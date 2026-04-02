@@ -32,7 +32,8 @@ exports.handler = async function (event) {
       "www.moel.go.kr",
       "moel.go.kr",
       "kosha.or.kr",
-      "www.kosha.or.kr"
+      "www.kosha.or.kr",
+      "query2.finance.yahoo.com"
     ]);
 
     if (!allowedHosts.has(url.hostname)) {
