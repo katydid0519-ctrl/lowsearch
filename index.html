@@ -535,7 +535,7 @@ function saveApiKey(){
   document.getElementById('apiOk').classList.add('show');
   toast('저장 ✓');
 }
-function getOC(){return 'bowlers';}
+function getOC(){return 'test';}
 
 // ── 안전보건환경 사이트 링크 ──
 const DEFAULT_SITES = [
@@ -2010,32 +2010,61 @@ async function loadKoshaNews(){
     const htmlStr=await koshaFetch();
     if(!htmlStr) throw new Error('fetch 실패');
 
-    const newsItems=[];
-    const re=/href=["']([^"']*pstNo=\d+[^"']*)["'][^>]*>([^<]{8,})</gi;
-    let m;
-
-    while((m=re.exec(htmlStr))!==null){
-      let href=m[1];
-      let title=m[2].trim();
-
-      if(!href.startsWith('http')){
-        href=href.startsWith('/') ? 'https://kosha.or.kr'+href : 'https://kosha.or.kr/'+href;
-      }
-
-      newsItems.push({title:title,date:'',link:href});
+    function decodeHtml(str){
+      const t=document.createElement('textarea');
+      t.innerHTML=str;
+      return t.value.replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
     }
 
-    const unique=[...new Map(newsItems.map(i=>[i.title,i])).values()].slice(0,10);
+    const doc=new DOMParser().parseFromString(htmlStr,'text/html');
+    const newsItems=[];
 
-    renderNewsSection(
-      el,
-      'https://kosha.or.kr/images/common/logo2.png',
-      '안전보건공단',
-      pageUrl,
-      unique
-    );
+    const selectors=[
+      'a[href*="pstNo="]',
+      'a[href*="bbsId="]',
+      'a[href*="press-release"]'
+    ];
 
+    selectors.forEach(sel=>{
+      doc.querySelectorAll(sel).forEach(a=>{
+        let href=(a.getAttribute('href')||'').trim();
+        let title=(a.getAttribute('title')||a.textContent||'').trim().replace(/\s+/g,' ');
+        title=decodeHtml(title);
+        if(!title || title.length<8) return;
+        if(/홈|이전|다음|더보기|보도자료$|목록|검색/.test(title) && title.length < 16) return;
+        if(!href.startsWith('http')){
+          href = href.startsWith('/') ? 'https://kosha.or.kr'+href : 'https://kosha.or.kr/'+href.replace(/^\.?\//,'');
+        }
+        if(!/pstNo=|bbsId=|press-release/.test(href)) return;
+        newsItems.push({title:title,date:'',link:href});
+      });
+    });
+
+    if(newsItems.length===0){
+      let m;
+      const re=/href=["']([^"']*(?:press-release|bbsId=|pstNo=)[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi;
+      while((m=re.exec(htmlStr))!==null){
+        let href=(m[1]||'').trim();
+        let title=decodeHtml(m[2]||'');
+        if(!title || title.length<8) continue;
+        if(!href.startsWith('http')){
+          href = href.startsWith('/') ? 'https://kosha.or.kr'+href : 'https://kosha.or.kr/'+href.replace(/^\.?\//,'');
+        }
+        newsItems.push({title:title,date:'',link:href});
+      }
+    }
+
+    const seen=new Set();
+    const unique=newsItems.filter(function(n){
+      const key=n.link+'|'+n.title;
+      if(seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0,10);
+
+    renderNewsSection(el,'https://kosha.or.kr/images/common/logo2.png','안전보건공단',pageUrl,unique);
   }catch(e){
+    console.warn('안전보건공단 보도자료 오류:',e.message);
     renderNewsSection(el,'https://kosha.or.kr/images/common/logo2.png','안전보건공단',pageUrl,[]);
   }
 }
