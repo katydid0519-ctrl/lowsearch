@@ -1,6 +1,5 @@
-const https = require("https");
-const http  = require("http");
-const { URL } = require("url");
+import https from "https";
+import http from "http";
 
 const ALLOWED_HOSTS = new Set([
   "www.law.go.kr",
@@ -18,126 +17,97 @@ function fetchUrl(targetUrl, timeoutMs = 15000) {
   return new Promise((resolve, reject) => {
     const parsed = new URL(targetUrl);
     const lib = parsed.protocol === "https:" ? https : http;
-    const options = {
-      hostname: parsed.hostname,
-      port: parsed.port || (parsed.protocol === "https:" ? 443 : 80),
-      path: parsed.pathname + parsed.search,
-      method: "GET",
-      headers: {
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
-        "accept": "application/json, text/xml, text/html, */*",
-        "accept-language": "ko-KR,ko;q=0.9",
-        "accept-encoding": "identity",
-        "cache-control": "no-cache",
-        "connection": "close",
+    const req = lib.request(
+      {
+        hostname: parsed.hostname,
+        port: parsed.port || (parsed.protocol === "https:" ? 443 : 80),
+        path: parsed.pathname + parsed.search,
+        method: "GET",
+        headers: {
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+          "accept": "application/json, text/xml, text/html, */*",
+          "accept-language": "ko-KR,ko;q=0.9",
+          "accept-encoding": "identity",
+          "cache-control": "no-cache",
+          "connection": "close",
+        },
+        timeout: timeoutMs,
       },
-      timeout: timeoutMs,
-    };
-
-    const req = lib.request(options, (res) => {
-      // 리디렉트 처리 (최대 3회)
-      if ((res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 303) && res.headers.location) {
-        const redirectUrl = new URL(res.headers.location, targetUrl).toString();
-        fetchUrl(redirectUrl, timeoutMs).then(resolve).catch(reject);
-        res.resume();
-        return;
+      (res) => {
+        if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
+          const next = new URL(res.headers.location, targetUrl).toString();
+          res.resume();
+          fetchUrl(next, timeoutMs).then(resolve).catch(reject);
+          return;
+        }
+        const chunks = [];
+        res.on("data", (c) => chunks.push(c));
+        res.on("end", () =>
+          resolve({
+            statusCode: res.statusCode,
+            contentType: res.headers["content-type"] || "application/json; charset=utf-8",
+            body: Buffer.concat(chunks).toString("utf-8"),
+          })
+        );
+        res.on("error", reject);
       }
-      const chunks = [];
-      res.on("data", (c) => chunks.push(c));
-      res.on("end", () => {
-        resolve({
-          statusCode: res.statusCode,
-          headers: res.headers,
-          body: Buffer.concat(chunks).toString("utf-8"),
-        });
-      });
-      res.on("error", reject);
-    });
-
-    req.on("timeout", () => { req.destroy(); reject(new Error("Request timeout")); });
+    );
+    req.on("timeout", () => { req.destroy(); reject(new Error("timeout")); });
     req.on("error", reject);
     req.end();
   });
 }
 
-exports.handler = async function (event) {
+export const handler = async (event) => {
+  const corsHeaders = {
+    "access-control-allow-origin": "*",
+    "access-control-allow-methods": "GET, OPTIONS",
+    "access-control-allow-headers": "*",
+  };
+
   if (event.httpMethod === "OPTIONS") {
-    return {
-      statusCode: 204,
-      headers: {
-        "access-control-allow-origin": "*",
-        "access-control-allow-methods": "GET, OPTIONS",
-        "access-control-allow-headers": "*",
-      },
-      body: "",
-    };
+    return { statusCode: 204, headers: corsHeaders, body: "" };
   }
 
   try {
-    // rawQuery에서 url= 이후 전체 추출 (Netlify의 쿼리스트링 잘림 버그 우회)
+    // rawQuery에서 url= 이후 전체 추출 (Netlify 쿼리스트링 잘림 버그 우회)
     const rawQuery = event.rawQuery || "";
-    let targetUrl = null;
-
-    if (rawQuery.startsWith("url=")) {
-      targetUrl = decodeURIComponent(rawQuery.slice(4));
-    } else {
-      const match = rawQuery.match(/(?:^|&)url=(.+)/);
-      if (match) targetUrl = decodeURIComponent(match[1]);
-    }
-    if (!targetUrl) {
-      targetUrl = event.queryStringParameters && event.queryStringParameters.url;
-    }
+    let targetUrl =
+      rawQuery.startsWith("url=")
+        ? decodeURIComponent(rawQuery.slice(4))
+        : (() => { const m = rawQuery.match(/(?:^|&)url=(.+)/); return m ? decodeURIComponent(m[1]) : null; })()
+      ?? event.queryStringParameters?.url
+      ?? null;
 
     if (!targetUrl) {
-      return {
-        statusCode: 400,
-        headers: { "content-type": "application/json; charset=utf-8", "access-control-allow-origin": "*" },
-        body: JSON.stringify({ error: "Missing url parameter", rawQuery }),
-      };
+      return { statusCode: 400, headers: { ...corsHeaders, "content-type": "application/json" }, body: JSON.stringify({ error: "Missing url", rawQuery }) };
     }
 
     let parsed;
     try { parsed = new URL(targetUrl); }
-    catch (e) {
-      return {
-        statusCode: 400,
-        headers: { "content-type": "application/json; charset=utf-8", "access-control-allow-origin": "*" },
-        body: JSON.stringify({ error: "Invalid URL: " + targetUrl }),
-      };
-    }
+    catch { return { statusCode: 400, headers: { ...corsHeaders, "content-type": "application/json" }, body: JSON.stringify({ error: "Invalid URL" }) }; }
 
     if (!ALLOWED_HOSTS.has(parsed.hostname)) {
-      return {
-        statusCode: 403,
-        headers: { "content-type": "application/json; charset=utf-8", "access-control-allow-origin": "*" },
-        body: JSON.stringify({ error: "Host not allowed: " + parsed.hostname }),
-      };
+      return { statusCode: 403, headers: { ...corsHeaders, "content-type": "application/json" }, body: JSON.stringify({ error: "Host not allowed: " + parsed.hostname }) };
     }
 
-    const result = await fetchUrl(targetUrl, 15000);
-    const contentType = result.headers["content-type"] || "application/json; charset=utf-8";
+    const result = await fetchUrl(targetUrl);
 
     return {
       statusCode: 200,
       headers: {
-        "content-type": contentType,
-        "access-control-allow-origin": "*",
-        "access-control-allow-methods": "GET, OPTIONS",
-        "access-control-allow-headers": "*",
+        ...corsHeaders,
+        "content-type": result.contentType,
         "cache-control": "public, max-age=300",
         "x-upstream-status": String(result.statusCode),
       },
       body: result.body,
     };
-
-  } catch (error) {
+  } catch (err) {
     return {
       statusCode: 500,
-      headers: { "content-type": "application/json; charset=utf-8", "access-control-allow-origin": "*" },
-      body: JSON.stringify({
-        error: error.message || "Proxy failed",
-        detail: String(error),
-      }),
+      headers: { ...corsHeaders, "content-type": "application/json" },
+      body: JSON.stringify({ error: err.message || "Proxy failed", detail: String(err) }),
     };
   }
 };
