@@ -2318,73 +2318,75 @@ async function doMsdsSearch(){
   const kw=(document.getElementById('msdsInput')?.value||'').trim();
   if(!kw){toast('물질명을 입력하세요');return;}
   const area=document.getElementById('msdsResultArea');
-  area.innerHTML='<div class="hw-loading">🔍 검색 중...</div>';
+  area.innerHTML='<div class="hw-loading">검색 중...</div>';
   try{
     const xml=await publicApiFetch('https://apis.data.go.kr/B552468/msdschem/getChemList',
-      {serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',chem_nm:kw,pageNo:1,numOfRows:10});
+      {serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',
+       searchWrd:kw,searchCnd:0,numOfRows:10,pageNo:1});
     if(!xml) throw new Error('응답없음');
-    console.log('[MSDS] 응답타입:', xml && xml.querySelectorAll ? 'XML' : typeof xml);
-    const items = xml && xml.querySelectorAll ? Array.from(xml.querySelectorAll('item')) : [];
-    console.log('[MSDS] item수:', items.length, items[0] ? items[0].outerHTML.substring(0,300) : '없음');
-    // item이 없으면 다른 태그명 시도
-    // item 없으면 items 하위 직접 자식 탐색
-    const msdsItems2 = items.length===0 && xml && xml.querySelectorAll
-      ? Array.from(xml.querySelectorAll('items > *'))
-      : [];
-    if(msdsItems2.length > 0){
-      console.log('[MSDS] items 하위 태그:', msdsItems2[0].tagName, msdsItems2.length+'개');
-    }
-    const finalItems = items.length > 0 ? items : msdsItems2;
-        if(finalItems.length===0){
-      area.innerHTML=`<div class="hw-err">"${eh(kw)}" 검색결과 없음</div>`;
+    let items=Array.from(xml.querySelectorAll('item'));
+    if(!items.length) items=Array.from(xml.querySelectorAll('items > *'));
+    if(!items.length) items=Array.from(xml.querySelectorAll('body > items > *'));
+    const totalCount=xml.querySelector('totalCount')?.textContent||'';
+    if(!items.length){
+      area.innerHTML='<div class="hw-err">"'+eh(kw)+'" 검색결과 없음</div>';
       return;
     }
-    const useItems = finalItems.length > 0 ? finalItems : items;
-    area.innerHTML=`<div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;">"${eh(kw)}" 검색결과 ${useItems.length}건 — 클릭하면 17섹션 상세정보</div>`
-    +useItems.map(item=>{
-      const mNo   =(item.querySelector('mNo')?.textContent||item.textContent||'').trim();
-      const chemNm=(item.querySelector('chemNm')?.textContent||item.querySelector('chem_nm')?.textContent||item.tagName||'').trim();
-      const casNo =(item.querySelector('casNo')?.textContent||item.querySelector('cas_no')?.textContent||'').trim();
-      return `<div class="msds-list-item" onclick="openMsdsDetail('${mNo}','${eh(chemNm)}')"
-        style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;margin-bottom:5px;transition:border-color .12s;"
-        onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-        <div style="font-size:12px;font-weight:500;color:var(--text);">${eh(chemNm)||mNo||'물질명 없음'}</div>
-        ${casNo?`<div style="font-size:10px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;">CAS: ${eh(casNo)}</div>`:''}
-      </div>`;
-    }).join('');
+    const cards=items.map(function(item){
+      var chemId=(item.querySelector('chemId')?.textContent||'').trim();
+      var chemNm=(item.querySelector('chemNm')?.textContent||item.querySelector('korName')?.textContent||'').trim();
+      var casNo=(item.querySelector('casNo')?.textContent||'').trim();
+      var engNm=(item.querySelector('engName')?.textContent||item.querySelector('chemEngNm')?.textContent||'').trim();
+      var displayNm=eh(chemNm||engNm||chemId||'물질명 없음');
+      var div=document.createElement('div');
+      div.className='msds-list-item';
+      div.style.cssText='padding:8px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;margin-bottom:5px;transition:border-color .12s;';
+      div.onmouseover=function(){this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#f0a500';};
+      div.onmouseout=function(){this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--border').trim()||'#dcdcdc';};
+      div.innerHTML='<div style="font-size:12px;font-weight:600;color:var(--text);">'+displayNm+'</div>'
+        +(engNm&&chemNm?'<div style="font-size:10px;color:var(--text-muted);">'+eh(engNm)+'</div>':'')
+        +(casNo?'<div style="font-size:10px;color:var(--text-dim);">CAS: '+eh(casNo)+'</div>':'');
+      div.addEventListener('click',function(){openMsdsDetail(chemId,chemNm||engNm||chemId);});
+      return div;
+    });
+    area.innerHTML='<div style="font-size:10px;color:var(--text-dim);margin-bottom:8px;">"'+eh(kw)+'" '+(totalCount||items.length)+'건</div>';
+    cards.forEach(function(c){area.appendChild(c);});
   }catch(e){
     console.warn('[MSDS]',e.message);
-    area.innerHTML=`<div class="hw-err">검색 실패: ${eh(e.message)}</div>`;
+    area.innerHTML='<div class="hw-err">검색 실패: '+eh(e.message)+'</div>';
   }
 }
 
-async function openMsdsDetail(mNo, chemNm){
-  if(!mNo){toast('물질번호 없음');return;}
+
+async function openMsdsDetail(chemId, chemNm){
+  if(!chemId){toast('화학물질ID 없음');return;}
   const modal=document.getElementById('msdsModal');
   if(!modal) return;
   document.getElementById('msdsModalTitle').textContent='🧪 '+chemNm;
-  document.getElementById('msdsModalBody').innerHTML='<div style="padding:20px;text-align:center;color:var(--text-dim);">전체 섹션 로딩 중 (16개)...</div>';
+  document.getElementById('msdsModalBody').innerHTML='<div style="padding:20px;text-align:center;color:var(--text-dim);">MSDS 로딩 중...</div>';
   modal.classList.add('open');
 
+  // 16개 섹션 병렬 로드 (chemId 파라미터)
   const results=await Promise.allSettled(
     MSDS_SECTIONS.map(sec=>
-      publicApiFetch(`https://apis.data.go.kr/B552468/msdschem/getChemDetail${sec.no}`,
-        {serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',mNo})
+      publicApiFetch('https://apis.data.go.kr/B552468/msdschem/getChemDetail'+sec.no,
+        {serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', chemId:chemId})
     )
   );
 
   let html='';
   MSDS_SECTIONS.forEach((sec,i)=>{
     const res=results[i];
-    html+=`<div class="msds-section">
-      <div class="msds-sec-title">섹션 ${sec.no}. ${sec.label}</div>`;
+    html+='<div class="msds-section"><div class="msds-sec-title">섹션 '+sec.no+'. '+sec.label+'</div>';
     if(res.status==='fulfilled'&&res.value){
       const xml=res.value;
-      const fields=Array.from(xml.querySelectorAll('item > *'));
+      // item 또는 하위 자식 모두 탐색
+      let fields=Array.from(xml.querySelectorAll('item > *'));
+      if(fields.length===0) fields=Array.from(xml.querySelectorAll('body > items > * > *'));
       const rows=fields.map(f=>{
         const tag=f.tagName; const val=(f.textContent||'').trim();
-        if(!val||val===mNo||tag==='mNo') return '';
-        return `<div class="msds-field"><span class="msds-field-key">${tag}</span><span class="msds-field-val">${eh(val)}</span></div>`;
+        if(!val||val===chemId||tag==='chemId') return '';
+        return '<div class="msds-field"><span class="msds-field-key">'+tag+'</span><span class="msds-field-val">'+eh(val)+'</span></div>';
       }).filter(Boolean).join('');
       html+=rows||'<div class="msds-field-empty">정보 없음</div>';
     }else{
