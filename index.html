@@ -368,11 +368,10 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
   <div class="logo">
     <button class="sidebar-toggle" onclick="toggleSidebar()" title="사이드바 토글">☰</button>
     <span class="logo-badge">LAW</span>
-    <span class="logo-title">국가법령 검색기</span>
+    <span class="logo-title" onclick="goHome()" style="cursor:pointer;">국가법령 검색기</span>
     <span class="logo-sub">Industrial Safety v7.0</span>
   </div>
   <div class="header-tabs">
-    <button class="tab-btn active" onclick="goHome()">홈</button>
     <button class="tab-btn" onclick="switchTab('favorites')">⭐ 즐겨찾기</button>
     <button class="tab-btn" onclick="switchTab('history')">히스토리</button>
     <button class="dark-toggle" onclick="toggleDark()" title="다크모드">🌙</button>
@@ -415,27 +414,20 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
     </div>
   </aside>
   <main>
-    <div class="search-wrap">
-      <div class="mode-tabs">
-        <button class="mode-btn active" id="modeBtn1" onclick="setMode('law')">법령명 검색</button>
-        <button class="mode-btn" id="modeBtn2" onclick="setMode('keyword')">조문 키워드</button>
-      </div>
-      <div class="law-search-box">
-        <input type="text" class="search-input" id="searchInput"
-          placeholder="법령명 또는 약칭 (예: 산안법, 중대법, 화관법)"
-          onkeydown="if(event.key==='Enter')doSearch()">
-      </div>
-      <button class="btn-search" onclick="doSearch()">검색</button>
-    </div>
+
     <div class="content-area" id="contentArea">
       <div class="state-box" id="initState" style="align-items:flex-start;padding:20px 22px;">
-        <!-- 히어로 검색 배너 -->
+        <!-- 히어로 검색 배너 (통합 검색창) -->
         <div class="home-hero" style="width:100%;margin-bottom:20px;">
           <div class="home-hero-title">⚖️ 법령 및 규정 통합 검색</div>
+          <div style="display:flex;gap:6px;margin-bottom:10px;">
+            <button class="mode-btn active" id="modeBtn1" onclick="setMode('law')" style="border-radius:8px;padding:6px 14px;font-size:12px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff;">법령명 검색</button>
+            <button class="mode-btn" id="modeBtn2" onclick="setMode('keyword')" style="border-radius:8px;padding:6px 14px;font-size:12px;background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.7);">조문 키워드</button>
+          </div>
           <div class="home-hero-input-wrap">
-            <input class="home-hero-input" id="heroSearchInput" placeholder="산업안전보건법, 중대재해처벌법, 화학물질관리법 검색..."
-              onkeydown="if(event.key==='Enter'){document.getElementById('searchInput').value=this.value;doSearch();}">
-            <button class="home-hero-btn" onclick="document.getElementById('searchInput').value=document.getElementById('heroSearchInput').value;doSearch();">검색하기</button>
+            <input class="home-hero-input" id="searchInput" placeholder="산업안전보건법, 중대재해처벌법, 화학물질관리법 검색..."
+              onkeydown="if(event.key==='Enter')doSearch()">
+            <button class="home-hero-btn" onclick="doSearch()">검색하기</button>
           </div>
           <div class="home-hero-tags">
             <span class="home-hero-tag" onclick="document.getElementById('searchInput').value='위험성평가';doSearch();">#위험성평가</span>
@@ -447,99 +439,64 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
         </div>
 
         <!-- 대시보드 메인 그리드 -->
-        <div class="home-dash" style="width:100%;">
+        <div style="display:grid;grid-template-columns:320px 1fr;gap:20px;width:100%;align-items:start;">
 
-          <!-- 좌측 컬럼: 캘린더 + 날씨 + MSDS -->
-          <div class="home-dash-left">
-            <!-- 캘린더 카드 -->
+          <!-- 좌측 컬럼: 캘린더 + 날씨 -->
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <!-- 캘린더 -->
             <div class="hw-card" id="hwCalendar" style="min-height:auto;">
               <div class="hw-card-title-row">
-                <div>
-                  <div class="hw-card-title">안전 점검 일정</div>
-                  <div class="hw-card-subtitle">일정을 클릭해 메모를 추가하세요</div>
-                </div>
+                <div class="hw-card-title">📅 캘린더</div>
               </div>
               <div id="hwCalendarBody"><div class="hw-loading">로딩 중...</div></div>
             </div>
-            <!-- 날씨 카드 (다크) -->
+            <!-- 날씨 (다크) -->
             <div class="hw-weather-card" id="hwWeather">
               <div id="hwWeatherBody"><div style="color:rgba(255,255,255,.5);font-size:11px;">날씨 로딩 중...</div></div>
             </div>
-            <!-- MSDS 카드 -->
-            <div class="hw-card" id="hwMsds" style="min-height:auto;">
-              <div class="hw-card-title-row">
-                <div class="hw-card-title">🧪 MSDS 화학물질 검색</div>
-                <span class="hw-src">KOSHA</span>
-              </div>
-              <div style="display:flex;gap:6px;margin-bottom:8px;">
-                <input type="text" id="msdsInput" class="art-kw-input" placeholder="물질명 (예: 황산, 톨루엔)"
-                  style="flex:1;font-size:12px;padding:7px 10px;">
-                <button onclick="doMsdsSearch()" class="btn-search" style="padding:7px 14px;font-size:12px;">검색</button>
-              </div>
-              <div class="home-hero-tags" style="margin-bottom:10px;">
-                <span class="home-hero-tag" style="background:var(--surface2);color:var(--text-muted);border-color:var(--border);font-size:10px;" onclick="document.getElementById('msdsInput').value='벤젠';doMsdsSearch();">벤젠</span>
-                <span class="home-hero-tag" style="background:var(--surface2);color:var(--text-muted);border-color:var(--border);font-size:10px;" onclick="document.getElementById('msdsInput').value='황산';doMsdsSearch();">황산</span>
-                <span class="home-hero-tag" style="background:var(--surface2);color:var(--text-muted);border-color:var(--border);font-size:10px;" onclick="document.getElementById('msdsInput').value='톨루엔';doMsdsSearch();">톨루엔</span>
-              </div>
-              <div id="msdsResultArea"></div>
-            </div>
           </div>
 
-          <!-- 우측 컬럼: 재해사례(대형) + 하단 2분할 -->
-          <div class="home-dash-right">
-            <!-- 전국 주요 재해사례 (레퍼런스 스타일) -->
-            <div class="hw-incident-card" id="hwAccident">
-              <div class="hw-incident-header">
-                <div>
-                  <div class="hw-incident-title">전국 주요 재해사례</div>
-                  <div class="hw-incident-sub">국내 산업현장 재해 사례 게시판</div>
+          <!-- 우측 컬럼: MSDS + 재해 + 사망사고 (3열) -->
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+              <!-- MSDS -->
+              <div class="hw-card" id="hwMsds" style="min-height:auto;">
+                <div class="hw-card-title-row">
+                  <div class="hw-card-title">🧪 MSDS 화학물질 검색</div>
+                  <span class="hw-src">KOSHA</span>
                 </div>
-                <a class="hw-incident-more" href="https://www.kosha.or.kr/kosha/data/disasterCase.do" target="_blank">전체보기 →</a>
+                <div style="display:flex;gap:5px;margin-bottom:7px;">
+                  <input type="text" id="msdsInput" class="art-kw-input" placeholder="물질명 (예: 황산)"
+                    style="flex:1;font-size:12px;padding:6px 9px;">
+                  <button onclick="doMsdsSearch()" class="btn-search" style="padding:6px 12px;font-size:12px;">검색</button>
+                </div>
+                <div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap;">
+                  <span style="padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;" onclick="document.getElementById('msdsInput').value='벤젠';doMsdsSearch();">벤젠</span>
+                  <span style="padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;" onclick="document.getElementById('msdsInput').value='황산';doMsdsSearch();">황산</span>
+                  <span style="padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;" onclick="document.getElementById('msdsInput').value='톨루엔';doMsdsSearch();">톨루엔</span>
+                </div>
+                <div id="msdsResultArea"></div>
               </div>
-              <div class="hw-incident-list" id="hwAccidentBody">
-                <div style="padding:20px;color:var(--text-dim);font-size:11px;">로딩 중...</div>
+              <!-- 국내 재해사례 -->
+              <div class="hw-card" id="hwAccident" style="min-height:auto;">
+                <div class="hw-card-title-row">
+                  <div class="hw-card-title">⚠️ 국내 재해사례</div>
+                  <span class="hw-src">KOSHA</span>
+                </div>
+                <div class="hw-card-body" id="hwAccidentBody"><div class="hw-loading">로딩 중...</div></div>
               </div>
-            </div>
-
-            <!-- 하단: 사고사망 + (추후 확장) -->
-            <div class="home-dash-right-bottom">
-              <!-- 사고사망 게시판 -->
+              <!-- 사망사고 게시판 -->
               <div class="hw-card" id="hwSafety" style="min-height:auto;">
                 <div class="hw-card-title-row">
-                  <div>
-                    <div class="hw-card-title">사고사망 게시판</div>
-                  </div>
+                  <div class="hw-card-title">💀 사망사고 게시판</div>
                   <span class="hw-src">KOSHA</span>
                 </div>
                 <div class="hw-card-body" id="hwSafetyBody"><div class="hw-loading">로딩 중...</div></div>
               </div>
-              <!-- 빠른 법령 바로가기 -->
-              <div class="hw-card" style="min-height:auto;">
-                <div class="hw-card-title-row">
-                  <div class="hw-card-title">최근 개정 법령</div>
-                </div>
-                <div style="display:flex;flex-direction:column;gap:10px;">
-                  <div onclick="document.getElementById('searchInput').value='산업안전보건법';doSearch();" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:4px 0;border-bottom:1px solid var(--border);" onmouseover="this.querySelector('span').style.color='var(--accent)'" onmouseout="this.querySelector('span').style.color='var(--text-muted)'">
-                    <div style="display:flex;align-items:center;gap:8px;"><div style="width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;"></div><span style="font-size:12px;font-weight:500;color:var(--text-muted);transition:color .12s;">산업안전보건법 시행규칙</span></div>
-                    <span style="color:var(--text-dim);font-size:12px;">→</span>
-                  </div>
-                  <div onclick="document.getElementById('searchInput').value='중대재해처벌법';doSearch();" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:4px 0;border-bottom:1px solid var(--border);" onmouseover="this.querySelector('span').style.color='var(--accent)'" onmouseout="this.querySelector('span').style.color='var(--text-muted)'">
-                    <div style="display:flex;align-items:center;gap:8px;"><div style="width:7px;height:7px;border-radius:50%;background:var(--border2);flex-shrink:0;"></div><span style="font-size:12px;font-weight:500;color:var(--text-muted);transition:color .12s;">중대재해처벌법</span></div>
-                    <span style="color:var(--text-dim);font-size:12px;">→</span>
-                  </div>
-                  <div onclick="document.getElementById('searchInput').value='화학물질관리법';doSearch();" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:4px 0;border-bottom:1px solid var(--border);" onmouseover="this.querySelector('span').style.color='var(--accent)'" onmouseout="this.querySelector('span').style.color='var(--text-muted)'">
-                    <div style="display:flex;align-items:center;gap:8px;"><div style="width:7px;height:7px;border-radius:50%;background:var(--border2);flex-shrink:0;"></div><span style="font-size:12px;font-weight:500;color:var(--text-muted);transition:color .12s;">화학물질관리법</span></div>
-                    <span style="color:var(--text-dim);font-size:12px;">→</span>
-                  </div>
-                  <div onclick="document.getElementById('searchInput').value='위험성평가';doSearch();" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:4px 0;" onmouseover="this.querySelector('span').style.color='var(--accent)'" onmouseout="this.querySelector('span').style.color='var(--text-muted)'">
-                    <div style="display:flex;align-items:center;gap:8px;"><div style="width:7px;height:7px;border-radius:50%;background:var(--border2);flex-shrink:0;"></div><span style="font-size:12px;font-weight:500;color:var(--text-muted);transition:color .12s;">위험성평가 지침(KOSHA)</span></div>
-                    <span style="color:var(--text-dim);font-size:12px;">→</span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
+
       </div>
       <div id="resultArea" style="display:none;"></div>
     </div>
@@ -2321,9 +2278,7 @@ async function loadKoshaAccidentWidget(){
       const title = item.keyword || item.title || '내용 확인';
       const biz   = item.business || '';
       const boardno = item.boardno || '';
-      const url   = boardno
-        ? 'https://www.kosha.or.kr/kosha/disaster_api.do?boardno='+boardno
-        : 'https://kosha.or.kr';
+      const url   = 'https://portal.kosha.or.kr/archive/disaster-case/accident-case/acccase-industry/construc-industry';
       const isFirst = i===0;
       const badgeCls = isFirst ? 'critical' : 'invest';
       const badgeLabel = isFirst ? 'CRITICAL' : '재해사례';
@@ -2343,8 +2298,8 @@ async function loadKoshaAccidentWidget(){
     + '</div>';
   }catch(e){
     console.warn('[재해사례]', e.message);
-    el.innerHTML=`<div class="hw-err">데이터를 불러올 수 없습니다.<br>
-      <a href="https://kosha.or.kr" target="_blank" class="hw-more-link">KOSHA →</a></div>`;
+    el.innerHTML='<div class="hw-err">데이터를 불러올 수 없습니다.<br>'
+      +'<a href="https://portal.kosha.or.kr/archive/disaster-case/accident-case/acccase-industry/construc-industry" target="_blank" class="hw-more-link">재해사례 게시판 →</a></div>';
   }
 }
 
@@ -2379,7 +2334,7 @@ async function loadKoshaSafetyNewsWidget(){
       // contents에서 날짜 추출 시도
       const dateMatch = (item.contents||'').match(/\d{4}-\d{2}-\d{2}|\d{4}\/\d{2}\/\d{2}|\d{4}\.\d{2}\.\d{2}/);
       const date = dateMatch ? dateMatch[0] : '';
-      const url = 'https://kosha.or.kr/notification/release/press-release';
+      const url = 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2';
       return `<div class="hw-list-item">
         <a href="${url}" target="_blank" class="hw-list-link">
           <span class="hw-list-title">${eh(title)}</span>
@@ -2387,11 +2342,11 @@ async function loadKoshaSafetyNewsWidget(){
         ${date?`<span class="hw-list-date">${eh(date)}</span>`:''}
       </div>`;
     }).join('')
-    + `<a href="https://kosha.or.kr/notification/release/press-release" target="_blank" class="hw-more-link">더보기 →</a>`;
+    + '<a href="https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2" target="_blank" class="hw-more-link">더보기 →</a>';
   }catch(e){
     console.warn('[사고사망]', e.message);
-    el.innerHTML=`<div class="hw-err">데이터를 불러올 수 없습니다.<br>
-      <a href="https://kosha.or.kr/notification/release/press-release" target="_blank" class="hw-more-link">사고사망 게시판 →</a></div>`;
+    el.innerHTML='<div class="hw-err">데이터를 불러올 수 없습니다.<br>'
+      +'<a href="https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2" target="_blank" class="hw-more-link">사망사고 게시판 →</a></div>';
   }
 }
 
@@ -2626,15 +2581,16 @@ async function doMsdsSearch(){
       area.innerHTML='<div class="hw-err">"'+eh(kw)+'" 검색결과 없음</div>';
       return;
     }
+    if(items[0]) console.log('[MSDS] 첫번째 item 태그들:', Array.from(items[0].children).map(c=>c.tagName+':'+c.textContent.substring(0,20)).join(', '));
     area.innerHTML='<div style="font-size:10px;color:var(--text-dim);margin-bottom:8px;">"'+eh(kw)+'" '+totalCount+'건</div>';
     items.forEach(function(item){
-      const chemId=(item.querySelector('chemId')?.textContent||'').trim();
-      const chemNm=(item.querySelector('chemNm')?.textContent||item.querySelector('korName')?.textContent||'').trim();
+      const chemId=(item.querySelector('chemId')?.textContent||item.querySelector('chemid')?.textContent||'').trim();
+      const chemNm=(item.querySelector('chemNm')?.textContent||item.querySelector('chemNm')?.textContent||item.querySelector('korName')?.textContent||item.querySelector('chemicalName')?.textContent||'').trim();
       const engNm=(item.querySelector('engName')?.textContent||'').trim();
       const casNo=(item.querySelector('casNo')?.textContent||'').trim();
       const itemDetail=(item.querySelector('itemDetail')?.textContent||'').trim();
       const msdsKor=(item.querySelector('msdsItemNameKor')?.textContent||'').trim();
-      const displayNm=chemNm||engNm||chemId||'물질명 없음';
+      const displayNm=chemNm||engNm||('ID:'+chemId)||'물질명 미상';
       const div=document.createElement('div');
       div.className='msds-list-item';
       div.style.cssText='padding:8px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;margin-bottom:5px;transition:border-color .12s;';
@@ -2659,7 +2615,10 @@ async function openMsdsDetail(chemId, chemNm){
   if(!chemId){toast('화학물질ID 없음');return;}
   const modal=document.getElementById('msdsModal');
   if(!modal) return;
-  document.getElementById('msdsModalTitle').textContent='🧪 '+chemNm;
+  document.getElementById('msdsModalTitle').innerHTML='🧪 '+chemNm
+    +'<a href="https://msds.kosha.or.kr/MSDSInfo/kcic/msdssearchAll.do" target="_blank"'
+    +' style="margin-left:12px;font-size:11px;font-weight:500;color:var(--accent);background:rgba(163,63,0,.08);padding:3px 10px;border-radius:6px;text-decoration:none;vertical-align:middle;">'
+    +'🔗 MSDS 검색 사이트</a>';
   document.getElementById('msdsModalBody').innerHTML='<div style="padding:20px;text-align:center;color:var(--text-dim);">MSDS 로딩 중...</div>';
   modal.classList.add('open');
 
