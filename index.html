@@ -2123,8 +2123,8 @@ async function loadKoshaAccidentWidget(){
   if(!el) return;
   try{
     const data = await publicApiFetch(
-      'https://apis.data.go.kr/B552468/disaster_api/getDisaster_api',
-      { ServiceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1 }
+      'https://apis.data.go.kr/B552468/disaster_api02/getdisaster_api02',
+      { ServiceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', callApiId:'getdisaster_api02', numOfRows:5, pageNo:1, type:'json' }
     );
     if(!data) throw new Error('응답없음');
     // 응답: {header:..., body:{items:{item:[...]}}}
@@ -2162,8 +2162,8 @@ async function loadKoshaSafetyNewsWidget(){
   if(!el) return;
   try{
     const data = await publicApiFetch(
-      'https://apis.data.go.kr/B552468/news_api/getNews_api',
-      { ServiceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1 }
+      'https://apis.data.go.kr/B552468/news_api02/getNews_api02',
+      { ServiceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', callApiId:'getNews_api02', numOfRows:5, pageNo:1, type:'json' }
     );
     if(!data) throw new Error('응답없음');
     const raw = data?.body?.items?.item || findArray(data) || [];
@@ -2197,9 +2197,22 @@ async function loadWeatherWidget(){
   if(!el) return;
   try{
     // wttr.in은 CORS 허용 → 직접 호출 가능
-    const res = await fetchWithTimeout('https://wttr.in/Hwaseong,Gyeonggi,Korea?format=j1', 10000);
-    if(!res.ok) throw new Error('wttr 응답 오류');
-    const data = await res.json();
+    // wttr.in - 여러 URL 시도
+    const wttrUrls = [
+      'https://wttr.in/Hwaseong?format=j1&lang=ko',
+      'https://wttr.in/Suwon?format=j1&lang=ko',
+      'https://wttr.in/Seoul?format=j1&lang=ko',
+    ];
+    let data = null;
+    for(const wttrUrl of wttrUrls){
+      try{
+        const res = await fetchWithTimeout(wttrUrl, 10000);
+        if(!res.ok) continue;
+        const json = await res.json();
+        if(json?.current_condition?.[0]){ data = json; break; }
+      }catch(e){ continue; }
+    }
+    if(!data || !data.current_condition?.[0]) throw new Error('날씨 데이터 없음');
     const cur = data.current_condition[0];
     const tempC   = parseInt(cur.temp_C);
     const feelsC  = parseInt(cur.FeelsLikeC);
