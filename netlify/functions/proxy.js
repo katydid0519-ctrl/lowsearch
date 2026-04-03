@@ -12,9 +12,8 @@ exports.handler = async function (event) {
   }
 
   try {
-    // Netlify는 /.netlify/functions/proxy?url=https://a.com?foo=1&bar=2 요청 시
-    // queryStringParameters.url = "https://a.com?foo=1" 만 파싱하고 "&bar=2"를 잘라버림.
-    // rawQuery 전체에서 "url=" 이후를 직접 추출해야 쿼리스트링 보존 가능.
+    // Netlify는 ?url=https://a.com?foo=1&bar=2 에서 &bar=2를 잘라버림
+    // rawQuery 전체에서 url= 이후를 직접 추출
     const rawQuery = event.rawQuery || "";
     let targetUrl = null;
 
@@ -24,8 +23,6 @@ exports.handler = async function (event) {
       const match = rawQuery.match(/(?:^|&)url=(.+)/);
       if (match) targetUrl = decodeURIComponent(match[1]);
     }
-
-    // 폴백: queryStringParameters (단순 URL에는 충분)
     if (!targetUrl) {
       targetUrl = event.queryStringParameters && event.queryStringParameters.url;
     }
@@ -57,6 +54,7 @@ exports.handler = async function (event) {
       "moel.go.kr",
       "kosha.or.kr",
       "www.kosha.or.kr",
+      "apis.data.go.kr",        // 공공데이터포털 API
     ]);
 
     if (!allowedHosts.has(url.hostname)) {
@@ -72,16 +70,14 @@ exports.handler = async function (event) {
       redirect: "follow",
       headers: {
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "accept": "text/html,application/xhtml+xml,application/xml,application/json,*/*;q=0.9",
-        "accept-language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
+        "accept": "application/json, text/xml, text/html, */*;q=0.9",
+        "accept-language": "ko-KR,ko;q=0.9",
         "accept-encoding": "identity",
-        "cache-control": "no-cache",
-        "pragma": "no-cache",
-        "referer": url.origin + "/"
+        "cache-control": "no-cache"
       }
     });
 
-    const contentType = upstream.headers.get("content-type") || "text/plain; charset=utf-8";
+    const contentType = upstream.headers.get("content-type") || "application/json; charset=utf-8";
     const body = await upstream.text();
 
     return {
@@ -91,7 +87,7 @@ exports.handler = async function (event) {
         "access-control-allow-origin": "*",
         "access-control-allow-methods": "GET, OPTIONS",
         "access-control-allow-headers": "*",
-        "cache-control": "public, max-age=60",
+        "cache-control": "public, max-age=300",
         "x-upstream-status": String(upstream.status)
       },
       body
