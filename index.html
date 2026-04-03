@@ -2191,57 +2191,58 @@ async function loadKoshaSafetyNewsWidget(){
   }
 }
 
-// ── 3. 날씨 (기상청 단기예보) 화성시 nx=60,ny=121 ──
+// ── 3. 날씨 (wttr.in - CORS 허용, proxy 불필요) 화성시 기준 ──
 async function loadWeatherWidget(){
   const el = document.getElementById('hwWeatherBody');
   if(!el) return;
   try{
-    const now=new Date();
-    const kst=new Date(now.getTime()+9*60*60*1000);
-    const h=kst.getUTCHours();
-    const baseHours=[2,5,8,11,14,17,20,23];
-    let baseHour=23;
-    for(let i=baseHours.length-1;i>=0;i--){ if(baseHours[i]<=h){baseHour=baseHours[i];break;} }
-    const pad2=n=>String(n).padStart(2,'0');
-    let baseKst=new Date(kst);
-    if(baseHour===23&&h<23) baseKst=new Date(kst.getTime()-86400000);
-    const baseDate=`${baseKst.getUTCFullYear()}${pad2(baseKst.getUTCMonth()+1)}${pad2(baseKst.getUTCDate())}`;
-    const baseTime=pad2(baseHour)+'00';
-    const data=await publicApiFetch(
-      'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst',
-      {serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',numOfRows:300,pageNo:1,dataType:'JSON',base_date:baseDate,base_time:baseTime,nx:60,ny:121}
-    );
-    const items=data?.response?.body?.items?.item||findArray(data)||[];
-    if(items.length===0) throw new Error('예보없음');
-    const nowHHMM=pad2(h)+'00';
-    const times=[...new Set(items.map(it=>it.fcstTime))].sort();
-    const targetTime=times.find(t=>t>=nowHHMM)||times[0];
-    const fcst={};
-    items.forEach(it=>{if(it.fcstTime===targetTime) fcst[it.category]=it.fcstValue;});
-    const temp=fcst['TMP']??'--', humid=fcst['REH']??'--', rain=fcst['PTY']??'0',
-          sky=fcst['SKY']??'1', wind=fcst['WSD']??'--', pop=fcst['POP']??'--';
-    const rainIcon=rain==='1'?'🌧️':rain==='2'?'🌨️':rain==='3'?'❄️':rain==='4'?'🌦️':'';
-    const skyIcon=rainIcon||(sky==='1'?'☀️':sky==='3'?'⛅':'☁️');
-    const tempN=parseFloat(temp),windN=parseFloat(wind),humidN=parseFloat(humid);
-    let risk=0;const risks=[];
-    if(tempN>=35){risk+=45;risks.push('🔴 폭염');}
-    else if(tempN>=33){risk+=35;risks.push('🟠 온열 위험');}
-    else if(tempN>=28){risk+=20;risks.push('🟡 더위 주의');}
-    else if(tempN<=0){risk+=35;risks.push('🔵 동결 위험');}
-    else if(tempN<=5){risk+=20;risks.push('🔵 한랭 주의');}
-    if(humidN>=85&&tempN>=25){risk+=20;risks.push('💧 고온다습');}
-    if(windN>=14){risk+=25;risks.push('💨 강풍 위험');}
-    else if(windN>=7){risk+=10;risks.push('💨 바람 주의');}
-    if(rain!=='0'){risk+=10;risks.push('🌧️ 우천');}
-    risk=Math.min(risk,100);
-    const riskClr=risk>=60?'#e74040':risk>=30?'#f0a500':'#3fb950';
-    const riskLbl=risk>=60?'위험':risk>=30?'주의':'양호';
-    el.innerHTML=`
+    // wttr.in은 CORS 허용 → 직접 호출 가능
+    const res = await fetchWithTimeout('https://wttr.in/Hwaseong,Gyeonggi,Korea?format=j1', 10000);
+    if(!res.ok) throw new Error('wttr 응답 오류');
+    const data = await res.json();
+    const cur = data.current_condition[0];
+    const tempC   = parseInt(cur.temp_C);
+    const feelsC  = parseInt(cur.FeelsLikeC);
+    const humid   = parseInt(cur.humidity);
+    const windKph = parseInt(cur.windspeedKmph);
+    const windMs  = Math.round(windKph / 3.6);
+    const uvIdx   = parseInt(cur.uvIndex || 0);
+    const desc    = cur.lang_ko?.[0]?.value || cur.weatherDesc?.[0]?.value || '';
+    const vis     = parseInt(cur.visibility || 10);
+
+    // 날씨 아이콘
+    const rainCodes = [263,266,281,284,293,296,299,302,305,308,311,314,317,320,323,326,356,359,362,365,374,377,386,389,392,395];
+    const snowCodes = [320,323,326,329,332,335,338,350,368,371,374,377,392,395];
+    const weatherCode = parseInt(cur.weatherCode || 0);
+    const rainIcon = rainCodes.includes(weatherCode) ? (snowCodes.includes(weatherCode) ? '❄️' : '🌧️') : '';
+    const skyIcon = rainIcon || (weatherCode <= 116 ? '☀️' : weatherCode <= 122 ? '⛅' : '☁️');
+
+    // 작업환경 위험지수
+    let risk = 0; const risks = [];
+    if(tempC >= 35){risk+=45; risks.push('🔴 폭염');}
+    else if(tempC >= 33){risk+=35; risks.push('🟠 온열 위험');}
+    else if(tempC >= 28){risk+=20; risks.push('🟡 더위 주의');}
+    else if(tempC <= 0){risk+=35; risks.push('🔵 동결 위험');}
+    else if(tempC <= 5){risk+=20; risks.push('🔵 한랭 주의');}
+    if(humid >= 85 && tempC >= 25){risk+=20; risks.push('💧 고온다습');}
+    if(windMs >= 14){risk+=25; risks.push('💨 강풍 위험');}
+    else if(windMs >= 7){risk+=10; risks.push('💨 바람 주의');}
+    if(uvIdx >= 8){risk+=15; risks.push('☀️ 자외선 강함');}
+    if(rainIcon){risk+=10; risks.push('🌧️ 우천');}
+    if(vis <= 1){risk+=15; risks.push('🌫️ 안개');}
+    risk = Math.min(risk, 100);
+    const riskClr = risk>=60?'#e74040':risk>=30?'#f0a500':'#3fb950';
+    const riskLbl = risk>=60?'위험':risk>=30?'주의':'양호';
+
+    el.innerHTML = `
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;">
         <span style="font-size:40px;line-height:1;">${skyIcon}</span>
         <div>
-          <div style="font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace;">${temp}°C</div>
-          <div style="font-size:11px;color:var(--text-dim);margin-top:3px;">습도 ${humid}% &nbsp;·&nbsp; 풍속 ${wind}m/s &nbsp;·&nbsp; 강수확률 ${pop}%</div>
+          <div style="font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace;">${tempC}°C</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:3px;">
+            체감 ${feelsC}°C &nbsp;·&nbsp; 습도 ${humid}% &nbsp;·&nbsp; 풍속 ${windMs}m/s &nbsp;·&nbsp; UV ${uvIdx}
+          </div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">${eh(desc)}</div>
         </div>
       </div>
       <div>
@@ -2252,12 +2253,12 @@ async function loadWeatherWidget(){
         <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;">
           <div style="width:${risk}%;height:100%;background:${riskClr};border-radius:4px;"></div>
         </div>
-        ${risks.length?`<div style="font-size:10px;color:var(--text-dim);margin-top:5px;">${risks.join(' &nbsp; ')}</div>`:''}
+        ${risks.length ? `<div style="font-size:10px;color:var(--text-dim);margin-top:5px;">${risks.join(' &nbsp; ')}</div>` : ''}
       </div>
-      <div style="font-size:10px;color:var(--text-dim);margin-top:8px;">📍 화성시 기준 · ${baseDate} ${baseTime} 발표</div>`;
+      <div style="font-size:10px;color:var(--text-dim);margin-top:8px;">📍 화성시 기준 · wttr.in</div>`;
   }catch(e){
-    console.warn('[날씨]',e.message);
-    el.innerHTML=`<div class="hw-err">날씨 정보를 불러올 수 없습니다.<br>
+    console.warn('[날씨]', e.message);
+    el.innerHTML = `<div class="hw-err">날씨 정보를 불러올 수 없습니다.<br>
       <a href="https://www.weather.go.kr" target="_blank" class="hw-more-link">기상청 →</a></div>`;
   }
 }
