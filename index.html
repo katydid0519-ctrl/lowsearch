@@ -236,7 +236,14 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 
 /* ── 홈 위젯 그리드 ── */
 .home-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;}
-@media(max-width:900px){.home-grid{grid-template-columns:1fr;}}
+.home-grid-5{grid-template-columns:1fr 1fr 1fr;grid-template-rows:auto auto;}
+.home-grid-5 .hw-card:nth-child(1){grid-column:2;grid-row:1;}
+.home-grid-5 .hw-card:nth-child(2){grid-column:3;grid-row:1;}
+.home-grid-5 .hw-card:nth-child(3){grid-column:1;grid-row:2;}
+.home-grid-5 .hw-card:nth-child(4){grid-column:2;grid-row:2;}
+.home-grid-5 .hw-card:nth-child(5){grid-column:3;grid-row:2;}
+@media(max-width:1000px){.home-grid,.home-grid-5{grid-template-columns:1fr 1fr;}}
+@media(max-width:700px){.home-grid,.home-grid-5{grid-template-columns:1fr;}}
 .hw-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;min-height:160px;display:flex;flex-direction:column;}
 .hw-card-wide{grid-column:1/-1;}
 .hw-card-title{font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:.3px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;}
@@ -331,15 +338,30 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
     </div>
     <div class="content-area" id="contentArea">
       <div class="state-box" id="initState" style="align-items:flex-start;padding:20px;">
-        <div style="width:100%;display:flex;align-items:center;gap:12px;margin-bottom:18px;">
-          <span style="font-size:28px;">⚖️</span>
-          <div>
-            <div style="font-size:16px;font-weight:700;">국가법령 검색기</div>
-            <div style="font-size:12px;color:var(--text-dim);">법령명을 입력하고 검색하세요</div>
+
+        <div class="home-grid home-grid-5">
+          <!-- 행1: 날씨 + 캘린더 (우측 2개) -->
+          <div class="hw-card hw-col-span-1" id="hwWeather">
+            <div class="hw-card-title">🌤️ 오늘의 날씨 &amp; 작업환경 위험지수 <span class="hw-src">기상청</span></div>
+            <div class="hw-card-body" id="hwWeatherBody"><div class="hw-loading">로딩 중...</div></div>
           </div>
-        </div>
-        <div class="home-grid">
-          <!-- 재해사례 + 사고사망 -->
+          <div class="hw-card hw-col-span-1" id="hwCalendar">
+            <div class="hw-card-title">📅 주요 일정 캘린더 <span class="hw-src">법령 시행일</span></div>
+            <div class="hw-card-body" id="hwCalendarBody"><div class="hw-loading">로딩 중...</div></div>
+          </div>
+          <!-- 행2: MSDS + 재해사례 + 사고사망 (3등분) -->
+          <div class="hw-card" id="hwMsds">
+            <div class="hw-card-title">🧪 MSDS 화학물질 검색 <span class="hw-src">KOSHA</span></div>
+            <div class="hw-card-body">
+              <div style="display:flex;gap:6px;margin-bottom:8px;">
+                <input type="text" id="msdsInput" class="art-kw-input" placeholder="물질명 (예: 황산, 톨루엔)"
+                  onkeydown="if(event.key==='Enter')doMsdsSearch()"
+                  style="flex:1;font-size:12px;padding:6px 9px;">
+                <button onclick="doMsdsSearch()" class="btn-search" style="padding:6px 12px;font-size:12px;">검색</button>
+              </div>
+              <div id="msdsResultArea"></div>
+            </div>
+          </div>
           <div class="hw-card" id="hwAccident">
             <div class="hw-card-title">⚠️ 국내재해사례 <span class="hw-src">KOSHA</span></div>
             <div class="hw-card-body" id="hwAccidentBody"><div class="hw-loading">로딩 중...</div></div>
@@ -347,24 +369,6 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
           <div class="hw-card" id="hwSafety">
             <div class="hw-card-title">💀 사고사망 게시판 <span class="hw-src">KOSHA</span></div>
             <div class="hw-card-body" id="hwSafetyBody"><div class="hw-loading">로딩 중...</div></div>
-          </div>
-          <!-- 날씨 위젯 -->
-          <div class="hw-card hw-card-wide" id="hwWeather">
-            <div class="hw-card-title">🌤️ 오늘의 날씨 &amp; 작업환경 위험지수 <span class="hw-src">기상청</span></div>
-            <div class="hw-card-body" id="hwWeatherBody"><div class="hw-loading">로딩 중...</div></div>
-          </div>
-          <!-- MSDS 검색 위젯 -->
-          <div class="hw-card hw-card-wide" id="hwMsds">
-            <div class="hw-card-title">🧪 MSDS 화학물질 검색 <span class="hw-src">KOSHA 공공데이터</span></div>
-            <div class="hw-card-body">
-              <div style="display:flex;gap:6px;margin-bottom:10px;">
-                <input type="text" id="msdsInput" class="art-kw-input" placeholder="물질명 입력 (예: 톨루엔, 아세톤, 황산)"
-                  onkeydown="if(event.key==='Enter')doMsdsSearch()"
-                  style="flex:1;font-size:12px;padding:7px 10px;">
-                <button onclick="doMsdsSearch()" class="btn-search" style="padding:7px 14px;font-size:12px;">검색</button>
-              </div>
-              <div id="msdsResultArea"></div>
-            </div>
           </div>
         </div>
       </div>
@@ -2082,6 +2086,7 @@ function initHomeWidgets(){
   loadKoshaAccidentWidget();
   loadKoshaSafetyNewsWidget();
   loadWeatherWidget();
+  loadCalendarWidget();
   initMsdsWidget();
 }
 
@@ -2212,6 +2217,71 @@ async function loadKoshaSafetyNewsWidget(){
   }
 }
 
+// ── 캘린더 위젯 (주요 법령 시행일 + 안전점검 일정) ──
+function loadCalendarWidget(){
+  const el=document.getElementById('hwCalendarBody');
+  if(!el) return;
+
+  const now=new Date();
+  const year=now.getFullYear(), month=now.getMonth();
+
+  // 주요 안전관련 연간 일정
+  const ANNUAL_EVENTS=[
+    {month:1,day:1,label:'산업안전보건법 정기점검',type:'law'},
+    {month:3,day:1,label:'봄철 건설현장 안전점검',type:'inspect'},
+    {month:4,day:28,label:'세계 산업안전보건의 날',type:'special'},
+    {month:5,day:1,label:'근로자의 날',type:'special'},
+    {month:6,day:1,label:'상반기 안전보건 자체점검',type:'inspect'},
+    {month:7,day:1,label:'여름철 온열질환 예방점검',type:'inspect'},
+    {month:9,day:1,label:'하반기 위험성평가 실시',type:'law'},
+    {month:10,day:1,label:'가을철 건설현장 안전점검',type:'inspect'},
+    {month:11,day:1,label:'동절기 안전점검',type:'inspect'},
+    {month:12,day:31,label:'연간 안전보건 교육 이수 마감',type:'law'},
+  ];
+
+  // 이번달 + 다음달 이벤트
+  const upcoming=[];
+  for(let m=0;m<=2;m++){
+    const checkMonth=new Date(year,month+m,1);
+    const cm=checkMonth.getMonth()+1;
+    const cy=checkMonth.getFullYear();
+    ANNUAL_EVENTS.forEach(ev=>{
+      if(ev.month===cm){
+        const evDate=new Date(cy,cm-1,ev.day);
+        const diff=Math.round((evDate-now)/(1000*60*60*24));
+        if(diff>=-3) upcoming.push({...ev,date:evDate,diff,year:cy});
+      }
+    });
+  }
+  upcoming.sort((a,b)=>a.diff-b.diff);
+
+  const typeColor={law:'var(--accent)',inspect:'#3182f6',special:'#3fb950'};
+  const typeLabel={law:'법령',inspect:'점검',special:'기념일'};
+
+  const pad2=n=>String(n).padStart(2,'0');
+
+  let html='';
+  upcoming.slice(0,6).forEach(ev=>{
+    const dateStr=ev.year+'.'+pad2(ev.month)+'.'+pad2(ev.day);
+    const diffLabel=ev.diff<0?'<span style="color:var(--text-dim);font-size:9px;">D+'+Math.abs(ev.diff)+'</span>':
+      ev.diff===0?'<span style="color:#3fb950;font-size:9px;font-weight:700;">오늘</span>':
+      '<span style="color:var(--accent);font-size:9px;">D-'+ev.diff+'</span>';
+    const color=typeColor[ev.type]||'var(--accent)';
+    html+='<div style="display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);">'
+      +'<div style="flex-shrink:0;text-align:right;">'
+        +'<div style="font-size:10px;font-family:monospace;color:'+color+';">'+dateStr+'</div>'
+        +diffLabel
+      +'</div>'
+      +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-size:11px;color:var(--text);line-height:1.4;">'+eh(ev.label)+'</div>'
+        +'<span style="font-size:9px;background:rgba(0,0,0,.06);padding:1px 5px;border-radius:3px;color:var(--text-dim);">'+typeLabel[ev.type]+'</span>'
+      +'</div>'
+      +'</div>';
+  });
+
+  el.innerHTML=html||'<div class="hw-loading">일정 없음</div>';
+}
+
 // ── 3. 날씨 (wttr.in - CORS 허용, proxy 불필요) 화성시 기준 ──
 async function loadWeatherWidget(){
   const el = document.getElementById('hwWeatherBody');
@@ -2326,31 +2396,33 @@ async function doMsdsSearch(){
     if(!xml) throw new Error('응답없음');
     let items=Array.from(xml.querySelectorAll('item'));
     if(!items.length) items=Array.from(xml.querySelectorAll('items > *'));
-    if(!items.length) items=Array.from(xml.querySelectorAll('body > items > *'));
-    const totalCount=xml.querySelector('totalCount')?.textContent||'';
+    const totalCount=xml.querySelector('totalCount')?.textContent||items.length;
     if(!items.length){
       area.innerHTML='<div class="hw-err">"'+eh(kw)+'" 검색결과 없음</div>';
       return;
     }
-    const cards=items.map(function(item){
-      var chemId=(item.querySelector('chemId')?.textContent||'').trim();
-      var chemNm=(item.querySelector('chemNm')?.textContent||item.querySelector('korName')?.textContent||'').trim();
-      var casNo=(item.querySelector('casNo')?.textContent||'').trim();
-      var engNm=(item.querySelector('engName')?.textContent||item.querySelector('chemEngNm')?.textContent||'').trim();
-      var displayNm=eh(chemNm||engNm||chemId||'물질명 없음');
-      var div=document.createElement('div');
+    area.innerHTML='<div style="font-size:10px;color:var(--text-dim);margin-bottom:8px;">"'+eh(kw)+'" '+totalCount+'건</div>';
+    items.forEach(function(item){
+      const chemId=(item.querySelector('chemId')?.textContent||'').trim();
+      const chemNm=(item.querySelector('chemNm')?.textContent||item.querySelector('korName')?.textContent||'').trim();
+      const engNm=(item.querySelector('engName')?.textContent||'').trim();
+      const casNo=(item.querySelector('casNo')?.textContent||'').trim();
+      const itemDetail=(item.querySelector('itemDetail')?.textContent||'').trim();
+      const msdsKor=(item.querySelector('msdsItemNameKor')?.textContent||'').trim();
+      const displayNm=chemNm||engNm||chemId||'물질명 없음';
+      const div=document.createElement('div');
       div.className='msds-list-item';
       div.style.cssText='padding:8px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;margin-bottom:5px;transition:border-color .12s;';
-      div.onmouseover=function(){this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#f0a500';};
-      div.onmouseout=function(){this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--border').trim()||'#dcdcdc';};
-      div.innerHTML='<div style="font-size:12px;font-weight:600;color:var(--text);">'+displayNm+'</div>'
-        +(engNm&&chemNm?'<div style="font-size:10px;color:var(--text-muted);">'+eh(engNm)+'</div>':'')
-        +(casNo?'<div style="font-size:10px;color:var(--text-dim);">CAS: '+eh(casNo)+'</div>':'');
-      div.addEventListener('click',function(){openMsdsDetail(chemId,chemNm||engNm||chemId);});
-      return div;
+      div.onmouseover=function(){this.style.borderColor='#f0a500';};
+      div.onmouseout=function(){this.style.borderColor='';};
+      let inner='<div style="font-size:12px;font-weight:600;color:var(--text);">'+eh(displayNm)+'</div>';
+      if(msdsKor) inner+='<div style="font-size:10px;color:#f0a500;margin-top:1px;">'+eh(msdsKor)+'</div>';
+      if(itemDetail&&itemDetail!='자료없음') inner+='<div style="font-size:11px;color:var(--text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+eh(itemDetail)+'</div>';
+      if(casNo) inner+='<div style="font-size:10px;color:var(--text-dim);">CAS: '+eh(casNo)+'</div>';
+      div.innerHTML=inner;
+      div.addEventListener('click',function(){openMsdsDetail(chemId,displayNm);});
+      area.appendChild(div);
     });
-    area.innerHTML='<div style="font-size:10px;color:var(--text-dim);margin-bottom:8px;">"'+eh(kw)+'" '+(totalCount||items.length)+'건</div>';
-    cards.forEach(function(c){area.appendChild(c);});
   }catch(e){
     console.warn('[MSDS]',e.message);
     area.innerHTML='<div class="hw-err">검색 실패: '+eh(e.message)+'</div>';
