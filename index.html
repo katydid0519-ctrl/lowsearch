@@ -237,46 +237,22 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 /* ── 홈 위젯 그리드 ── */
 .home-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;}
 @media(max-width:900px){.home-grid{grid-template-columns:1fr;}}
-.hw-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;min-height:180px;display:flex;flex-direction:column;}
-.hw-card-title{font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:.3px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
-.hw-card-body{flex:1;display:flex;flex-direction:column;gap:6px;}
+.hw-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;min-height:160px;display:flex;flex-direction:column;}
+.hw-card-wide{grid-column:1/-1;}
+.hw-card-title{font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:.3px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;}
+.hw-src{font-size:9px;font-weight:400;color:var(--text-dim);background:var(--surface2);padding:1px 6px;border-radius:3px;margin-left:auto;}
+.hw-card-body{flex:1;display:flex;flex-direction:column;gap:4px;overflow:hidden;}
 .hw-loading{color:var(--text-dim);font-size:11px;}
-/* 산업재해 통계 */
-.acc-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.acc-stat{background:var(--surface2);border-radius:6px;padding:10px 8px;text-align:center;border:1px solid var(--border);}
-.acc-stat-val{font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--accent);}
-.acc-stat-lbl{font-size:10px;color:var(--text-dim);margin-top:3px;}
-.acc-stat-sub{font-size:10px;color:var(--text-muted);margin-top:2px;}
-/* 날씨 위험지수 */
-.wx-row{display:flex;align-items:center;gap:10px;padding:6px 0;}
-.wx-icon{font-size:28px;flex-shrink:0;}
-.wx-temp{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;}
-.wx-desc{font-size:11px;color:var(--text-muted);}
-.risk-bar-wrap{margin-top:6px;}
-.risk-bar-label{display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-bottom:3px;}
-.risk-bar-track{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;}
-.risk-bar-fill{height:100%;border-radius:3px;transition:width .4s;}
-.risk-low{background:#3fb950;}
-.risk-mid{background:#f0a500;}
-.risk-high{background:#e74040;}
-.risk-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-top:4px;}
-/* 법령 개정 캘린더 */
-.cal-item{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);}
-.cal-item:last-child{border-bottom:none;}
-.cal-date{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--accent);background:rgba(240,165,0,.1);padding:2px 6px;border-radius:4px;white-space:nowrap;flex-shrink:0;margin-top:1px;}
-.cal-name{font-size:12px;color:var(--text);cursor:pointer;line-height:1.4;}
-.cal-name:hover{color:var(--accent);}
-.cal-badge{font-size:9px;color:var(--text-dim);background:var(--surface2);padding:1px 5px;border-radius:3px;flex-shrink:0;margin-top:3px;}
-/* 퀴즈 */
-.quiz-q{font-size:13px;font-weight:500;line-height:1.6;margin-bottom:12px;color:var(--text);}
-.quiz-opts{display:flex;flex-direction:column;gap:6px;}
-.quiz-opt{padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;cursor:pointer;font-family:inherit;text-align:left;transition:all .12s;}
-.quiz-opt:hover{border-color:var(--accent);color:var(--accent);}
-.quiz-opt.correct{border-color:#3fb950;background:rgba(63,185,80,.1);color:#3fb950;font-weight:600;}
-.quiz-opt.wrong{border-color:#e74040;background:rgba(231,64,64,.08);color:#e74040;}
-.quiz-result{margin-top:10px;font-size:12px;line-height:1.6;color:var(--text-muted);padding:8px 10px;background:var(--surface2);border-radius:6px;border-left:3px solid var(--accent);}
-.quiz-next{margin-top:8px;padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;font-family:inherit;transition:all .12s;}
-.quiz-next:hover{border-color:var(--accent);color:var(--accent);}
+.hw-err{color:var(--text-dim);font-size:11px;line-height:1.6;}
+.hw-list-item{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);}
+.hw-list-item:last-of-type{border-bottom:none;}
+.hw-list-link{flex:1;text-decoration:none;display:flex;align-items:flex-start;gap:5px;min-width:0;}
+.hw-list-title{font-size:12px;color:var(--text);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hw-list-link:hover .hw-list-title{color:var(--accent);}
+.hw-list-date{font-size:10px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;white-space:nowrap;flex-shrink:0;margin-top:2px;}
+.hw-badge{font-size:9px;color:var(--accent);background:rgba(240,165,0,.1);padding:1px 5px;border-radius:3px;white-space:nowrap;flex-shrink:0;margin-top:2px;}
+.hw-more-link{font-size:11px;color:var(--accent);text-decoration:none;margin-top:auto;padding-top:6px;display:block;}
+.hw-more-link:hover{text-decoration:underline;}
 </style>
 </head>
 <body>
@@ -354,20 +330,16 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
         </div>
         <div class="home-grid">
           <div class="hw-card" id="hwAccident">
-            <div class="hw-card-title">📊 산업재해 통계</div>
+            <div class="hw-card-title">⚠️ 국내재해사례 <span class="hw-src">KOSHA</span></div>
             <div class="hw-card-body" id="hwAccidentBody"><div class="hw-loading">로딩 중...</div></div>
           </div>
-          <div class="hw-card" id="hwWeather">
-            <div class="hw-card-title">🌤️ 오늘의 날씨 &amp; 작업환경 위험</div>
+          <div class="hw-card" id="hwSafety">
+            <div class="hw-card-title">📢 사고사망 게시판 <span class="hw-src">KOSHA</span></div>
+            <div class="hw-card-body" id="hwSafetyBody"><div class="hw-loading">로딩 중...</div></div>
+          </div>
+          <div class="hw-card hw-card-wide" id="hwWeather">
+            <div class="hw-card-title">🌤️ 오늘의 날씨 &amp; 작업환경 위험지수 <span class="hw-src">기상청</span></div>
             <div class="hw-card-body" id="hwWeatherBody"><div class="hw-loading">로딩 중...</div></div>
-          </div>
-          <div class="hw-card" id="hwCalendar">
-            <div class="hw-card-title">📅 최근 법령 시행</div>
-            <div class="hw-card-body" id="hwCalendarBody"><div class="hw-loading">로딩 중...</div></div>
-          </div>
-          <div class="hw-card" id="hwQuiz">
-            <div class="hw-card-title">🧠 안전보건 퀴즈</div>
-            <div class="hw-card-body" id="hwQuizBody"></div>
           </div>
         </div>
       </div>
@@ -2071,286 +2043,188 @@ function goHome(){
 // ══════════════════════════════════════════════════
 
 function initHomeWidgets(){
-  loadAccidentStats();
+  loadKoshaAccidentWidget();
+  loadKoshaSafetyNewsWidget();
   loadWeatherWidget();
-  loadLawCalendar();
-  initQuiz();
 }
 
-// ── 1. 산업재해 통계 (하드코딩 최신 연도 + 법제처 연계) ──
-function loadAccidentStats(){
-  const el=document.getElementById('hwAccidentBody');
-  if(!el) return;
-  // 고용노동부 공식 발표 2023년 산업재해 현황 (2024.12 발표)
-  const stats={
-    year:2023,
-    workers:19_568_594,
-    accidents:130_348,
-    deaths:2_093,
-    rate:0.67, // 재해율(%)
-    deathRate:10.65, // 사망만인율
-  };
-  const fmt=n=>n.toLocaleString('ko-KR');
-  el.innerHTML=`
-    <div style="font-size:10px;color:var(--text-dim);margin-bottom:8px;">
-      ${stats.year}년 산업재해 현황 <span style="color:var(--accent);">(고용노동부 공식 통계)</span>
-    </div>
-    <div class="acc-stat-grid">
-      <div class="acc-stat">
-        <div class="acc-stat-val">${fmt(stats.accidents)}</div>
-        <div class="acc-stat-lbl">재해자수</div>
-        <div class="acc-stat-sub">재해율 ${stats.rate}%</div>
-      </div>
-      <div class="acc-stat">
-        <div class="acc-stat-val" style="color:#e74040;">${fmt(stats.deaths)}</div>
-        <div class="acc-stat-lbl">사망자수</div>
-        <div class="acc-stat-sub">만인율 ${stats.deathRate}</div>
-      </div>
-      <div class="acc-stat">
-        <div class="acc-stat-val" style="color:var(--text-muted);font-size:14px;">${(stats.accidents/stats.workers*100).toFixed(2)}%</div>
-        <div class="acc-stat-lbl">근로자 재해율</div>
-        <div class="acc-stat-sub">${(stats.workers/10000).toFixed(0)}만명 기준</div>
-      </div>
-    </div>
-    <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
-      <a href="https://www.moel.go.kr/policy/policydata/view.do?bbs_seq=20240301194" target="_blank"
-         style="font-size:10px;color:var(--accent);text-decoration:none;border:1px solid rgba(240,165,0,.3);padding:3px 8px;border-radius:4px;">
-        📄 원문 보기
-      </a>
-      <span onclick="document.getElementById('searchInput').value='산업재해보상보험법';doSearch();"
-         style="font-size:10px;color:var(--text-muted);cursor:pointer;border:1px solid var(--border);padding:3px 8px;border-radius:4px;">
-        ⚖️ 관련 법령 검색
-      </span>
-    </div>`;
-}
-
-// ── 2. 날씨 + 작업환경 위험지수 ──
-async function loadWeatherWidget(){
-  const el=document.getElementById('hwWeatherBody');
-  if(!el) return;
-
-  // 기상청 초단기실황 API (공개, 인증키 불필요 버전 → Open API)
-  // 인증키 없이 쓸 수 있는 wttr.in API 사용
+// ── 공통: 공공데이터 API fetch (proxy 경유) ──
+async function publicApiFetch(endpoint, params){
+  const qs = new URLSearchParams(params).toString();
+  const url = endpoint + '?' + qs;
+  if(IS_NETLIFY){
+    try{
+      const res = await netlifyProxy(url, 15000);
+      const text = await res.text();
+      try{ return JSON.parse(text); }catch(e){ return text; }
+    }catch(e){ console.warn('[PublicAPI] proxy 실패:', e.message); }
+  }
   try{
-    const res=await fetchWithTimeout(
-      'https://wttr.in/Hwaseong,Korea?format=j1', 8000
+    const res = await fetchWithTimeout(url, 12000);
+    if(res.ok){ const text=await res.text(); try{return JSON.parse(text);}catch(e){return text;} }
+  }catch(e){}
+  return null;
+}
+
+// ── 1. 국내재해사례 (KOSHA) ──
+async function loadKoshaAccidentWidget(){
+  const el = document.getElementById('hwAccidentBody');
+  if(!el) return;
+  try{
+    const data = await publicApiFetch(
+      'https://apis.data.go.kr/B552468/disaster_api02/getdisaster_api02',
+      { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1, type:'json' }
     );
-    if(!res.ok) throw new Error('wttr 실패');
-    const data=await res.json();
-    const cur=data.current_condition[0];
-    const tempC=parseInt(cur.temp_C);
-    const humidity=parseInt(cur.humidity);
-    const windKph=parseInt(cur.windspeedKmph);
-    const desc=(cur.lang_ko?.[0]?.value)||cur.weatherDesc[0].value;
-    const feels=parseInt(cur.FeelsLikeC);
-    const uvIdx=parseInt(cur.uvIndex||0);
+    const items = data?.body?.items?.item || data?.items?.item || [];
+    const arr = Array.isArray(items) ? items : (items ? [items] : []);
+    if(arr.length === 0) throw new Error('데이터 없음');
 
-    // 작업환경 위험지수 계산 (온열 + 동결 + 강풍)
-    // WBGT 간이 추정: 실외 = 0.7*습구온도 + 0.2*흑구온도 + 0.1*건구온도
-    // 간이 공식: 더위지수 = -42.379 + 2.04901523*T + 10.14333127*H ... (HI)
-    let riskScore=0;
-    let riskItems=[];
-    // 온열 위험
-    if(tempC>=33){ riskScore+=40; riskItems.push('🔴 온열질환 위험'); }
-    else if(tempC>=28){ riskScore+=25; riskItems.push('🟡 온열 주의'); }
-    else if(tempC<=0){ riskScore+=30; riskItems.push('🔵 동결 위험'); }
-    else if(tempC<=5){ riskScore+=15; riskItems.push('🔵 한랭 주의'); }
-    // 습도 불쾌지수
-    if(humidity>=80&&tempC>=25){ riskScore+=20; riskItems.push('💧 고온다습'); }
-    // 강풍
-    if(windKph>=40){ riskScore+=25; riskItems.push('💨 강풍 위험'); }
-    else if(windKph>=20){ riskScore+=10; riskItems.push('💨 바람 주의'); }
-    // UV
-    if(uvIdx>=8){ riskScore+=15; riskItems.push('☀️ 자외선 강함'); }
+    el.innerHTML = arr.map(item => {
+      const title = item.title || item.bbsttl || item.TITLE || '제목 없음';
+      const date  = (item.regDt || item.REG_DT || item.regdate || '').substring(0,10);
+      const cate  = item.disaster_cd || item.disasterCd || '';
+      const url   = item.url || item.URL || 'https://kosha.or.kr';
+      return `<div class="hw-list-item">
+        <a href="${url}" target="_blank" class="hw-list-link">
+          ${cate ? `<span class="hw-badge">${eh(cate)}</span>` : ''}
+          <span class="hw-list-title">${eh(title)}</span>
+        </a>
+        <span class="hw-list-date">${eh(date)}</span>
+      </div>`;
+    }).join('')
+    + `<a href="https://kosha.or.kr" target="_blank" class="hw-more-link">더보기 →</a>`;
+  }catch(e){
+    console.warn('[재해사례]', e.message);
+    el.innerHTML = `<div class="hw-err">데이터를 불러올 수 없습니다.<br>
+      <a href="https://kosha.or.kr" target="_blank" class="hw-more-link">KOSHA 바로가기 →</a></div>`;
+  }
+}
 
-    riskScore=Math.min(riskScore,100);
-    const riskClass=riskScore>=60?'risk-high':riskScore>=30?'risk-mid':'risk-low';
-    const riskLabel=riskScore>=60?'⚠️ 위험':'보통';
+// ── 2. 사고사망 게시판 (KOSHA) ──
+async function loadKoshaSafetyNewsWidget(){
+  const el = document.getElementById('hwSafetyBody');
+  if(!el) return;
+  try{
+    const data = await publicApiFetch(
+      'https://apis.data.go.kr/B552468/news_api02/getNews_api02',
+      { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1, type:'json' }
+    );
+    const items = data?.body?.items?.item || data?.items?.item || [];
+    const arr = Array.isArray(items) ? items : (items ? [items] : []);
+    if(arr.length === 0) throw new Error('데이터 없음');
 
-    // 날씨 아이콘
-    const weatherIcon=tempC>=30?'🌡️':tempC<=0?'❄️':desc.includes('rain')||desc.includes('비')?'🌧️':desc.includes('cloud')||desc.includes('흐')?'☁️':'☀️';
+    el.innerHTML = arr.map(item => {
+      const title = item.title || item.bbsttl || item.TITLE || '제목 없음';
+      const date  = (item.regDt || item.REG_DT || item.regdate || '').substring(0,10);
+      const url   = item.url || item.URL || 'https://kosha.or.kr/notification/release/press-release';
+      return `<div class="hw-list-item">
+        <a href="${url}" target="_blank" class="hw-list-link">
+          <span class="hw-list-title">${eh(title)}</span>
+        </a>
+        <span class="hw-list-date">${eh(date)}</span>
+      </div>`;
+    }).join('')
+    + `<a href="https://kosha.or.kr/notification/release/press-release" target="_blank" class="hw-more-link">더보기 →</a>`;
+  }catch(e){
+    console.warn('[사고사망]', e.message);
+    el.innerHTML = `<div class="hw-err">데이터를 불러올 수 없습니다.<br>
+      <a href="https://kosha.or.kr/notification/release/press-release" target="_blank" class="hw-more-link">사고사망 게시판 →</a></div>`;
+  }
+}
+
+// ── 3. 날씨 (기상청 단기예보 API) ──
+// 화성시 격자 좌표 nx=60, ny=121
+async function loadWeatherWidget(){
+  const el = document.getElementById('hwWeatherBody');
+  if(!el) return;
+  try{
+    const now = new Date();
+    // 단기예보 발표시각: 0200,0500,0800,1100,1400,1700,2000,2300
+    const baseHours = [2,5,8,11,14,17,20,23];
+    const h = now.getHours();
+    let baseHour = baseHours.filter(bh => bh <= h).pop() || 23;
+    const baseDate = baseHour === 23 && h < 23
+      ? new Date(now-86400000).toISOString().slice(0,10).replace(/-/g,'')
+      : now.toISOString().slice(0,10).replace(/-/g,'');
+    const baseTime = String(baseHour).padStart(2,'0') + '00';
+
+    const data = await publicApiFetch(
+      'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst',
+      {
+        serviceKey: 'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',
+        numOfRows: 100, pageNo: 1,
+        dataType: 'JSON',
+        base_date: baseDate,
+        base_time: baseTime,
+        nx: 60, ny: 121
+      }
+    );
+
+    const items = data?.response?.body?.items?.item || [];
+    if(items.length === 0) throw new Error('예보 없음');
+
+    // 카테고리별 최근값 추출
+    const fcst = {};
+    const targetTime = items[0]?.fcstTime || '0000';
+    items.forEach(it => {
+      if(it.fcstTime === targetTime) fcst[it.category] = it.fcstValue;
+    });
+
+    const temp  = fcst['TMP']  ?? fcst['T1H'] ?? '--';
+    const humid = fcst['REH']  ?? '--';
+    const rain  = fcst['PTY']  ?? '0'; // 0:없음 1:비 2:비/눈 3:눈 4:소나기
+    const sky   = fcst['SKY']  ?? '1'; // 1:맑음 3:구름많음 4:흐림
+    const wind  = fcst['WSD']  ?? fcst['WST'] ?? '0';
+    const pop   = fcst['POP']  ?? '--'; // 강수확률
+
+    const rainIcon = rain==='1'?'🌧️':rain==='2'?'🌨️':rain==='3'?'❄️':rain==='4'?'🌦️':'';
+    const skyIcon  = rainIcon || (sky==='1'?'☀️':sky==='3'?'⛅':'☁️');
+    const tempN    = parseFloat(temp);
+    const windN    = parseFloat(wind);
+    const humidN   = parseFloat(humid);
+
+    // 작업환경 위험지수
+    let risk=0; const risks=[];
+    if(tempN>=35){risk+=45;risks.push('🔴 폭염 위험');}
+    else if(tempN>=33){risk+=35;risks.push('🟠 온열 위험');}
+    else if(tempN>=28){risk+=20;risks.push('🟡 더위 주의');}
+    else if(tempN<=0){risk+=35;risks.push('🔵 동결 위험');}
+    else if(tempN<=5){risk+=20;risks.push('🔵 한랭 주의');}
+    if(humidN>=85&&tempN>=25){risk+=20;risks.push('💧 고온다습');}
+    if(windN>=14){risk+=25;risks.push('💨 강풍 위험');}
+    else if(windN>=7){risk+=10;risks.push('💨 바람 주의');}
+    if(rain!=='0'){risk+=10;risks.push('🌧️ 우천');}
+    risk=Math.min(risk,100);
+
+    const riskCls = risk>=60?'risk-high':risk>=30?'risk-mid':'risk-low';
+    const riskLbl = risk>=60?'위험':risk>=30?'주의':'양호';
+    const riskClr = risk>=60?'#e74040':risk>=30?'#f0a500':'#3fb950';
 
     el.innerHTML=`
-      <div class="wx-row">
-        <span class="wx-icon">${weatherIcon}</span>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+        <span style="font-size:36px;">${skyIcon}</span>
         <div>
-          <div class="wx-temp">${tempC}°C</div>
-          <div class="wx-desc">체감 ${feels}°C &nbsp;·&nbsp; 습도 ${humidity}% &nbsp;·&nbsp; 풍속 ${windKph}km/h</div>
-          <div class="wx-desc" style="margin-top:2px;">${desc}</div>
+          <div style="font-size:24px;font-weight:700;font-family:'JetBrains Mono',monospace;">${temp}°C</div>
+          <div style="font-size:11px;color:var(--text-dim);">습도 ${humid}% &nbsp;·&nbsp; 풍속 ${wind}m/s &nbsp;·&nbsp; 강수확률 ${pop}%</div>
         </div>
       </div>
-      <div class="risk-bar-wrap">
-        <div class="risk-bar-label">
-          <span>작업환경 위험지수</span>
-          <span>${riskScore}/100</span>
+      <div style="margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-bottom:3px;">
+          <span>작업환경 위험지수</span><span style="color:${riskClr};font-weight:700;">${riskLbl} (${risk}/100)</span>
         </div>
-        <div class="risk-bar-track">
-          <div class="risk-bar-fill ${riskClass}" style="width:${riskScore}%"></div>
+        <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;">
+          <div style="width:${risk}%;height:100%;background:${riskClr};border-radius:3px;transition:width .4s;"></div>
         </div>
-        <span class="risk-badge ${riskClass}" style="color:#fff;margin-top:4px;">${riskLabel}</span>
-        ${riskItems.length?'<div style="font-size:10px;color:var(--text-dim);margin-top:4px;">'+riskItems.join(' &nbsp; ')+'</div>':''}
       </div>
-      <div style="font-size:10px;color:var(--text-dim);margin-top:6px;">📍 화성시 기준 · UV지수 ${uvIdx}</div>`;
+      ${risks.length?`<div style="font-size:10px;color:var(--text-dim);margin-top:4px;">${risks.join(' &nbsp; ')}</div>`:''}
+      <div style="font-size:10px;color:var(--text-dim);margin-top:6px;">📍 화성시 기준 · 기상청 단기예보</div>`;
   }catch(e){
-    el.innerHTML=`<div class="hw-loading">날씨 정보를 불러올 수 없습니다.<br>
-      <a href="https://www.weather.go.kr" target="_blank" style="color:var(--accent);font-size:11px;">기상청 바로가기 →</a></div>`;
+    console.warn('[날씨]', e.message);
+    el.innerHTML=`<div class="hw-err">날씨 정보를 불러올 수 없습니다.<br>
+      <a href="https://www.weather.go.kr" target="_blank" class="hw-more-link">기상청 →</a></div>`;
   }
 }
 
-// ── 3. 법령 개정 캘린더 (법제처 API) ──
-async function loadLawCalendar(){
-  const el=document.getElementById('hwCalendarBody');
-  if(!el) return;
-
-  // 관심 법령 목록 (산업안전 관련)
-  const WATCH_LAWS=[
-    '산업안전보건법','중대재해처벌법','화학물질관리법',
-    '고압가스 안전관리법','위험물안전관리법','소방시설 설치 및 관리에 관한 법률',
-    '근로기준법','산업재해보상보험법',
-  ];
-
-  const oc=getOC();
-  const today=new Date();
-  const y=today.getFullYear(), m=today.getMonth();
-  // 최근 6개월 ~ 3개월 후
-  const fromDate=new Date(y,m-6,1);
-  const toDate=new Date(y,m+3,1);
-  const fmt2=n=>String(n).padStart(2,'0');
-  const dateStr=d=>`${d.getFullYear()}${fmt2(d.getMonth()+1)}${fmt2(d.getDate())}`;
-
-  try{
-    // 최근 공포/시행 법령 검색
-    const data=await lawApiFetch('search',{
-      OC:oc, target:'law', type:'JSON',
-      query:'산업안전', display:20, sort:'efdes'
-    });
-
-    let items=[];
-    const arr=data?.LawSearch?.law||data?.law||[];
-    const lawArr=Array.isArray(arr)?arr:(arr?[arr]:[]);
-
-    lawArr.forEach(l=>{
-      const name=l['법령명한글']||'';
-      const effDate=l['법령시행일자']||l['시행일자']||'';
-      const promDate=l['공포일자']||'';
-      if(!name||!effDate) return;
-      // YYYYMMDD → Date
-      const dStr=effDate.replace(/\D/g,'').substring(0,8);
-      if(dStr.length<8) return;
-      const d=new Date(dStr.substring(0,4),parseInt(dStr.substring(4,6))-1,parseInt(dStr.substring(6,8)));
-      const diff=Math.round((d-today)/(1000*60*60*24));
-      items.push({name,effDate:dStr,diff,promDate});
-    });
-
-    // 날짜순 정렬 (최근~미래)
-    items.sort((a,b)=>Math.abs(a.diff)-Math.abs(b.diff));
-    items=items.slice(0,6);
-
-    if(items.length===0) throw new Error('결과 없음');
-
-    el.innerHTML=items.map(item=>{
-      const dStr=item.effDate;
-      const display=`${dStr.substring(0,4)}.${dStr.substring(4,6)}.${dStr.substring(6,8)}`;
-      const diffLabel=item.diff===0?'<span style="color:#3fb950;font-size:9px;">오늘</span>':
-        item.diff>0?`<span style="color:var(--accent);font-size:9px;">D-${item.diff}</span>`:
-        `<span style="color:var(--text-dim);font-size:9px;">D+${Math.abs(item.diff)}</span>`;
-      return `<div class="cal-item">
-        <div>
-          <span class="cal-date">${display}</span>
-          ${diffLabel}
-        </div>
-        <div>
-          <div class="cal-name" onclick="document.getElementById('searchInput').value='${item.name.replace(/'/g,"\'")}';doSearch();"
-               title="클릭하여 법령 검색">${item.name}</div>
-        </div>
-      </div>`;
-    }).join('');
-  }catch(e){
-    // API 실패 시 하드코딩 주요 개정 일정
-    const fallback=[
-      {date:'2024.01.01',name:'중대재해처벌법 (50인 미만 확대 적용)',diff:-365},
-      {date:'2024.07.01',name:'산업안전보건법 시행규칙 개정',diff:-200},
-      {date:'2025.01.01',name:'화학물질관리법 시행령 개정',diff:-90},
-    ];
-    el.innerHTML=fallback.map(item=>`
-      <div class="cal-item">
-        <span class="cal-date">${item.date}</span>
-        <div class="cal-name" onclick="document.getElementById('searchInput').value='${item.name.split(' ')[0]}';doSearch();">${item.name}</div>
-      </div>`).join('')
-      +'<div style="font-size:10px;color:var(--text-dim);margin-top:6px;">⚠️ 법령검색 API 연결 후 실시간 갱신됩니다</div>';
-  }
-}
-
-// ── 4. 안전보건 퀴즈 ──
-const QUIZ_BANK=[
-  {q:'산업안전보건법상 안전관리자를 선임해야 하는 사업장의 최소 규모는?',
-   opts:['상시근로자 50인 이상','상시근로자 100인 이상','상시근로자 300인 이상','모든 사업장'],
-   ans:0, exp:'산업안전보건법 제17조에 따라 상시근로자 50인 이상(업종에 따라 다름) 사업장은 안전관리자를 선임해야 합니다.'},
-  {q:'중대재해처벌법상 중대산업재해에 해당하는 것은?',
-   opts:['사망자 1명 이상','3개월 이상 요양 부상자 2명 이상','부상자 10명 이상 동시 발생','이 중 2가지 이상'],
-   ans:3, exp:'중대재해처벌법 제2조: ①사망자 1인 이상 ②동일사고 2개월 이상 요양 부상자 10인 이상 ③동일 유해요인 직업성 질병자 1년 이내 3인 이상 중 하나 해당 시 중대산업재해입니다.'},
-  {q:'작업장 내 유해물질의 노출기준은 누가 고시하는가?',
-   opts:['환경부장관','고용노동부장관','식품의약품안전처장','국가기술표준원장'],
-   ans:1, exp:'산업안전보건법 제106조에 따라 고용노동부장관이 유해인자의 유해성·위험성 평가 결과 및 노출기준을 고시합니다.'},
-  {q:'위험성평가를 실시해야 하는 주체는?',
-   opts:['안전관리자','보건관리자','사업주','근로감독관'],
-   ans:2, exp:'산업안전보건법 제36조에 따라 사업주가 위험성평가를 실시해야 합니다. 안전관리자·보건관리자 등은 사업주를 보좌하여 참여합니다.'},
-  {q:'산업재해 발생 시 고용노동부에 보고해야 하는 기한은?',
-   opts:['즉시','24시간 이내','3일 이내','1개월 이내'],
-   ans:2, exp:'산업안전보건법 시행규칙 제73조: 중대재해는 즉시 보고, 일반 산업재해는 발생일로부터 1개월 이내에 산업재해조사표를 제출해야 합니다. 사망 등 중대재해는 즉시 전화 보고.'},
-  {q:'특수건강진단을 실시해야 하는 근로자 유형은?',
-   opts:['야간작업 근로자만','유해인자 노출 근로자','모든 근로자','외국인 근로자'],
-   ans:1, exp:'산업안전보건법 제130조에 따라 고용노동부령으로 정하는 유해인자(소음, 분진, 화학물질 등)에 노출되는 근로자는 특수건강진단을 받아야 합니다.'},
-  {q:'MSDS(물질안전보건자료)를 작성·제공해야 하는 의무자는?',
-   opts:['근로자','사업주','화학물질 제조·수입업자','안전보건공단'],
-   ans:2, exp:'산업안전보건법 제110조에 따라 화학물질을 제조하거나 수입하는 자는 MSDS를 작성하여 양도·제공해야 합니다.'},
-  {q:'안전보건관리책임자가 총괄·관리해야 하는 사항이 아닌 것은?',
-   opts:['산업재해 예방계획 수립','안전·보건관련 규정 작성','근로자 임금 결정','작업환경 측정'],
-   ans:2, exp:'산업안전보건법 제15조에 따른 안전보건관리책임자의 업무는 산재예방계획, 안전보건규정, 안전교육, 작업환경측정, 건강진단 등입니다. 임금 결정은 해당 없습니다.'},
-];
-
-let quizIdx=-1, quizAnswered=false;
-
-function initQuiz(){
-  nextQuiz();
-}
-
-function nextQuiz(){
-  quizAnswered=false;
-  quizIdx=(quizIdx+1)%QUIZ_BANK.length;
-  renderQuiz();
-}
-
-function renderQuiz(){
-  const el=document.getElementById('hwQuizBody');
-  if(!el) return;
-  const q=QUIZ_BANK[quizIdx];
-  el.innerHTML=`
-    <div class="quiz-q">Q${quizIdx+1}. ${q.q}</div>
-    <div class="quiz-opts">
-      ${q.opts.map((o,i)=>`<button class="quiz-opt" onclick="answerQuiz(${i})">${i+1}. ${o}</button>`).join('')}
-    </div>
-    <div id="quizResult"></div>`;
-}
-
-function answerQuiz(idx){
-  if(quizAnswered) return;
-  quizAnswered=true;
-  const q=QUIZ_BANK[quizIdx];
-  const opts=document.querySelectorAll('#hwQuizBody .quiz-opt');
-  opts.forEach((btn,i)=>{
-    btn.disabled=true;
-    if(i===q.ans) btn.classList.add('correct');
-    else if(i===idx&&idx!==q.ans) btn.classList.add('wrong');
-  });
-  const result=document.getElementById('quizResult');
-  const correct=idx===q.ans;
-  result.innerHTML=`
-    <div class="quiz-result">
-      ${correct?'✅ 정답!':'❌ 오답'}  ${q.exp}
-    </div>
-    <button class="quiz-next" onclick="nextQuiz()">다음 문제 →</button>`;
-}
 
 function switchTab(tab){
   document.querySelectorAll('.tab-btn').forEach((b,i)=>{
