@@ -2127,10 +2127,11 @@ async function loadKoshaAccidentWidget(){
       { ServiceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', callApiId:'getdisaster_api02', numOfRows:5, pageNo:1, type:'json' }
     );
     if(!data) throw new Error('응답없음');
+    console.log('[재해사례] 전체 응답:', JSON.stringify(data).substring(0,500));
     // 응답: {header:..., body:{items:{item:[...]}}}
     const raw = data?.body?.items?.item || findArray(data) || [];
     const arr = Array.isArray(raw) ? raw : (raw ? [raw] : []);
-    if(arr.length===0) throw new Error('데이터 없음');
+    if(arr.length===0) throw new Error('데이터 없음 | 응답:'+JSON.stringify(data).substring(0,200));
 
     el.innerHTML = arr.slice(0,5).map(item=>{
       const title = item.keyword || item.title || '내용 확인';
