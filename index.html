@@ -2322,32 +2322,9 @@ async function doMsdsSearch(){
     const xml=await publicApiFetch('https://apis.data.go.kr/B552468/msdschem/getChemList',
       {serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',chem_nm:kw,pageNo:1,numOfRows:10});
     if(!xml) throw new Error('응답없음');
-    // XML or JSON 모두 처리
-    let items=[];
-    if(xml && xml.querySelectorAll){
-      items=Array.from(xml.querySelectorAll('item'));
-      console.log('[MSDS] XML items:', items.length, xml.documentElement?.tagName);
-    } else if(typeof xml==='object'){
-      console.log('[MSDS] JSON 응답:', JSON.stringify(xml).substring(0,200));
-      const arr=findArray(xml)||[];
-      // JSON을 가짜 XML item처럼 처리
-      if(arr.length>0){
-        area.innerHTML=arr.slice(0,10).map(item=>{
-          const mNo=(item.mNo||item.m_no||'').toString().trim();
-          const chemNm=(item.chemNm||item.chem_nm||item.chemicalName||'').trim();
-          const casNo=(item.casNo||item.cas_no||'').trim();
-          return \`<div class="msds-list-item" onclick="openMsdsDetail('\${mNo}','\${eh(chemNm)}')"
-            style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;margin-bottom:5px;"
-            onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-            <div style="font-size:12px;font-weight:500;color:var(--text);">\${eh(chemNm)||mNo||'물질명 없음'}</div>
-            \${casNo?\`<div style="font-size:10px;color:var(--text-dim);">CAS: \${eh(casNo)}</div>\`:''}
-          </div>\`;
-        }).join('');
-        area.innerHTML=\`<div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;">"\${eh(kw)}" \${arr.length}건</div>\`+area.innerHTML;
-        return;
-      }
-    }
-    if(items.length===0){
+    console.log('[MSDS] 응답타입:', xml && xml.querySelectorAll ? 'XML' : typeof xml);
+    const items = xml && xml.querySelectorAll ? Array.from(xml.querySelectorAll('item')) : [];
+        if(items.length===0){
       area.innerHTML=`<div class="hw-err">"${eh(kw)}" 검색결과 없음</div>`;
       return;
     }
