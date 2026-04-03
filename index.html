@@ -2325,6 +2325,12 @@ async function doMsdsSearch(){
     if(!xml) throw new Error('응답없음');
     console.log('[MSDS] 응답타입:', xml && xml.querySelectorAll ? 'XML' : typeof xml);
     const items = xml && xml.querySelectorAll ? Array.from(xml.querySelectorAll('item')) : [];
+    console.log('[MSDS] item수:', items.length, items[0] ? items[0].outerHTML.substring(0,300) : '없음');
+    // item이 없으면 다른 태그명 시도
+    if(items.length===0 && xml && xml.querySelectorAll){
+      const allTags = Array.from(xml.querySelectorAll('*')).slice(0,20).map(el=>el.tagName).join(',');
+      console.log('[MSDS] 모든 태그:', allTags);
+    }
         if(items.length===0){
       area.innerHTML=`<div class="hw-err">"${eh(kw)}" 검색결과 없음</div>`;
       return;
