@@ -253,6 +253,16 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .hw-badge{font-size:9px;color:var(--accent);background:rgba(240,165,0,.1);padding:1px 5px;border-radius:3px;white-space:nowrap;flex-shrink:0;margin-top:2px;}
 .hw-more-link{font-size:11px;color:var(--accent);text-decoration:none;margin-top:auto;padding-top:6px;display:block;}
 .hw-more-link:hover{text-decoration:underline;}
+
+/* ── MSDS 상세 ── */
+.msds-section{padding:14px 20px;border-bottom:1px solid var(--border);}
+.msds-section:last-child{border-bottom:none;}
+.msds-sec-title{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(240,165,0,.2);}
+.msds-field{display:flex;gap:8px;padding:4px 0;font-size:12px;border-bottom:1px solid rgba(220,220,220,.3);}
+.msds-field:last-child{border-bottom:none;}
+.msds-field-key{color:var(--text-dim);min-width:160px;flex-shrink:0;font-size:11px;}
+.msds-field-val{color:var(--text);flex:1;line-height:1.6;word-break:break-all;}
+.msds-field-empty{font-size:11px;color:var(--text-dim);font-style:italic;}
 </style>
 </head>
 <body>
@@ -329,17 +339,32 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
           </div>
         </div>
         <div class="home-grid">
+          <!-- 재해사례 + 사고사망 -->
           <div class="hw-card" id="hwAccident">
             <div class="hw-card-title">⚠️ 국내재해사례 <span class="hw-src">KOSHA</span></div>
             <div class="hw-card-body" id="hwAccidentBody"><div class="hw-loading">로딩 중...</div></div>
           </div>
           <div class="hw-card" id="hwSafety">
-            <div class="hw-card-title">📢 사고사망 게시판 <span class="hw-src">KOSHA</span></div>
+            <div class="hw-card-title">💀 사고사망 게시판 <span class="hw-src">KOSHA</span></div>
             <div class="hw-card-body" id="hwSafetyBody"><div class="hw-loading">로딩 중...</div></div>
           </div>
+          <!-- 날씨 위젯 -->
           <div class="hw-card hw-card-wide" id="hwWeather">
             <div class="hw-card-title">🌤️ 오늘의 날씨 &amp; 작업환경 위험지수 <span class="hw-src">기상청</span></div>
             <div class="hw-card-body" id="hwWeatherBody"><div class="hw-loading">로딩 중...</div></div>
+          </div>
+          <!-- MSDS 검색 위젯 -->
+          <div class="hw-card hw-card-wide" id="hwMsds">
+            <div class="hw-card-title">🧪 MSDS 화학물질 검색 <span class="hw-src">KOSHA 공공데이터</span></div>
+            <div class="hw-card-body">
+              <div style="display:flex;gap:6px;margin-bottom:10px;">
+                <input type="text" id="msdsInput" class="art-kw-input" placeholder="물질명 입력 (예: 톨루엔, 아세톤, 황산)"
+                  onkeydown="if(event.key==='Enter')doMsdsSearch()"
+                  style="flex:1;font-size:12px;padding:7px 10px;">
+                <button onclick="doMsdsSearch()" class="btn-search" style="padding:7px 14px;font-size:12px;">검색</button>
+              </div>
+              <div id="msdsResultArea"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -410,6 +435,17 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
       <button class="modal-close" onclick="closeCompareModal()">&times;</button>
     </div>
     <div class="modal-body" id="compareBody"></div>
+  </div>
+</div>
+
+<!-- MSDS 상세 모달 -->
+<div class="modal-overlay" id="msdsModal" onclick="if(event.target===this)closeMsdsModal()">
+  <div class="modal-content" style="max-width:860px;">
+    <div class="modal-header">
+      <div class="modal-title" id="msdsModalTitle">🧪 MSDS 상세정보</div>
+      <button class="modal-close" onclick="closeMsdsModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="msdsModalBody" style="padding:0;"></div>
   </div>
 </div>
 
@@ -2046,6 +2082,7 @@ function initHomeWidgets(){
   loadKoshaAccidentWidget();
   loadKoshaSafetyNewsWidget();
   loadWeatherWidget();
+  initMsdsWidget();
 }
 
 // ── 공통: 공공데이터 API fetch ──
@@ -2056,175 +2093,133 @@ async function publicApiFetch(endpoint, params){
     try{
       const res = await netlifyProxy(url, 15000);
       const text = await res.text();
-      console.log('[PublicAPI] raw응답 앞200자:', text.substring(0,200));
-      try{ return JSON.parse(text); }catch(e){
-        // XML 응답인 경우
-        const xml = new DOMParser().parseFromString(text,'text/xml');
-        return xml;
-      }
-    }catch(e){ console.warn('[PublicAPI] proxy 실패:', e.message); }
+      if(text.trim().startsWith('<')) return new DOMParser().parseFromString(text,'text/xml');
+      return JSON.parse(text);
+    }catch(e){ console.warn('[PublicAPI] 실패:', e.message); }
   }
   try{
     const res = await fetchWithTimeout(url, 12000);
-    if(res.ok){ const text=await res.text(); try{return JSON.parse(text);}catch(e){return text;} }
+    if(res.ok){ const t=await res.text(); return t.trim().startsWith('<')?new DOMParser().parseFromString(t,'text/xml'):JSON.parse(t); }
   }catch(e){}
   return null;
 }
 
-// ── JSON 깊이우선 배열 탐색 ──
 function findArray(obj, depth=0){
-  if(depth>5||!obj||typeof obj!=='object') return null;
-  if(Array.isArray(obj) && obj.length>0) return obj;
-  for(const k of Object.keys(obj)){
-    const found=findArray(obj[k], depth+1);
-    if(found) return found;
-  }
+  if(depth>6||!obj||typeof obj!=='object') return null;
+  if(Array.isArray(obj)&&obj.length>0) return obj;
+  for(const k of Object.keys(obj)){ const f=findArray(obj[k],depth+1); if(f) return f; }
   return null;
 }
 
 // ── 1. 국내재해사례 ──
+// 엔드포인트: disaster_api/getDisaster_api
+// 응답키: keyword(제목), contents(내용), business(업종), boardno
 async function loadKoshaAccidentWidget(){
   const el = document.getElementById('hwAccidentBody');
   if(!el) return;
-  // 파라미터 조합 순서대로 시도
-  const paramSets = [
-    { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1, type:'json' },
-    { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1 },
-    { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', pageSize:5, pageIndex:1, type:'json' },
-    { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361' },
-  ];
-  let arr=[], lastResp='';
-  for(const params of paramSets){
-    try{
-      const data = await publicApiFetch('https://apis.data.go.kr/B552468/disaster_api02/getdisaster_api02', params);
-      const raw = JSON.stringify(data);
-      lastResp = raw.substring(0,500);
-      console.log('[재해사례] params:', JSON.stringify(params), '응답:', lastResp);
-      arr = findArray(data) || [];
-      if(arr.length>0) break;
-    }catch(e){ console.warn('[재해사례] 시도실패:', e.message); }
+  try{
+    const data = await publicApiFetch(
+      'https://apis.data.go.kr/B552468/disaster_api/getDisaster_api',
+      { ServiceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1 }
+    );
+    if(!data) throw new Error('응답없음');
+    // 응답: {header:..., body:{items:{item:[...]}}}
+    const raw = data?.body?.items?.item || findArray(data) || [];
+    const arr = Array.isArray(raw) ? raw : (raw ? [raw] : []);
+    if(arr.length===0) throw new Error('데이터 없음');
+
+    el.innerHTML = arr.slice(0,5).map(item=>{
+      const title = item.keyword || item.title || '내용 확인';
+      const biz   = item.business || '';
+      const boardno = item.boardno || '';
+      const url   = boardno
+        ? `https://www.kosha.or.kr/kosha/disaster_api.do?boardno=${boardno}`
+        : 'https://kosha.or.kr';
+      return `<div class="hw-list-item">
+        <a href="${url}" target="_blank" class="hw-list-link">
+          ${biz?`<span class="hw-badge">${eh(biz)}</span>`:''}
+          <span class="hw-list-title">${eh(title)}</span>
+        </a>
+      </div>`;
+    }).join('')
+    + `<a href="https://kosha.or.kr" target="_blank" class="hw-more-link">더보기 →</a>`;
+  }catch(e){
+    console.warn('[재해사례]', e.message);
+    el.innerHTML=`<div class="hw-err">데이터를 불러올 수 없습니다.<br>
+      <a href="https://kosha.or.kr" target="_blank" class="hw-more-link">KOSHA →</a></div>`;
   }
-  if(arr.length===0){
-    el.innerHTML=`<div class="hw-err" style="font-size:10px;">
-      API 파라미터 확인 필요<br>
-      <details style="margin-top:4px;"><summary style="cursor:pointer;color:var(--accent);">마지막 응답 보기</summary>
-      <pre style="font-size:9px;overflow:auto;max-height:80px;color:var(--text-dim);">${eh(lastResp)}</pre></details>
-      <a href="https://kosha.or.kr" target="_blank" class="hw-more-link">KOSHA 바로가기 →</a>
-    </div>`;
-    return;
-  }
-  el.innerHTML = arr.slice(0,5).map(item => {
-    const keys=Object.keys(item);
-    console.log('[재해사례] 아이템 키:', keys.join(','));
-    const titleKey=keys.find(k=>/title|ttl|sj|subject|nm|name/i.test(k))||keys[0];
-    const dateKey =keys.find(k=>/dt|date|time/i.test(k))||'';
-    const urlKey  =keys.find(k=>/url|link|href/i.test(k))||'';
-    const title=item[titleKey]||'내용 확인';
-    const date=(item[dateKey]||'').substring(0,10);
-    const url=item[urlKey]||'https://kosha.or.kr';
-    return `<div class="hw-list-item">
-      <a href="${url}" target="_blank" class="hw-list-link">
-        <span class="hw-list-title">${eh(title)}</span>
-      </a>
-      <span class="hw-list-date">${eh(date)}</span>
-    </div>`;
-  }).join('')
-  + `<a href="https://kosha.or.kr" target="_blank" class="hw-more-link">더보기 →</a>`;
 }
 
 // ── 2. 사고사망 게시판 ──
+// 엔드포인트: news_api/getNews_api
+// 응답키: keyword(제목), contents(내용)
 async function loadKoshaSafetyNewsWidget(){
   const el = document.getElementById('hwSafetyBody');
   if(!el) return;
-  const paramSets = [
-    { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1, type:'json' },
-    { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1 },
-    { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', pageSize:5, pageIndex:1, type:'json' },
-    { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361' },
-  ];
-  let arr=[], lastResp='';
-  for(const params of paramSets){
-    try{
-      const data = await publicApiFetch('https://apis.data.go.kr/B552468/news_api02/getNews_api02', params);
-      const raw = JSON.stringify(data);
-      lastResp = raw.substring(0,500);
-      console.log('[사고사망] params:', JSON.stringify(params), '응답:', lastResp);
-      arr = findArray(data) || [];
-      if(arr.length>0) break;
-    }catch(e){ console.warn('[사고사망] 시도실패:', e.message); }
+  try{
+    const data = await publicApiFetch(
+      'https://apis.data.go.kr/B552468/news_api/getNews_api',
+      { ServiceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1 }
+    );
+    if(!data) throw new Error('응답없음');
+    const raw = data?.body?.items?.item || findArray(data) || [];
+    const arr = Array.isArray(raw) ? raw : (raw ? [raw] : []);
+    if(arr.length===0) throw new Error('데이터 없음');
+
+    el.innerHTML = arr.slice(0,5).map(item=>{
+      const title = item.keyword || item.title || '내용 확인';
+      // contents에서 날짜 추출 시도
+      const dateMatch = (item.contents||'').match(/\d{4}-\d{2}-\d{2}|\d{4}\/\d{2}\/\d{2}|\d{4}\.\d{2}\.\d{2}/);
+      const date = dateMatch ? dateMatch[0] : '';
+      const url = 'https://kosha.or.kr/notification/release/press-release';
+      return `<div class="hw-list-item">
+        <a href="${url}" target="_blank" class="hw-list-link">
+          <span class="hw-list-title">${eh(title)}</span>
+        </a>
+        ${date?`<span class="hw-list-date">${eh(date)}</span>`:''}
+      </div>`;
+    }).join('')
+    + `<a href="https://kosha.or.kr/notification/release/press-release" target="_blank" class="hw-more-link">더보기 →</a>`;
+  }catch(e){
+    console.warn('[사고사망]', e.message);
+    el.innerHTML=`<div class="hw-err">데이터를 불러올 수 없습니다.<br>
+      <a href="https://kosha.or.kr/notification/release/press-release" target="_blank" class="hw-more-link">사고사망 게시판 →</a></div>`;
   }
-  if(arr.length===0){
-    el.innerHTML=`<div class="hw-err" style="font-size:10px;">
-      API 파라미터 확인 필요<br>
-      <details style="margin-top:4px;"><summary style="cursor:pointer;color:var(--accent);">마지막 응답 보기</summary>
-      <pre style="font-size:9px;overflow:auto;max-height:80px;color:var(--text-dim);">${eh(lastResp)}</pre></details>
-      <a href="https://kosha.or.kr/notification/release/press-release" target="_blank" class="hw-more-link">사고사망 게시판 →</a>
-    </div>`;
-    return;
-  }
-  el.innerHTML = arr.slice(0,5).map(item => {
-    const keys=Object.keys(item);
-    const titleKey=keys.find(k=>/title|ttl|sj|subject|nm|name/i.test(k))||keys[0];
-    const dateKey =keys.find(k=>/dt|date|time/i.test(k))||'';
-    const urlKey  =keys.find(k=>/url|link|href/i.test(k))||'';
-    const title=item[titleKey]||'내용 확인';
-    const date=(item[dateKey]||'').substring(0,10);
-    const url=item[urlKey]||'https://kosha.or.kr/notification/release/press-release';
-    return `<div class="hw-list-item">
-      <a href="${url}" target="_blank" class="hw-list-link">
-        <span class="hw-list-title">${eh(title)}</span>
-      </a>
-      <span class="hw-list-date">${eh(date)}</span>
-    </div>`;
-  }).join('')
-  + `<a href="https://kosha.or.kr/notification/release/press-release" target="_blank" class="hw-more-link">더보기 →</a>`;
 }
 
-// ── 3. 날씨 (기상청 단기예보) / 화성시 nx=60,ny=121 ──
+// ── 3. 날씨 (기상청 단기예보) 화성시 nx=60,ny=121 ──
 async function loadWeatherWidget(){
   const el = document.getElementById('hwWeatherBody');
   if(!el) return;
   try{
-    const now = new Date();
-    const kst = new Date(now.getTime() + 9*60*60*1000);
-    const h   = kst.getUTCHours();
-    const baseHours = [2,5,8,11,14,17,20,23];
-    let baseHour = 23;
+    const now=new Date();
+    const kst=new Date(now.getTime()+9*60*60*1000);
+    const h=kst.getUTCHours();
+    const baseHours=[2,5,8,11,14,17,20,23];
+    let baseHour=23;
     for(let i=baseHours.length-1;i>=0;i--){ if(baseHours[i]<=h){baseHour=baseHours[i];break;} }
-    const pad2 = n=>String(n).padStart(2,'0');
-    let baseKst = new Date(kst);
-    if(baseHour===23 && h<23) baseKst=new Date(kst.getTime()-86400000);
-    const baseDate = `${baseKst.getUTCFullYear()}${pad2(baseKst.getUTCMonth()+1)}${pad2(baseKst.getUTCDate())}`;
-    const baseTime = pad2(baseHour)+'00';
-
-    const data = await publicApiFetch(
+    const pad2=n=>String(n).padStart(2,'0');
+    let baseKst=new Date(kst);
+    if(baseHour===23&&h<23) baseKst=new Date(kst.getTime()-86400000);
+    const baseDate=`${baseKst.getUTCFullYear()}${pad2(baseKst.getUTCMonth()+1)}${pad2(baseKst.getUTCDate())}`;
+    const baseTime=pad2(baseHour)+'00';
+    const data=await publicApiFetch(
       'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst',
-      { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:300, pageNo:1, dataType:'JSON', base_date:baseDate, base_time:baseTime, nx:60, ny:121 }
+      {serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',numOfRows:300,pageNo:1,dataType:'JSON',base_date:baseDate,base_time:baseTime,nx:60,ny:121}
     );
-
-    const items = data?.response?.body?.items?.item || findArray(data) || [];
-    if(items.length===0) throw new Error('예보 없음');
-
-    // 가장 가까운 미래 fcstTime의 값 추출
-    const nowHHMM = pad2(h)+'00';
-    const times = [...new Set(items.map(it=>it.fcstTime))].sort();
-    const targetTime = times.find(t=>t>=nowHHMM) || times[0];
-
+    const items=data?.response?.body?.items?.item||findArray(data)||[];
+    if(items.length===0) throw new Error('예보없음');
+    const nowHHMM=pad2(h)+'00';
+    const times=[...new Set(items.map(it=>it.fcstTime))].sort();
+    const targetTime=times.find(t=>t>=nowHHMM)||times[0];
     const fcst={};
-    items.forEach(it=>{ if(it.fcstTime===targetTime) fcst[it.category]=it.fcstValue; });
-
-    const temp   = fcst['TMP']??'--';
-    const humid  = fcst['REH']??'--';
-    const rain   = fcst['PTY']??'0';
-    const sky    = fcst['SKY']??'1';
-    const wind   = fcst['WSD']??'--';
-    const pop    = fcst['POP']??'--';
-
-    const rainIcon = rain==='1'?'🌧️':rain==='2'?'🌨️':rain==='3'?'❄️':rain==='4'?'🌦️':'';
-    const skyIcon  = rainIcon||(sky==='1'?'☀️':sky==='3'?'⛅':'☁️');
-    const tempN=parseFloat(temp), windN=parseFloat(wind), humidN=parseFloat(humid);
-
-    let risk=0; const risks=[];
+    items.forEach(it=>{if(it.fcstTime===targetTime) fcst[it.category]=it.fcstValue;});
+    const temp=fcst['TMP']??'--', humid=fcst['REH']??'--', rain=fcst['PTY']??'0',
+          sky=fcst['SKY']??'1', wind=fcst['WSD']??'--', pop=fcst['POP']??'--';
+    const rainIcon=rain==='1'?'🌧️':rain==='2'?'🌨️':rain==='3'?'❄️':rain==='4'?'🌦️':'';
+    const skyIcon=rainIcon||(sky==='1'?'☀️':sky==='3'?'⛅':'☁️');
+    const tempN=parseFloat(temp),windN=parseFloat(wind),humidN=parseFloat(humid);
+    let risk=0;const risks=[];
     if(tempN>=35){risk+=45;risks.push('🔴 폭염');}
     else if(tempN>=33){risk+=35;risks.push('🟠 온열 위험');}
     else if(tempN>=28){risk+=20;risks.push('🟡 더위 주의');}
@@ -2237,7 +2232,6 @@ async function loadWeatherWidget(){
     risk=Math.min(risk,100);
     const riskClr=risk>=60?'#e74040':risk>=30?'#f0a500':'#3fb950';
     const riskLbl=risk>=60?'위험':risk>=30?'주의':'양호';
-
     el.innerHTML=`
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;">
         <span style="font-size:40px;line-height:1;">${skyIcon}</span>
@@ -2258,20 +2252,100 @@ async function loadWeatherWidget(){
       </div>
       <div style="font-size:10px;color:var(--text-dim);margin-top:8px;">📍 화성시 기준 · ${baseDate} ${baseTime} 발표</div>`;
   }catch(e){
-    console.warn('[날씨]', e.message);
+    console.warn('[날씨]',e.message);
     el.innerHTML=`<div class="hw-err">날씨 정보를 불러올 수 없습니다.<br>
       <a href="https://www.weather.go.kr" target="_blank" class="hw-more-link">기상청 →</a></div>`;
   }
 }
 
-// ── 4. MSDS 화학물질 검색 (사이드바 연동용, 추후 확장) ──
-async function searchMsds(chemName){
-  if(!chemName) return null;
-  const data = await publicApiFetch(
-    'https://apis.data.go.kr/B552468/msdschem/getChemList',
-    { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1, chem_nm:chemName }
+// ── 4. MSDS 화학물질 검색 ──
+const MSDS_SECTIONS=[
+  {no:'01',label:'화학제품과 회사 정보'},{no:'02',label:'유해성·위험성'},
+  {no:'03',label:'구성성분 명칭 및 함유량'},{no:'04',label:'응급조치 요령'},
+  {no:'05',label:'폭발·화재시 대처방법'},{no:'06',label:'누출사고시 대처방법'},
+  {no:'07',label:'취급 및 저장방법'},{no:'08',label:'노출방지 및 개인보호구'},
+  {no:'09',label:'물리화학적 특성'},{no:'10',label:'안정성 및 반응성'},
+  {no:'11',label:'독성에 관한 정보'},{no:'12',label:'환경에 미치는 영향'},
+  {no:'13',label:'폐기시 주의사항'},{no:'14',label:'운송에 필요한 정보'},
+  {no:'15',label:'법적 규제현황'},{no:'16',label:'그 밖의 참고사항'},
+];
+
+function initMsdsWidget(){
+  document.getElementById('msdsResultArea').innerHTML=
+    `<div class="hw-loading">물질명을 입력하여 MSDS 정보를 검색하세요</div>`;
+}
+
+async function doMsdsSearch(){
+  const kw=(document.getElementById('msdsInput')?.value||'').trim();
+  if(!kw){toast('물질명을 입력하세요');return;}
+  const area=document.getElementById('msdsResultArea');
+  area.innerHTML='<div class="hw-loading">🔍 검색 중...</div>';
+  try{
+    const xml=await publicApiFetch('https://apis.data.go.kr/B552468/msdschem/getChemList',
+      {serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',chem_nm:kw,pageNo:1,numOfRows:10});
+    if(!xml) throw new Error('응답없음');
+    const items=Array.from(xml.querySelectorAll('item'));
+    if(items.length===0){
+      area.innerHTML=`<div class="hw-err">"${eh(kw)}" 검색결과 없음</div>`;
+      return;
+    }
+    area.innerHTML=`<div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;">"${eh(kw)}" 검색결과 ${items.length}건 — 클릭하면 17섹션 상세정보</div>`
+    +items.map(item=>{
+      const mNo   =(item.querySelector('mNo')?.textContent||'').trim();
+      const chemNm=(item.querySelector('chemNm')?.textContent||item.querySelector('chem_nm')?.textContent||'').trim();
+      const casNo =(item.querySelector('casNo')?.textContent||item.querySelector('cas_no')?.textContent||'').trim();
+      return `<div class="msds-list-item" onclick="openMsdsDetail('${mNo}','${eh(chemNm)}')"
+        style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;margin-bottom:5px;transition:border-color .12s;"
+        onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:12px;font-weight:500;color:var(--text);">${eh(chemNm)||mNo||'물질명 없음'}</div>
+        ${casNo?`<div style="font-size:10px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;">CAS: ${eh(casNo)}</div>`:''}
+      </div>`;
+    }).join('');
+  }catch(e){
+    console.warn('[MSDS]',e.message);
+    area.innerHTML=`<div class="hw-err">검색 실패: ${eh(e.message)}</div>`;
+  }
+}
+
+async function openMsdsDetail(mNo, chemNm){
+  if(!mNo){toast('물질번호 없음');return;}
+  const modal=document.getElementById('msdsModal');
+  if(!modal) return;
+  document.getElementById('msdsModalTitle').textContent='🧪 '+chemNm;
+  document.getElementById('msdsModalBody').innerHTML='<div style="padding:20px;text-align:center;color:var(--text-dim);">전체 섹션 로딩 중 (16개)...</div>';
+  modal.classList.add('open');
+
+  const results=await Promise.allSettled(
+    MSDS_SECTIONS.map(sec=>
+      publicApiFetch(`https://apis.data.go.kr/B552468/msdschem/getChemDetail${sec.no}`,
+        {serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',mNo})
+    )
   );
-  return findArray(data) || [];
+
+  let html='';
+  MSDS_SECTIONS.forEach((sec,i)=>{
+    const res=results[i];
+    html+=`<div class="msds-section">
+      <div class="msds-sec-title">섹션 ${sec.no}. ${sec.label}</div>`;
+    if(res.status==='fulfilled'&&res.value){
+      const xml=res.value;
+      const fields=Array.from(xml.querySelectorAll('item > *'));
+      const rows=fields.map(f=>{
+        const tag=f.tagName; const val=(f.textContent||'').trim();
+        if(!val||val===mNo||tag==='mNo') return '';
+        return `<div class="msds-field"><span class="msds-field-key">${tag}</span><span class="msds-field-val">${eh(val)}</span></div>`;
+      }).filter(Boolean).join('');
+      html+=rows||'<div class="msds-field-empty">정보 없음</div>';
+    }else{
+      html+='<div class="msds-field-empty">로드 실패</div>';
+    }
+    html+='</div>';
+  });
+  document.getElementById('msdsModalBody').innerHTML=html;
+}
+
+function closeMsdsModal(){
+  document.getElementById('msdsModal')?.classList.remove('open');
 }
 
 
