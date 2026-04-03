@@ -2085,23 +2085,27 @@ function initHomeWidgets(){
   initMsdsWidget();
 }
 
-// ── 공통: 공공데이터 API fetch ──
+// ── 공통: 공공데이터 API fetch (항상 proxy 경유) ──
 async function publicApiFetch(endpoint, params){
   const qs = new URLSearchParams(params).toString();
-  const url = endpoint + '?' + qs;
-  if(IS_NETLIFY){
-    try{
-      const res = await netlifyProxy(url, 15000);
-      const text = await res.text();
-      if(text.trim().startsWith('<')) return new DOMParser().parseFromString(text,'text/xml');
-      return JSON.parse(text);
-    }catch(e){ console.warn('[PublicAPI] 실패:', e.message); }
-  }
+  const targetUrl = endpoint + '?' + qs;
+  // 공공데이터포털은 CORS 미지원 → 항상 proxy 경유
   try{
-    const res = await fetchWithTimeout(url, 12000);
-    if(res.ok){ const t=await res.text(); return t.trim().startsWith('<')?new DOMParser().parseFromString(t,'text/xml'):JSON.parse(t); }
-  }catch(e){}
-  return null;
+    const proxyUrl = '/.netlify/functions/proxy?url=' + encodeURIComponent(targetUrl);
+    const res = await fetchWithTimeout(proxyUrl, 18000);
+    const text = await res.text();
+    if(!text || text.trim()==='') throw new Error('빈 응답');
+    // XML이면 DOMParser로
+    if(text.trim().startsWith('<')) return new DOMParser().parseFromString(text,'text/xml');
+    // JSON이면 파싱
+    try{ return JSON.parse(text); }catch(e){
+      console.warn('[PublicAPI] JSON파싱실패, 응답:', text.substring(0,100));
+      throw new Error('JSON파싱실패: '+text.substring(0,80));
+    }
+  }catch(e){
+    console.warn('[PublicAPI] 실패:', e.message, '| URL:', targetUrl.substring(0,80));
+    throw e;
+  }
 }
 
 function findArray(obj, depth=0){
