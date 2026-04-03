@@ -2048,7 +2048,7 @@ function initHomeWidgets(){
   loadWeatherWidget();
 }
 
-// ── 공통: 공공데이터 API fetch (proxy 경유) ──
+// ── 공통: 공공데이터 API fetch ──
 async function publicApiFetch(endpoint, params){
   const qs = new URLSearchParams(params).toString();
   const url = endpoint + '?' + qs;
@@ -2056,7 +2056,12 @@ async function publicApiFetch(endpoint, params){
     try{
       const res = await netlifyProxy(url, 15000);
       const text = await res.text();
-      try{ return JSON.parse(text); }catch(e){ return text; }
+      console.log('[PublicAPI] raw응답 앞200자:', text.substring(0,200));
+      try{ return JSON.parse(text); }catch(e){
+        // XML 응답인 경우
+        const xml = new DOMParser().parseFromString(text,'text/xml');
+        return xml;
+      }
     }catch(e){ console.warn('[PublicAPI] proxy 실패:', e.message); }
   }
   try{
@@ -2066,7 +2071,18 @@ async function publicApiFetch(endpoint, params){
   return null;
 }
 
-// ── 1. 국내재해사례 (KOSHA) ──
+// ── JSON 깊이우선 배열 탐색 ──
+function findArray(obj, depth=0){
+  if(depth>5||!obj||typeof obj!=='object') return null;
+  if(Array.isArray(obj) && obj.length>0) return obj;
+  for(const k of Object.keys(obj)){
+    const found=findArray(obj[k], depth+1);
+    if(found) return found;
+  }
+  return null;
+}
+
+// ── 1. 국내재해사례 ──
 async function loadKoshaAccidentWidget(){
   const el = document.getElementById('hwAccidentBody');
   if(!el) return;
@@ -2075,18 +2091,19 @@ async function loadKoshaAccidentWidget(){
       'https://apis.data.go.kr/B552468/disaster_api02/getdisaster_api02',
       { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1, type:'json' }
     );
-    const items = data?.body?.items?.item || data?.items?.item || [];
-    const arr = Array.isArray(items) ? items : (items ? [items] : []);
+    console.log('[재해사례] 응답 구조:', JSON.stringify(data).substring(0,300));
+    if(!data) throw new Error('응답없음');
+
+    // 다양한 응답 구조 대응
+    const arr = findArray(data) || [];
     if(arr.length === 0) throw new Error('데이터 없음');
 
-    el.innerHTML = arr.map(item => {
-      const title = item.title || item.bbsttl || item.TITLE || '제목 없음';
-      const date  = (item.regDt || item.REG_DT || item.regdate || '').substring(0,10);
-      const cate  = item.disaster_cd || item.disasterCd || '';
-      const url   = item.url || item.URL || 'https://kosha.or.kr';
+    el.innerHTML = arr.slice(0,5).map(item => {
+      const title = item.title||item.TITLE||item.bbsttl||item.sj||item.subject||Object.values(item).find(v=>typeof v==='string'&&v.length>3)||'내용 확인';
+      const date  = (item.regDt||item.REG_DT||item.regdate||item.wrtDt||item.crtDt||'').substring(0,10);
+      const url   = item.url||item.URL||item.link||'https://kosha.or.kr';
       return `<div class="hw-list-item">
         <a href="${url}" target="_blank" class="hw-list-link">
-          ${cate ? `<span class="hw-badge">${eh(cate)}</span>` : ''}
           <span class="hw-list-title">${eh(title)}</span>
         </a>
         <span class="hw-list-date">${eh(date)}</span>
@@ -2100,7 +2117,7 @@ async function loadKoshaAccidentWidget(){
   }
 }
 
-// ── 2. 사고사망 게시판 (KOSHA) ──
+// ── 2. 사고사망 게시판 ──
 async function loadKoshaSafetyNewsWidget(){
   const el = document.getElementById('hwSafetyBody');
   if(!el) return;
@@ -2109,14 +2126,16 @@ async function loadKoshaSafetyNewsWidget(){
       'https://apis.data.go.kr/B552468/news_api02/getNews_api02',
       { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1, type:'json' }
     );
-    const items = data?.body?.items?.item || data?.items?.item || [];
-    const arr = Array.isArray(items) ? items : (items ? [items] : []);
+    console.log('[사고사망] 응답 구조:', JSON.stringify(data).substring(0,300));
+    if(!data) throw new Error('응답없음');
+
+    const arr = findArray(data) || [];
     if(arr.length === 0) throw new Error('데이터 없음');
 
-    el.innerHTML = arr.map(item => {
-      const title = item.title || item.bbsttl || item.TITLE || '제목 없음';
-      const date  = (item.regDt || item.REG_DT || item.regdate || '').substring(0,10);
-      const url   = item.url || item.URL || 'https://kosha.or.kr/notification/release/press-release';
+    el.innerHTML = arr.slice(0,5).map(item => {
+      const title = item.title||item.TITLE||item.bbsttl||item.sj||item.subject||Object.values(item).find(v=>typeof v==='string'&&v.length>3)||'내용 확인';
+      const date  = (item.regDt||item.REG_DT||item.regdate||item.wrtDt||item.crtDt||'').substring(0,10);
+      const url   = item.url||item.URL||item.link||'https://kosha.or.kr/notification/release/press-release';
       return `<div class="hw-list-item">
         <a href="${url}" target="_blank" class="hw-list-link">
           <span class="hw-list-title">${eh(title)}</span>
@@ -2132,60 +2151,52 @@ async function loadKoshaSafetyNewsWidget(){
   }
 }
 
-// ── 3. 날씨 (기상청 단기예보 API) ──
-// 화성시 격자 좌표 nx=60, ny=121
+// ── 3. 날씨 (기상청 단기예보) / 화성시 nx=60,ny=121 ──
 async function loadWeatherWidget(){
   const el = document.getElementById('hwWeatherBody');
   if(!el) return;
   try{
     const now = new Date();
-    // 단기예보 발표시각: 0200,0500,0800,1100,1400,1700,2000,2300
+    const kst = new Date(now.getTime() + 9*60*60*1000);
+    const h   = kst.getUTCHours();
     const baseHours = [2,5,8,11,14,17,20,23];
-    const h = now.getHours();
-    let baseHour = baseHours.filter(bh => bh <= h).pop() || 23;
-    const baseDate = baseHour === 23 && h < 23
-      ? new Date(now-86400000).toISOString().slice(0,10).replace(/-/g,'')
-      : now.toISOString().slice(0,10).replace(/-/g,'');
-    const baseTime = String(baseHour).padStart(2,'0') + '00';
+    let baseHour = 23;
+    for(let i=baseHours.length-1;i>=0;i--){ if(baseHours[i]<=h){baseHour=baseHours[i];break;} }
+    const pad2 = n=>String(n).padStart(2,'0');
+    let baseKst = new Date(kst);
+    if(baseHour===23 && h<23) baseKst=new Date(kst.getTime()-86400000);
+    const baseDate = `${baseKst.getUTCFullYear()}${pad2(baseKst.getUTCMonth()+1)}${pad2(baseKst.getUTCDate())}`;
+    const baseTime = pad2(baseHour)+'00';
 
     const data = await publicApiFetch(
       'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst',
-      {
-        serviceKey: 'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',
-        numOfRows: 100, pageNo: 1,
-        dataType: 'JSON',
-        base_date: baseDate,
-        base_time: baseTime,
-        nx: 60, ny: 121
-      }
+      { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:300, pageNo:1, dataType:'JSON', base_date:baseDate, base_time:baseTime, nx:60, ny:121 }
     );
 
-    const items = data?.response?.body?.items?.item || [];
-    if(items.length === 0) throw new Error('예보 없음');
+    const items = data?.response?.body?.items?.item || findArray(data) || [];
+    if(items.length===0) throw new Error('예보 없음');
 
-    // 카테고리별 최근값 추출
-    const fcst = {};
-    const targetTime = items[0]?.fcstTime || '0000';
-    items.forEach(it => {
-      if(it.fcstTime === targetTime) fcst[it.category] = it.fcstValue;
-    });
+    // 가장 가까운 미래 fcstTime의 값 추출
+    const nowHHMM = pad2(h)+'00';
+    const times = [...new Set(items.map(it=>it.fcstTime))].sort();
+    const targetTime = times.find(t=>t>=nowHHMM) || times[0];
 
-    const temp  = fcst['TMP']  ?? fcst['T1H'] ?? '--';
-    const humid = fcst['REH']  ?? '--';
-    const rain  = fcst['PTY']  ?? '0'; // 0:없음 1:비 2:비/눈 3:눈 4:소나기
-    const sky   = fcst['SKY']  ?? '1'; // 1:맑음 3:구름많음 4:흐림
-    const wind  = fcst['WSD']  ?? fcst['WST'] ?? '0';
-    const pop   = fcst['POP']  ?? '--'; // 강수확률
+    const fcst={};
+    items.forEach(it=>{ if(it.fcstTime===targetTime) fcst[it.category]=it.fcstValue; });
+
+    const temp   = fcst['TMP']??'--';
+    const humid  = fcst['REH']??'--';
+    const rain   = fcst['PTY']??'0';
+    const sky    = fcst['SKY']??'1';
+    const wind   = fcst['WSD']??'--';
+    const pop    = fcst['POP']??'--';
 
     const rainIcon = rain==='1'?'🌧️':rain==='2'?'🌨️':rain==='3'?'❄️':rain==='4'?'🌦️':'';
-    const skyIcon  = rainIcon || (sky==='1'?'☀️':sky==='3'?'⛅':'☁️');
-    const tempN    = parseFloat(temp);
-    const windN    = parseFloat(wind);
-    const humidN   = parseFloat(humid);
+    const skyIcon  = rainIcon||(sky==='1'?'☀️':sky==='3'?'⛅':'☁️');
+    const tempN=parseFloat(temp), windN=parseFloat(wind), humidN=parseFloat(humid);
 
-    // 작업환경 위험지수
     let risk=0; const risks=[];
-    if(tempN>=35){risk+=45;risks.push('🔴 폭염 위험');}
+    if(tempN>=35){risk+=45;risks.push('🔴 폭염');}
     else if(tempN>=33){risk+=35;risks.push('🟠 온열 위험');}
     else if(tempN>=28){risk+=20;risks.push('🟡 더위 주의');}
     else if(tempN<=0){risk+=35;risks.push('🔵 동결 위험');}
@@ -2195,34 +2206,43 @@ async function loadWeatherWidget(){
     else if(windN>=7){risk+=10;risks.push('💨 바람 주의');}
     if(rain!=='0'){risk+=10;risks.push('🌧️ 우천');}
     risk=Math.min(risk,100);
-
-    const riskCls = risk>=60?'risk-high':risk>=30?'risk-mid':'risk-low';
-    const riskLbl = risk>=60?'위험':risk>=30?'주의':'양호';
-    const riskClr = risk>=60?'#e74040':risk>=30?'#f0a500':'#3fb950';
+    const riskClr=risk>=60?'#e74040':risk>=30?'#f0a500':'#3fb950';
+    const riskLbl=risk>=60?'위험':risk>=30?'주의':'양호';
 
     el.innerHTML=`
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-        <span style="font-size:36px;">${skyIcon}</span>
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;">
+        <span style="font-size:40px;line-height:1;">${skyIcon}</span>
         <div>
-          <div style="font-size:24px;font-weight:700;font-family:'JetBrains Mono',monospace;">${temp}°C</div>
-          <div style="font-size:11px;color:var(--text-dim);">습도 ${humid}% &nbsp;·&nbsp; 풍속 ${wind}m/s &nbsp;·&nbsp; 강수확률 ${pop}%</div>
+          <div style="font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace;">${temp}°C</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:3px;">습도 ${humid}% &nbsp;·&nbsp; 풍속 ${wind}m/s &nbsp;·&nbsp; 강수확률 ${pop}%</div>
         </div>
       </div>
-      <div style="margin-bottom:6px;">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-bottom:3px;">
-          <span>작업환경 위험지수</span><span style="color:${riskClr};font-weight:700;">${riskLbl} (${risk}/100)</span>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-bottom:4px;">
+          <span>작업환경 위험지수</span>
+          <span style="color:${riskClr};font-weight:700;">${riskLbl} (${risk}/100)</span>
         </div>
-        <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;">
-          <div style="width:${risk}%;height:100%;background:${riskClr};border-radius:3px;transition:width .4s;"></div>
+        <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;">
+          <div style="width:${risk}%;height:100%;background:${riskClr};border-radius:4px;"></div>
         </div>
+        ${risks.length?`<div style="font-size:10px;color:var(--text-dim);margin-top:5px;">${risks.join(' &nbsp; ')}</div>`:''}
       </div>
-      ${risks.length?`<div style="font-size:10px;color:var(--text-dim);margin-top:4px;">${risks.join(' &nbsp; ')}</div>`:''}
-      <div style="font-size:10px;color:var(--text-dim);margin-top:6px;">📍 화성시 기준 · 기상청 단기예보</div>`;
+      <div style="font-size:10px;color:var(--text-dim);margin-top:8px;">📍 화성시 기준 · ${baseDate} ${baseTime} 발표</div>`;
   }catch(e){
     console.warn('[날씨]', e.message);
     el.innerHTML=`<div class="hw-err">날씨 정보를 불러올 수 없습니다.<br>
       <a href="https://www.weather.go.kr" target="_blank" class="hw-more-link">기상청 →</a></div>`;
   }
+}
+
+// ── 4. MSDS 화학물질 검색 (사이드바 연동용, 추후 확장) ──
+async function searchMsds(chemName){
+  if(!chemName) return null;
+  const data = await publicApiFetch(
+    'https://apis.data.go.kr/B552468/msdschem/getChemList',
+    { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1, chem_nm:chemName }
+  );
+  return findArray(data) || [];
 }
 
 
