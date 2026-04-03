@@ -2124,7 +2124,7 @@ async function loadKoshaAccidentWidget(){
   try{
     // callApiId 여러 값 순서대로 시도
     const accParamSets = [
-      { ServiceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', callApiId:'getDisaster_api02', numOfRows:5, pageNo:1, type:'json' },
+      { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', callApiId:1060, numOfRows:5, pageNo:1 },
       { ServiceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1, type:'json' },
       { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', callApiId:'getDisaster_api02', numOfRows:5, pageNo:1 },
       { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1 },
@@ -2173,7 +2173,7 @@ async function loadKoshaSafetyNewsWidget(){
   if(!el) return;
   try{
     const safParamSets = [
-      { ServiceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', callApiId:'getNews_api02', numOfRows:5, pageNo:1, type:'json' },
+      { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', callApiId:1040, numOfRows:5, pageNo:1 },
       { ServiceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1, type:'json' },
       { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', callApiId:'getNews_api02', numOfRows:5, pageNo:1 },
       { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1 },
@@ -2327,18 +2327,23 @@ async function doMsdsSearch(){
     const items = xml && xml.querySelectorAll ? Array.from(xml.querySelectorAll('item')) : [];
     console.log('[MSDS] item수:', items.length, items[0] ? items[0].outerHTML.substring(0,300) : '없음');
     // item이 없으면 다른 태그명 시도
-    if(items.length===0 && xml && xml.querySelectorAll){
-      const allTags = Array.from(xml.querySelectorAll('*')).slice(0,20).map(el=>el.tagName).join(',');
-      console.log('[MSDS] 모든 태그:', allTags);
+    // item 없으면 items 하위 직접 자식 탐색
+    const msdsItems2 = items.length===0 && xml && xml.querySelectorAll
+      ? Array.from(xml.querySelectorAll('items > *'))
+      : [];
+    if(msdsItems2.length > 0){
+      console.log('[MSDS] items 하위 태그:', msdsItems2[0].tagName, msdsItems2.length+'개');
     }
-        if(items.length===0){
+    const finalItems = items.length > 0 ? items : msdsItems2;
+        if(finalItems.length===0){
       area.innerHTML=`<div class="hw-err">"${eh(kw)}" 검색결과 없음</div>`;
       return;
     }
-    area.innerHTML=`<div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;">"${eh(kw)}" 검색결과 ${items.length}건 — 클릭하면 17섹션 상세정보</div>`
-    +items.map(item=>{
-      const mNo   =(item.querySelector('mNo')?.textContent||'').trim();
-      const chemNm=(item.querySelector('chemNm')?.textContent||item.querySelector('chem_nm')?.textContent||'').trim();
+    const useItems = finalItems.length > 0 ? finalItems : items;
+    area.innerHTML=`<div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;">"${eh(kw)}" 검색결과 ${useItems.length}건 — 클릭하면 17섹션 상세정보</div>`
+    +useItems.map(item=>{
+      const mNo   =(item.querySelector('mNo')?.textContent||item.textContent||'').trim();
+      const chemNm=(item.querySelector('chemNm')?.textContent||item.querySelector('chem_nm')?.textContent||item.tagName||'').trim();
       const casNo =(item.querySelector('casNo')?.textContent||item.querySelector('cas_no')?.textContent||'').trim();
       return `<div class="msds-list-item" onclick="openMsdsDetail('${mNo}','${eh(chemNm)}')"
         style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;margin-bottom:5px;transition:border-color .12s;"
