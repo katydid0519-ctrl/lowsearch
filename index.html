@@ -2133,7 +2133,8 @@ async function loadKoshaAccidentWidget(){
     for(const params of accParamSets){
       try{
         const d = await publicApiFetch('https://apis.data.go.kr/B552468/disaster_api02/getdisaster_api02', params);
-        console.log('[재해사례] params:', JSON.stringify(params).substring(0,80), '응답:', JSON.stringify(d).substring(0,150));
+        const dStr = JSON.stringify(d);
+        console.log('[재해사례] params:', JSON.stringify(params).substring(0,80), '응답:', dStr.substring(0,300), '전체길이:', dStr.length);
         if(d?.header?.resultCode==='00'||d?.body||findArray(d)){ data=d; break; }
       }catch(e){ console.warn('[재해사례] 시도실패:', e.message); }
     }
