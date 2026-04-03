@@ -498,23 +498,17 @@ async function moelFetch(){
 }
 // 안전보건공단 HTML fetch
 async function koshaFetch(){
-  // 시도할 URL 순서 (리뉴얼 대비 대체 경로 포함)
   const urls=[
     'https://kosha.or.kr/notification/release/press-release',
     'https://www.kosha.or.kr/notification/release/press-release',
-    'https://kosha.or.kr/kosha/news/pressReleaseList.do',
-    'https://www.kosha.or.kr/kosha/news/pressReleaseList.do',
   ];
   if(IS_NETLIFY){
     for(const url of urls){
       try{
         const res=await netlifyProxy(url,12000);
         const text=await res.text();
-        if(text && text.length>500){
-          console.log('[KOSHA] 성공 URL:',url,'길이:',text.length);
-          return text;
-        }
-      }catch(e){ console.warn('[KOSHA] proxy 실패:',url,e.message); }
+        if(text && text.length>500) return text;
+      }catch(e){}
     }
   }
   for(const url of urls){
@@ -522,6 +516,39 @@ async function koshaFetch(){
     if(text && text.length>500) return text;
   }
   return null;
+}
+
+// RSS XML fetch (proxy 경유)
+async function rssFetch(rssUrl){
+  if(IS_NETLIFY){
+    try{
+      const res=await netlifyProxy(rssUrl,12000);
+      return await res.text();
+    }catch(e){}
+  }
+  return proxyFetch(rssUrl);
+}
+
+// RSS XML 파싱 → [{title,link,date}]
+function parseRSS(xmlStr){
+  const doc=new DOMParser().parseFromString(xmlStr,'text/xml');
+  const items=Array.from(doc.querySelectorAll('item'));
+  return items.map(function(item){
+    const title=(item.querySelector('title')?.textContent||'').replace(/<!\[CDATA\[|\]\]>/g,'').trim();
+    const link=(item.querySelector('link')?.textContent||item.querySelector('guid')?.textContent||'').trim();
+    const pubDate=(item.querySelector('pubDate')?.textContent||'').trim();
+    // pubDate → YYYY.MM.DD 변환
+    let date='';
+    if(pubDate){
+      const d=new Date(pubDate);
+      if(!isNaN(d)) date=`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+      else{
+        const m=pubDate.match(/(\d{4})[.\-\/](\d{2})[.\-\/](\d{2})/);
+        if(m) date=`${m[1]}.${m[2]}.${m[3]}`;
+      }
+    }
+    return {title,link,date};
+  }).filter(n=>n.title.length>2);
 }
 
 
@@ -554,7 +581,9 @@ function saveApiKey(){
   document.getElementById('apiOk').classList.add('show');
   toast('저장 ✓');
 }
-function getOC(){return 'test';}
+function getOC(){
+  return localStorage.getItem(LS_API)||'bowlers';
+}
 
 // ── 안전보건환경 사이트 링크 ──
 const DEFAULT_SITES = [
@@ -1960,192 +1989,98 @@ function goHome(){
   loadKoshaNews();
 }
 
-// ── 고용노동부 보도자료 ──
+// ── 고용노동부 보도자료 (RSS) ──
 async function loadMoelNews(){
   const el=document.getElementById('moelNews');
   if(!el) return;
   const pageUrl='https://www.moel.go.kr/news/enews/report/enewsList.do';
+  const logoUrl='https://www.moel.go.kr/images/layout/logo.png';
   el.innerHTML='<div style="text-align:center;color:var(--text-dim);font-size:11px;padding:10px;">로딩 중...</div>';
-  try{
-    const htmlStr=await moelFetch();
-    if(!htmlStr) throw new Error('fetch 실패');
 
-    function decodeHtml(str){
-      const t=document.createElement('textarea');
-      t.innerHTML=str;
-      return t.value.replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
-    }
+  // 고용노동부 RSS 피드 목록 (순서대로 시도)
+  const rssUrls=[
+    'https://www.moel.go.kr/rss/rssNotice.do',
+    'https://www.moel.go.kr/rss/rssPressRelease.do',
+    'https://www.moel.go.kr/rss/rssNews.do',
+  ];
 
-    const newsItems=[];
-    const re=/<a[^>]+href=["']([^"']*enewsView\.do\?[^"'<>]*news_seq=\d+[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi;
-    let m;
-    while((m=re.exec(htmlStr))!==null){
-      let href=m[1].trim();
-      let title=decodeHtml(m[2]);
-      if(!title || title.length<8) continue;
-      if(!href.startsWith('http')){
-        href=href.startsWith('/') ? 'https://www.moel.go.kr'+href : 'https://www.moel.go.kr/news/enews/report/'+href;
-      }
-      newsItems.push({title:title,date:'',link:href});
-    }
-
-    if(newsItems.length===0){
-      const rowRe=/(\d{5})\s+(.+?)\s+첨부파일 있음\s+(\d{4}\.\d{2}\.\d{2})\s+\d+/g;
-      while((m=rowRe.exec(htmlStr))!==null){
-        const no=m[1];
-        const title=m[2].trim();
-        const date=m[3];
-        if(!title || title.length<8) continue;
-        newsItems.push({
-          title:title,
-          date:date,
-          link:'https://www.moel.go.kr/news/enews/report/enewsView.do?news_seq='+no
-        });
-      }
-    }
-
-    const seen=new Set();
-    const unique=newsItems.filter(function(n){
-      const key=n.link+'|'+n.title;
-      if(seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    }).slice(0,10);
-
-    renderNewsSection(el,'https://www.moel.go.kr/images/layout/logo.png','고용노동부',pageUrl,unique);
-  }catch(e){
-    console.warn('고용노동부 보도자료 오류:',e.message);
-    renderNewsSection(el,'https://www.moel.go.kr/images/layout/logo.png','고용노동부',pageUrl,[]);
+  let items=[];
+  for(const rssUrl of rssUrls){
+    try{
+      const xmlStr=await rssFetch(rssUrl);
+      if(!xmlStr||xmlStr.length<100) continue;
+      items=parseRSS(xmlStr).slice(0,10);
+      if(items.length>0){ console.log('[MOEL] RSS 성공:', rssUrl, items.length,'건'); break; }
+    }catch(e){ console.warn('[MOEL] RSS 실패:', rssUrl, e.message); }
   }
+
+  // RSS 실패 시 HTML 파싱 폴백
+  if(items.length===0){
+    try{
+      const htmlStr=await moelFetch();
+      if(htmlStr){
+        function decodeHtml(str){
+          const t=document.createElement('textarea');t.innerHTML=str;
+          return t.value.replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
+        }
+        const re=/<a[^>]+href=["']([^"']*enewsView\.do\?[^"'<>]*news_seq=\d+[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi;
+        let m;
+        while((m=re.exec(htmlStr))!==null){
+          let href=m[1].trim();
+          const title=decodeHtml(m[2]);
+          if(!title||title.length<8) continue;
+          if(!href.startsWith('http')) href='https://www.moel.go.kr'+href;
+          items.push({title,date:'',link:href});
+        }
+        items=items.slice(0,10);
+      }
+    }catch(e){}
+  }
+
+  renderNewsSection(el,logoUrl,'고용노동부',pageUrl,items);
 }
 
-// ── 안전보건공단 보도자료 ──
+// ── 안전보건공단 보도자료 (RSS) ──
 async function loadKoshaNews(){
   const el=document.getElementById('koshaNews');
   if(!el) return;
   const pageUrl='https://kosha.or.kr/notification/release/press-release';
   const logoUrl='https://www.kosha.or.kr/img/portal/common/logo.png';
   el.innerHTML='<div style="text-align:center;color:var(--text-dim);font-size:11px;padding:10px;">로딩 중...</div>';
-  try{
-    const htmlStr=await koshaFetch();
-    if(!htmlStr) throw new Error('fetch 실패');
 
-    // 디버그: 실제 HTML 구조 콘솔 출력 (처음 4000자)
-    console.log('[KOSHA] HTML 앞부분:', htmlStr.substring(0,4000));
+  // KOSHA RSS 피드 목록
+  const rssUrls=[
+    'https://kosha.or.kr/rss/kosha/press.do',
+    'https://www.kosha.or.kr/rss/kosha/press.do',
+    'https://kosha.or.kr/rss.do',
+    'https://www.kosha.or.kr/rss.do',
+  ];
 
-    const doc=new DOMParser().parseFromString(htmlStr,'text/html');
-    const newsItems=[];
-
-    // ── 패턴 1: 기존 tboard 구조 (.tboard_list_row) ──────────────────
-    const tboardRows=Array.from(doc.querySelectorAll('.tboard_list_row'));
-    if(tboardRows.length>0){
-      console.log('[KOSHA] 패턴1(tboard_list_row) 감지:', tboardRows.length,'행');
-      tboardRows.forEach(function(row){
-        // data 속성 기반 (구버전)
-        const noEl=row.querySelector('[data-tboard-artcl-no="D020100001"]');
-        const dateEl=row.querySelector('[data-tboard-artcl-no="E030100006"]');
-        const titleEl=row.querySelector('.tboard_list_subject');
-        // href 있는 a 태그 탐색
-        const aEl=row.querySelector('a[href]');
-        const date=((dateEl?.textContent)||'').replace(/\s+/g,' ').replace(/^보도일자\s*/,'').trim();
-        const title=((titleEl?.getAttribute('title'))||(titleEl?.textContent)||(aEl?.textContent)||'').replace(/\s+/g,' ').trim();
-        if(!title || title.length<4) return;
-        let href=aEl?.getAttribute('href')||pageUrl;
-        if(!href.startsWith('http')) href='https://kosha.or.kr'+(href.startsWith('/')?href:'/'+href);
-        newsItems.push({title,date,link:href});
-      });
-    }
-
-    // ── 패턴 2: board-list / board-item 구조 ─────────────────────────
-    if(newsItems.length===0){
-      const boardItems=Array.from(doc.querySelectorAll('.board-item, .board_item, li.item, .list-item'));
-      if(boardItems.length>0){
-        console.log('[KOSHA] 패턴2(board-item) 감지:', boardItems.length,'행');
-        boardItems.forEach(function(item){
-          const aEl=item.querySelector('a[href]');
-          if(!aEl) return;
-          const title=(aEl.getAttribute('title')||aEl.textContent||'').replace(/\s+/g,' ').trim();
-          if(!title || title.length<4) return;
-          const dateEl=item.querySelector('.date,.board-date,.board_date,[class*="date"]');
-          const date=(dateEl?.textContent||'').replace(/\s+/g,' ').trim();
-          let href=aEl.getAttribute('href')||pageUrl;
-          if(!href.startsWith('http')) href='https://kosha.or.kr'+(href.startsWith('/')?href:'/'+href);
-          newsItems.push({title,date,link:href});
-        });
-      }
-    }
-
-    // ── 패턴 3: table 기반 목록 ──────────────────────────────────────
-    if(newsItems.length===0){
-      const tableRows=Array.from(doc.querySelectorAll('table tbody tr'));
-      if(tableRows.length>0){
-        console.log('[KOSHA] 패턴3(table tr) 감지:', tableRows.length,'행');
-        tableRows.forEach(function(tr){
-          const aEl=tr.querySelector('td a[href]');
-          if(!aEl) return;
-          const title=(aEl.getAttribute('title')||aEl.textContent||'').replace(/\s+/g,' ').trim();
-          if(!title || title.length<4) return;
-          const tds=Array.from(tr.querySelectorAll('td'));
-          // 날짜는 보통 마지막 또는 끝에서 두 번째 td
-          const dateTd=tds[tds.length-1]||tds[tds.length-2];
-          const date=(dateTd?.textContent||'').replace(/\s+/g,' ').trim();
-          const validDate=/\d{4}[.\-\/]\d{2}[.\-\/]\d{2}/.test(date)?date:'';
-          let href=aEl.getAttribute('href')||pageUrl;
-          if(!href.startsWith('http')) href='https://kosha.or.kr'+(href.startsWith('/')?href:'/'+href);
-          newsItems.push({title,date:validDate,link:href});
-        });
-      }
-    }
-
-    // ── 패턴 4: ul>li 내 a[href] 범용 추출 ──────────────────────────
-    if(newsItems.length===0){
-      console.log('[KOSHA] 패턴4(범용 a 태그) 시도');
-      const allLinks=Array.from(doc.querySelectorAll('a[href]'));
-      allLinks.forEach(function(a){
-        const href=a.getAttribute('href')||'';
-        // press-release 관련 경로 or articleNo/bbsNo 쿼리 포함
-        if(!/press.?release|artclNo|articleNo|bbsNo|noticeNo|seqNo/i.test(href)) return;
-        const title=(a.getAttribute('title')||a.textContent||'').replace(/\s+/g,' ').trim();
-        if(!title || title.length<6) return;
-        // 날짜 찾기: 부모 li/tr 안에서
-        const parent=a.closest('li,tr,div.item,div.row')||a.parentElement;
-        const parentText=(parent?.textContent||'');
-        const dateMatch=parentText.match(/\d{4}[.\-\/]\d{2}[.\-\/]\d{2}/);
-        const date=dateMatch?dateMatch[0]:'';
-        let fullHref=href.startsWith('http')?href:'https://kosha.or.kr'+(href.startsWith('/')?href:'/'+href);
-        newsItems.push({title,date,link:fullHref});
-      });
-    }
-
-    // 중복 제거 및 정제
-    const seen=new Set();
-    const unique=newsItems.filter(function(n){
-      const key=n.title.substring(0,30);
-      if(seen.has(key)||n.title.length<4) return false;
-      seen.add(key);
-      return true;
-    }).slice(0,10);
-
-    console.log('[KOSHA] 최종 파싱 결과:', unique.length,'건', unique.slice(0,3));
-    renderNewsSection(el,logoUrl,'안전보건공단',pageUrl,unique);
-  }catch(e){
-    console.warn('[KOSHA] 보도자료 오류:', e.message);
-    renderNewsSection(el,logoUrl,'안전보건공단',pageUrl,[]);
+  let items=[];
+  for(const rssUrl of rssUrls){
+    try{
+      const xmlStr=await rssFetch(rssUrl);
+      if(!xmlStr||xmlStr.length<100) continue;
+      items=parseRSS(xmlStr).slice(0,10);
+      if(items.length>0){ console.log('[KOSHA] RSS 성공:', rssUrl, items.length,'건'); break; }
+    }catch(e){ console.warn('[KOSHA] RSS 실패:', rssUrl, e.message); }
   }
+
+  renderNewsSection(el,logoUrl,'안전보건공단',pageUrl,items);
 }
 
 // 공통 뉴스 렌더러
 function renderNewsSection(el,logoUrl,altText,pageUrl,items){
   var html='<div class="news-section"><div class="news-header">'
-    +'<img src="'+logoUrl+'" alt="'+altText+'" style="height:32px;object-fit:contain;vertical-align:middle;">'
-    +'<span class="news-tab active">보도자료</span>'
+    +'<img src="'+logoUrl+'" alt="'+altText+'" onerror="this.style.display=\'none\'" style="height:32px;object-fit:contain;vertical-align:middle;">'
+    +'<span class="news-tab active" style="margin-left:8px;">보도자료</span>'
     +'<a class="news-more" href="'+pageUrl+'" target="_blank">더보기 +</a>'
     +'</div><ul class="news-list">';
   if(items.length===0){
     html+='<li><a href="'+pageUrl+'" target="_blank"><em>'+altText+' 보도자료 바로가기</em><span class="date">→</span></a></li>';
   } else {
     items.forEach(function(n){
-      html+='<li><a href="'+n.link+'" target="_blank"><em>'+eh(n.title)+'</em><span class="date">'+eh(n.date)+'</span></a></li>';
+      html+='<li><a href="'+(n.link||pageUrl)+'" target="_blank"><em>'+eh(n.title)+'</em><span class="date">'+eh(n.date)+'</span></a></li>';
     });
   }
   html+='</ul></div>';
