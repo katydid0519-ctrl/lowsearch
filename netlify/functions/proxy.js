@@ -16,7 +16,7 @@ exports.handler = async function(event) {
     "www.law.go.kr": 1, "law.go.kr": 1,
     "query1.finance.yahoo.com": 1, "query2.finance.yahoo.com": 1,
     "www.moel.go.kr": 1, "moel.go.kr": 1,
-    "kosha.or.kr": 1, "www.kosha.or.kr": 1,
+    "kosha.or.kr": 1, "www.kosha.or.kr": 1, "portal.kosha.or.kr": 1,
     "apis.data.go.kr": 1
   };
 
