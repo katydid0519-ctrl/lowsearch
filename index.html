@@ -438,61 +438,49 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
           </div>
         </div>
 
-        <!-- 대시보드 메인 그리드 -->
+        <!-- 대시보드 메인 그리드: 좌(캘린더+날씨) / 우(MSDS+사망사고) -->
         <div style="display:grid;grid-template-columns:320px 1fr;gap:20px;width:100%;align-items:start;">
 
-          <!-- 좌측 컬럼: 캘린더 + 날씨 -->
+          <!-- 좌측: 캘린더 + 날씨 -->
           <div style="display:flex;flex-direction:column;gap:16px;">
-            <!-- 캘린더 -->
             <div class="hw-card" id="hwCalendar" style="min-height:auto;">
               <div class="hw-card-title-row">
                 <div class="hw-card-title">📅 캘린더</div>
               </div>
               <div id="hwCalendarBody"><div class="hw-loading">로딩 중...</div></div>
             </div>
-            <!-- 날씨 (다크) -->
             <div class="hw-weather-card" id="hwWeather">
               <div id="hwWeatherBody"><div style="color:rgba(255,255,255,.5);font-size:11px;">날씨 로딩 중...</div></div>
             </div>
           </div>
 
-          <!-- 우측 컬럼: MSDS + 재해 + 사망사고 (3열) -->
+          <!-- 우측: MSDS + 사망사고 게시판 -->
           <div style="display:flex;flex-direction:column;gap:16px;">
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
-              <!-- MSDS -->
-              <div class="hw-card" id="hwMsds" style="min-height:auto;">
-                <div class="hw-card-title-row">
-                  <div class="hw-card-title">🧪 MSDS 화학물질 검색</div>
-                  <span class="hw-src">KOSHA</span>
-                </div>
-                <div style="display:flex;gap:5px;margin-bottom:7px;">
-                  <input type="text" id="msdsInput" class="art-kw-input" placeholder="물질명 (예: 황산)"
-                    style="flex:1;font-size:12px;padding:6px 9px;">
-                  <button onclick="doMsdsSearch()" class="btn-search" style="padding:6px 12px;font-size:12px;">검색</button>
-                </div>
-                <div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap;">
-                  <span style="padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;" onclick="document.getElementById('msdsInput').value='벤젠';doMsdsSearch();">벤젠</span>
-                  <span style="padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;" onclick="document.getElementById('msdsInput').value='황산';doMsdsSearch();">황산</span>
-                  <span style="padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;" onclick="document.getElementById('msdsInput').value='톨루엔';doMsdsSearch();">톨루엔</span>
-                </div>
-                <div id="msdsResultArea"></div>
+            <!-- MSDS -->
+            <div class="hw-card" id="hwMsds" style="min-height:auto;">
+              <div class="hw-card-title-row">
+                <div class="hw-card-title">🧪 MSDS 화학물질 검색</div>
+                <span class="hw-src">KOSHA</span>
               </div>
-              <!-- 국내 재해사례 -->
-              <div class="hw-card" id="hwAccident" style="min-height:auto;">
-                <div class="hw-card-title-row">
-                  <div class="hw-card-title">⚠️ 국내 재해사례</div>
-                  <span class="hw-src">KOSHA</span>
-                </div>
-                <div class="hw-card-body" id="hwAccidentBody"><div class="hw-loading">로딩 중...</div></div>
+              <div style="display:flex;gap:5px;margin-bottom:7px;">
+                <input type="text" id="msdsInput" class="art-kw-input" placeholder="물질명 (예: 황산)"
+                  style="flex:1;font-size:12px;padding:6px 9px;">
+                <button onclick="doMsdsSearch()" class="btn-search" style="padding:6px 12px;font-size:12px;">검색</button>
               </div>
-              <!-- 사망사고 게시판 -->
-              <div class="hw-card" id="hwSafety" style="min-height:auto;">
-                <div class="hw-card-title-row">
-                  <div class="hw-card-title">💀 사망사고 게시판</div>
-                  <span class="hw-src">KOSHA</span>
-                </div>
-                <div class="hw-card-body" id="hwSafetyBody"><div class="hw-loading">로딩 중...</div></div>
+              <div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap;">
+                <span style="padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;" onclick="document.getElementById('msdsInput').value='벤젠';doMsdsSearch();">벤젠</span>
+                <span style="padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;" onclick="document.getElementById('msdsInput').value='황산';doMsdsSearch();">황산</span>
+                <span style="padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;" onclick="document.getElementById('msdsInput').value='톨루엔';doMsdsSearch();">톨루엔</span>
               </div>
+              <div id="msdsResultArea"></div>
+            </div>
+            <!-- 사망사고 게시판 -->
+            <div class="hw-card" id="hwSafety" style="min-height:auto;">
+              <div class="hw-card-title-row">
+                <div class="hw-card-title">💀 사망사고 게시판</div>
+                <span class="hw-src">KOSHA</span>
+              </div>
+              <div class="hw-card-body" id="hwSafetyBody"><div class="hw-loading">로딩 중...</div></div>
             </div>
           </div>
         </div>
@@ -2285,7 +2273,6 @@ function goHome(){
 // ══════════════════════════════════════════════════
 
 function initHomeWidgets(){
-  loadKoshaAccidentWidget();
   loadKoshaSafetyNewsWidget();
   loadWeatherWidget();
   loadCalendarWidget();
