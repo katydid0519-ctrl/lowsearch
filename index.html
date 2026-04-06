@@ -2329,57 +2329,48 @@ async function loadKoshaAccidentWidget(){
   const el = document.getElementById('hwAccidentBody');
   if(!el) return;
   try{
-    // callApiId 여러 값 순서대로 시도
-    // callApiId:1060 고정, 최대 3회 재시도
-    let data = null;
-    for(let retry=0; retry<3; retry++){
-      try{
-        const d = await publicApiFetch('https://apis.data.go.kr/B552468/disaster_api02/getdisaster_api02',
-          { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', callApiId:1060, numOfRows:5, pageNo:1 });
-        console.log('[재해사례] 시도'+(retry+1)+' 응답:', JSON.stringify(d).substring(0,200));
-        if(d?.header?.resultCode==='00'||d?.body||findArray(d)){ data=d; break; }
-        if(retry===0){
-          // 두번째 시도: callApiId 없이
-          const d2 = await publicApiFetch('https://apis.data.go.kr/B552468/disaster_api02/getdisaster_api02',
-            { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1 });
-          console.log('[재해사례] callApiId없이 응답:', JSON.stringify(d2).substring(0,200));
-          if(d2?.header?.resultCode==='00'||d2?.body||findArray(d2)){ data=d2; break; }
-        }
-      }catch(e){
-        console.warn('[재해사례] 시도'+(retry+1)+'실패:', e.message);
-        if(retry<2) await new Promise(r=>setTimeout(r,1000));
-      }
-    }
-    if(!data) throw new Error('API 응답 없음 (3회 재시도 실패)');
-    const raw = data?.body?.items?.item || findArray(data) || [];
-    const arr = Array.isArray(raw) ? raw : (raw ? [raw] : []);
-    if(arr.length===0) throw new Error('데이터 없음 | 응답:'+JSON.stringify(data).substring(0,200));
+    // portal.kosha.or.kr 사고사례 게시판 HTML 직접 fetch (proxy 경유)
+    const ACC_URL = 'https://portal.kosha.or.kr/archive/disaster-case/accident-case/acccase-industry/construc-industry';
+    const proxyUrl = '/.netlify/functions/proxy?url=' + encodeURIComponent(ACC_URL);
+    const res = await fetchWithTimeout(proxyUrl, 18000);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const html = await res.text();
 
-    el.innerHTML = arr.slice(0,4).map((item,i)=>{
-      const title = item.keyword || item.title || '내용 확인';
-      const biz   = item.business || '';
-      const boardno = item.boardno || '';
-      const url   = 'https://portal.kosha.or.kr/archive/disaster-case/accident-case/acccase-industry/construc-industry';
-      const isFirst = i===0;
-      const badgeCls = isFirst ? 'critical' : 'invest';
-      const badgeLabel = isFirst ? 'CRITICAL' : '재해사례';
-      const iconCls = isFirst ? 'critical' : 'invest';
-      const iconEmoji = isFirst ? '⚠️' : '📋';
+    // tboard_list_subject 제목 파싱
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const rows = Array.from(doc.querySelectorAll('.tboard_list_row'));
+
+    if(!rows.length) throw new Error('게시글 없음 (파싱 실패)');
+
+    const items = rows.slice(0,5).map(row => {
+      const titleEl = row.querySelector('.tboard_list_subject');
+      const title = titleEl ? titleEl.textContent.trim() : '';
+      const dateEl = row.querySelector('[data-tboard-artcl-no="D030100003"]');
+      const date = dateEl ? dateEl.textContent.replace('등록일','').trim() : '';
+      return { title, date };
+    }).filter(i => i.title);
+
+    if(!items.length) throw new Error('파싱된 항목 없음');
+
+    el.innerHTML = items.map(item => {
       return '<div class="hw-list-item" style="cursor:pointer;" onclick="openKoshaPopup(this)" '
-        +'data-title="'+eh(title)+'" data-biz="'+eh(biz)+'" data-contents="'+eh(contents)+'" data-boardno="'+eh(boardno)+'" data-type="accident">'
+        +'data-title="'+eh(item.title)+'" data-contents="" data-boardno="" data-type="accident" data-date="'+eh(item.date)+'">'
         +'<span class="hw-list-link">'
-          +(biz?'<span class="hw-badge">'+eh(biz)+'</span>':'')
-          +'<span class="hw-list-title">'+eh(title)+'</span>'
+          +'<span class="hw-list-title">'+eh(item.title)+'</span>'
         +'</span>'
+        +(item.date?'<span class="hw-list-date">'+eh(item.date)+'</span>':'')
         +'</div>';
     }).join('')
-    + '<a href="https://portal.kosha.or.kr/archive/disaster-case/accident-case/acccase-industry/construc-industry" target="_blank" class="hw-more-link">더보기 →</a>'
+    + '<a href="'+ACC_URL+'" target="_blank" class="hw-more-link">더보기 →</a>';
+
   }catch(e){
-    console.error('[재해사례] 에러:', e.message, '| data:', data ? JSON.stringify(data).substring(0,200) : 'null');
+    console.error('[재해사례] 에러:', e.message);
     el.innerHTML='<div class="hw-err">데이터를 불러올 수 없습니다.<br>'
       +'<a href="https://portal.kosha.or.kr/archive/disaster-case/accident-case/acccase-industry/construc-industry" target="_blank" class="hw-more-link">재해사례 게시판 →</a></div>';
   }
 }
+
 
 // ── 2. 사고사망 게시판 ──
 // 엔드포인트: news_api/getNews_api
