@@ -2237,18 +2237,28 @@ function openKoshaPopup(el){
 
   const body = document.getElementById('koshaModalBody');
   // contents에서 HTML 태그 제거
-  const cleanContents = contents.replace(/<[^>]+>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&quot;/g,'"').trim();
-  if(cleanContents){
+  // HTML 엔티티 복원 후 태그 제거
+  let cleanContents = contents
+    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'")
+    .replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+  if(cleanContents && cleanContents.length > 3){
+    body.style.whiteSpace='pre-line';
     body.textContent = cleanContents;
   } else {
-    body.innerHTML = '<div style="color:var(--text-dim);font-size:12px;font-style:italic;">상세 내용은 원문에서 확인하세요.</div>';
+    body.innerHTML = '<div style="color:var(--text-dim);font-size:12px;font-style:italic;line-height:1.8;">'
+      +'API에서 본문을 제공하지 않습니다.<br>원문 보기 버튼을 눌러 KOSHA 사이트에서 확인하세요.</div>';
   }
 
   const link = document.getElementById('koshaModalLink');
   if(type==='accident'){
-    link.href = 'https://portal.kosha.or.kr/archive/disaster-case/accident-case/acccase-industry/construc-industry';
+    // boardno로 상세 URL 생성
+    link.href = boardno
+      ? 'https://portal.kosha.or.kr/archive/disaster-case/accident-case/acccase-industry/construc-industry/view?pstNo='+boardno
+      : 'https://portal.kosha.or.kr/archive/disaster-case/accident-case/acccase-industry/construc-industry';
   } else {
-    link.href = 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2';
+    link.href = boardno
+      ? 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2/view?pstNo='+boardno
+      : 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2';
   }
 
   document.getElementById('koshaModal').style.display='block';
@@ -2351,7 +2361,7 @@ async function loadKoshaAccidentWidget(){
       const iconCls = isFirst ? 'critical' : 'invest';
       const iconEmoji = isFirst ? '⚠️' : '📋';
       return '<div class="hw-list-item" style="cursor:pointer;" onclick="openKoshaPopup(this)" '
-        +'data-title="'+eh(title)+'" data-biz="'+eh(biz)+'" data-contents="" data-boardno="'+boardno+'" data-type="accident">'
+        +'data-title="'+eh(title)+'" data-biz="'+eh(biz)+'" data-contents="'+eh(contents)+'" data-boardno="'+eh(boardno)+'" data-type="accident">'
         +'<span class="hw-list-link">'
           +(biz?'<span class="hw-badge">'+eh(biz)+'</span>':'')
           +'<span class="hw-list-title">'+eh(title)+'</span>'
