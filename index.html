@@ -2257,7 +2257,7 @@ function openKoshaPopup(el){
       : 'https://portal.kosha.or.kr/archive/disaster-case/accident-case/acccase-industry/construc-industry';
   } else {
     link.href = boardno
-      ? 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2/view?pstNo='+boardno
+      ? 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2?bbsId=B2025021314108&pstNo='+boardno
       : 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2';
   }
 
@@ -2330,22 +2330,27 @@ async function loadKoshaAccidentWidget(){
   if(!el) return;
   try{
     // callApiId 여러 값 순서대로 시도
-    const accParamSets = [
-      { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', callApiId:1060, numOfRows:5, pageNo:1 },
-      { ServiceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1, type:'json' },
-      { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', callApiId:'getDisaster_api02', numOfRows:5, pageNo:1 },
-      { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1 },
-    ];
+    // callApiId:1060 고정, 최대 3회 재시도
     let data = null;
-    for(const params of accParamSets){
+    for(let retry=0; retry<3; retry++){
       try{
-        const d = await publicApiFetch('https://apis.data.go.kr/B552468/disaster_api02/getdisaster_api02', params);
-        const dStr = JSON.stringify(d);
-        console.log('[재해사례] params:', JSON.stringify(params).substring(0,80), '응답:', dStr.substring(0,300), '전체길이:', dStr.length);
+        const d = await publicApiFetch('https://apis.data.go.kr/B552468/disaster_api02/getdisaster_api02',
+          { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', callApiId:1060, numOfRows:5, pageNo:1 });
+        console.log('[재해사례] 시도'+(retry+1)+' 응답:', JSON.stringify(d).substring(0,200));
         if(d?.header?.resultCode==='00'||d?.body||findArray(d)){ data=d; break; }
-      }catch(e){ console.warn('[재해사례] 시도실패:', e.message); }
+        if(retry===0){
+          // 두번째 시도: callApiId 없이
+          const d2 = await publicApiFetch('https://apis.data.go.kr/B552468/disaster_api02/getdisaster_api02',
+            { serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', numOfRows:5, pageNo:1 });
+          console.log('[재해사례] callApiId없이 응답:', JSON.stringify(d2).substring(0,200));
+          if(d2?.header?.resultCode==='00'||d2?.body||findArray(d2)){ data=d2; break; }
+        }
+      }catch(e){
+        console.warn('[재해사례] 시도'+(retry+1)+'실패:', e.message);
+        if(retry<2) await new Promise(r=>setTimeout(r,1000));
+      }
     }
-    if(!data) throw new Error('응답없음');
+    if(!data) throw new Error('API 응답 없음 (3회 재시도 실패)');
     const raw = data?.body?.items?.item || findArray(data) || [];
     const arr = Array.isArray(raw) ? raw : (raw ? [raw] : []);
     if(arr.length===0) throw new Error('데이터 없음 | 응답:'+JSON.stringify(data).substring(0,200));
@@ -2370,7 +2375,7 @@ async function loadKoshaAccidentWidget(){
     }).join('')
     + '<a href="https://portal.kosha.or.kr/archive/disaster-case/accident-case/acccase-industry/construc-industry" target="_blank" class="hw-more-link">더보기 →</a>'
   }catch(e){
-    console.warn('[재해사례]', e.message);
+    console.error('[재해사례] 에러:', e.message, '| data:', data ? JSON.stringify(data).substring(0,200) : 'null');
     el.innerHTML='<div class="hw-err">데이터를 불러올 수 없습니다.<br>'
       +'<a href="https://portal.kosha.or.kr/archive/disaster-case/accident-case/acccase-industry/construc-industry" target="_blank" class="hw-more-link">재해사례 게시판 →</a></div>';
   }
