@@ -324,16 +324,16 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .cal-event-del:hover{color:#e74040;}
 /* 검색 히어로 */
 .home-hero{background:linear-gradient(135deg,#1e2629 0%,#2d3a3f 50%,#1a2428 100%);border-radius:var(--radius-xl);padding:32px;margin-bottom:20px;position:relative;overflow:hidden;}
-.home-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(252,113,39,.25) 0%,transparent 70%);}
-.home-hero::after{content:'';position:absolute;bottom:-20px;left:40px;width:140px;height:140px;background:radial-gradient(circle,rgba(240,165,0,.15) 0%,transparent 70%);}
+.home-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(252,113,39,.25) 0%,transparent 70%);pointer-events:none;}
+.home-hero::after{content:'';position:absolute;bottom:-20px;left:40px;width:140px;height:140px;background:radial-gradient(circle,rgba(240,165,0,.15) 0%,transparent 70%);pointer-events:none;}
 .home-hero-title{font-family:'Manrope',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:14px;letter-spacing:-.5px;}
-.home-hero-input-wrap{display:flex;gap:8px;position:relative;z-index:1;}
+.home-hero-input-wrap{display:flex;gap:8px;position:relative;z-index:2;}
 .home-hero-input{flex:1;background:rgba(255,255,255,.95);border:none;border-radius:12px;padding:11px 18px;font-size:13px;font-family:inherit;outline:none;color:var(--text);box-shadow:0 4px 20px rgba(0,0,0,.2);}
 .home-hero-input::placeholder{color:#9ba3a8;}
 .home-hero-btn{padding:11px 22px;background:var(--accent-light);border:none;border-radius:12px;color:#fff;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;font-family:'Manrope',sans-serif;transition:opacity .15s;}
 .home-hero-btn:hover{opacity:.9;}
-.home-hero-tags{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
-.home-hero-tag{padding:4px 12px;background:rgba(255,255,255,.12);border-radius:20px;font-size:11px;color:rgba(255,255,255,.8);cursor:pointer;transition:all .15s;border:1px solid rgba(255,255,255,.1);}
+.home-hero-tags{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;position:relative;z-index:2;}
+.home-hero-tag{padding:4px 12px;background:rgba(255,255,255,.12);border-radius:20px;font-size:11px;color:rgba(255,255,255,.8);cursor:pointer;transition:all .15s;border:1px solid rgba(255,255,255,.1);position:relative;z-index:2;}
 .home-hero-tag:hover{background:rgba(255,255,255,.2);color:#fff;}
 .hw-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;min-height:160px;display:flex;flex-direction:column;}
 .hw-card-wide{grid-column:1/-1;}
@@ -369,6 +369,12 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
     <button class="sidebar-toggle" onclick="toggleSidebar()" title="사이드바 토글">☰</button>
     <span class="logo-badge">LAW</span>
     <span class="logo-title" onclick="goHome()" style="cursor:pointer;">국가법령 검색기</span>
+    <button id="globalBackBtn" onclick="globalBack()" title="뒤로가기"
+      style="display:none;align-items:center;gap:4px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-size:12px;cursor:pointer;padding:4px 10px;transition:all .15s;font-family:inherit;"
+      onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+      ← 뒤로
+    </button>
     <span class="logo-sub">Industrial Safety v7.0</span>
   </div>
   <div class="header-tabs">
@@ -421,8 +427,8 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
         <div class="home-hero" style="width:100%;margin-bottom:20px;">
           <div class="home-hero-title">⚖️ 법령 및 규정 통합 검색</div>
           <div style="display:flex;gap:6px;margin-bottom:10px;">
-            <button class="mode-btn active" id="modeBtn1" onclick="setMode('law')" style="border-radius:8px;padding:6px 14px;font-size:12px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff;">법령명 검색</button>
-            <button class="mode-btn" id="modeBtn2" onclick="setMode('keyword')" style="border-radius:8px;padding:6px 14px;font-size:12px;background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.7);">조문 키워드</button>
+            <button class="mode-btn active" id="modeBtn1" onclick="setMode('law')" style="border-radius:8px;padding:6px 14px;font-size:12px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff;position:relative;z-index:2;">법령명 검색</button>
+            <button class="mode-btn" id="modeBtn2" onclick="setMode('keyword')" style="border-radius:8px;padding:6px 14px;font-size:12px;background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.7);position:relative;z-index:2;">조문 키워드</button>
           </div>
           <div class="home-hero-input-wrap">
             <input class="home-hero-input" id="searchInput" placeholder="산업안전보건법, 중대재해처벌법, 화학물질관리법 검색..."
@@ -430,59 +436,55 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
             <button class="home-hero-btn" onclick="doSearch()">검색하기</button>
           </div>
           <div class="home-hero-tags">
-            <span class="home-hero-tag" onclick="document.getElementById('searchInput').value='위험성평가';doSearch();">#위험성평가</span>
-            <span class="home-hero-tag" onclick="document.getElementById('searchInput').value='산업안전보건법';doSearch();">#산업안전보건법</span>
-            <span class="home-hero-tag" onclick="document.getElementById('searchInput').value='중대재해처벌법';doSearch();">#중대재해처벌법</span>
-            <span class="home-hero-tag" onclick="document.getElementById('searchInput').value='MSDS';doSearch();">#MSDS_작성요령</span>
-            <span class="home-hero-tag" onclick="document.getElementById('searchInput').value='안전보건교육';doSearch();">#안전보건교육</span>
+            <span class="home-hero-tag" onclick="heroSearch('산업안전보건법')">#산업안전보건법</span>
+            <span class="home-hero-tag" onclick="heroSearch('중대재해 처벌 등에 관한 법률')">#중대재해처벌법</span>
+            <span class="home-hero-tag" onclick="heroSearch('화학물질관리법')">#화학물질관리법</span>
+            <span class="home-hero-tag" onclick="heroSearch('산업안전보건기준에 관한 규칙')">#안전보건규칙</span>
           </div>
         </div>
 
-        <!-- 대시보드 메인 그리드: 좌(캘린더+날씨) / 우(MSDS+사망사고) -->
-        <div style="display:grid;grid-template-columns:320px 1fr;gap:20px;width:100%;align-items:start;">
+        <!-- 대시보드: 4개 위젯 일렬 -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;width:100%;align-items:start;">
 
-          <!-- 좌측: 캘린더 + 날씨 -->
-          <div style="display:flex;flex-direction:column;gap:16px;">
-            <div class="hw-card" id="hwCalendar" style="min-height:auto;">
-              <div class="hw-card-title-row">
-                <div class="hw-card-title">📅 캘린더</div>
-              </div>
-              <div id="hwCalendarBody"><div class="hw-loading">로딩 중...</div></div>
-            </div>
-            <div class="hw-weather-card" id="hwWeather">
-              <div id="hwWeatherBody"><div style="color:rgba(255,255,255,.5);font-size:11px;">날씨 로딩 중...</div></div>
-            </div>
+          <!-- 1. 캘린더 -->
+          <div class="hw-card" id="hwCalendar" style="min-height:auto;">
+            <div class="hw-card-title-row"><div class="hw-card-title">📅 캘린더</div></div>
+            <div id="hwCalendarBody"><div class="hw-loading">로딩 중...</div></div>
           </div>
 
-          <!-- 우측: MSDS + 사망사고 게시판 -->
-          <div style="display:flex;flex-direction:column;gap:16px;">
-            <!-- MSDS -->
-            <div class="hw-card" id="hwMsds" style="min-height:auto;">
-              <div class="hw-card-title-row">
-                <div class="hw-card-title">🧪 MSDS 화학물질 검색</div>
-                <span class="hw-src">KOSHA</span>
-              </div>
-              <div style="display:flex;gap:5px;margin-bottom:7px;">
-                <input type="text" id="msdsInput" class="art-kw-input" placeholder="물질명 (예: 황산)"
-                  style="flex:1;font-size:12px;padding:6px 9px;">
-                <button onclick="doMsdsSearch()" class="btn-search" style="padding:6px 12px;font-size:12px;">검색</button>
-              </div>
-              <div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap;">
-                <span style="padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;" onclick="document.getElementById('msdsInput').value='벤젠';doMsdsSearch();">벤젠</span>
-                <span style="padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;" onclick="document.getElementById('msdsInput').value='황산';doMsdsSearch();">황산</span>
-                <span style="padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;" onclick="document.getElementById('msdsInput').value='톨루엔';doMsdsSearch();">톨루엔</span>
-              </div>
-              <div id="msdsResultArea"></div>
-            </div>
-            <!-- 사망사고 게시판 -->
-            <div class="hw-card" id="hwSafety" style="min-height:auto;">
-              <div class="hw-card-title-row">
-                <div class="hw-card-title">💀 사망사고 게시판</div>
-                <span class="hw-src">KOSHA</span>
-              </div>
-              <div class="hw-card-body" id="hwSafetyBody"><div class="hw-loading">로딩 중...</div></div>
-            </div>
+          <!-- 2. 날씨 -->
+          <div class="hw-weather-card" id="hwWeather">
+            <div id="hwWeatherBody"><div style="color:rgba(255,255,255,.5);font-size:11px;">날씨 로딩 중...</div></div>
           </div>
+
+          <!-- 3. MSDS -->
+          <div class="hw-card" id="hwMsds" style="min-height:auto;">
+            <div class="hw-card-title-row">
+              <div class="hw-card-title">🧪 MSDS 검색</div>
+              <span class="hw-src">KOSHA</span>
+            </div>
+            <div style="display:flex;gap:5px;margin-bottom:7px;">
+              <input type="text" id="msdsInput" class="art-kw-input" placeholder="물질명 (예: 황산)"
+                style="flex:1;font-size:12px;padding:6px 9px;">
+              <button onclick="doMsdsSearch()" class="btn-search" style="padding:6px 12px;font-size:12px;">검색</button>
+            </div>
+            <div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap;">
+              <span style="padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;" onclick="document.getElementById('msdsInput').value='벤젠';doMsdsSearch();">벤젠</span>
+              <span style="padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;" onclick="document.getElementById('msdsInput').value='황산';doMsdsSearch();">황산</span>
+              <span style="padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;" onclick="document.getElementById('msdsInput').value='톨루엔';doMsdsSearch();">톨루엔</span>
+            </div>
+            <div id="msdsResultArea"></div>
+          </div>
+
+          <!-- 4. 사망사고 게시판 -->
+          <div class="hw-card" id="hwSafety" style="min-height:auto;">
+            <div class="hw-card-title-row">
+              <div class="hw-card-title">💀 사망사고 게시판</div>
+              <span class="hw-src">KOSHA</span>
+            </div>
+            <div class="hw-card-body" id="hwSafetyBody"><div class="hw-loading">로딩 중...</div></div>
+          </div>
+
         </div>
 
       </div>
@@ -1100,7 +1102,7 @@ async function searchLaws(query){
 // ── 조문 로드 ──────────────────────────────────────────────────────────────
 async function loadArticles(mst, name){
   showLoading(name+' 조문 불러오는 중...');
-  currentView='articles'; currentLaw={mst,name}; currentKeyword='';
+  currentView='articles'; if(_navStack[_navStack.length-1]!=='법령목록') pushNav('법령목록'); updateBackBtn(); currentLaw={mst,name}; currentKeyword='';
   document.getElementById('searchInput').value='';
   selectedArticles.clear();
   const oc=getOC();
@@ -1464,6 +1466,7 @@ function renderLawList(){
   const area=document.getElementById('resultArea');
   document.getElementById('initState').style.display='none';
   area.style.display='block';
+  if(!_navStack.length||_navStack[_navStack.length-1]!=='홈') { _navStack.length=0; pushNav('홈'); }
   if(!lawList.length){
     area.innerHTML=`<div class="state-box"><div class="state-icon">🔍</div><div class="state-title">검색 결과 없음</div></div>`;
     return;
@@ -1499,6 +1502,7 @@ function renderArticles(){
   const area=document.getElementById('resultArea');
   document.getElementById('initState').style.display='none';
   area.style.display='block';
+  if(!_navStack.length||_navStack[_navStack.length-1]!=='홈') { _navStack.length=0; pushNav('홈'); }
   const kw=currentKeyword;
   const hl=str=>kw?eh(str).replace(new RegExp(er(kw),'gi'),m=>`<mark>${m}</mark>`):eh(str);
   const total=filteredArticles.length;
@@ -1622,6 +1626,7 @@ function renderAppendixList(){
   const area=document.getElementById('resultArea');
   document.getElementById('initState').style.display='none';
   area.style.display='block';
+  if(!_navStack.length||_navStack[_navStack.length-1]!=='홈') { _navStack.length=0; pushNav('홈'); }
   
   let html=`<button class="back-btn" onclick="goBack()">◀ 법령 목록</button>
     <div class="law-title-bar">
@@ -2265,6 +2270,39 @@ function goHome(){
   document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
   updateCounts();
   initHomeWidgets();
+  updateBackBtn();
+}
+
+function heroSearch(kw){
+  setMode('law');
+  const inp = document.getElementById('searchInput');
+  if(inp) inp.value = kw;
+  doSearch();
+}
+
+// ── 뒤로가기 히스토리 ──
+const _navStack = [];
+function pushNav(label){ _navStack.push(label); updateBackBtn(); }
+function popNav(){ if(_navStack.length) _navStack.pop(); updateBackBtn(); }
+function updateBackBtn(){
+  const btn=document.getElementById('globalBackBtn');
+  if(!btn) return;
+  btn.style.display = _navStack.length>0 ? 'flex' : 'none';
+  if(_navStack.length>0) btn.title=_navStack[_navStack.length-1];
+}
+function globalBack(){
+  if(!_navStack.length) return;
+  const prev=_navStack[_navStack.length-1];
+  popNav();
+  if(prev==='법령목록'&&currentLaw){
+    // 조문 → 법령 목록으로
+    currentView='list'; articleList=[]; filteredArticles=[];
+    document.getElementById('resultArea').style.display='';
+    document.getElementById('initState').style.display='none';
+    renderLawList();
+  } else {
+    goHome();
+  }
 }
 
 
@@ -2732,6 +2770,7 @@ function renderSearchHistory(){
   const area=document.getElementById('resultArea');
   document.getElementById('initState').style.display='none';
   area.style.display='block';
+  if(!_navStack.length||_navStack[_navStack.length-1]!=='홈') { _navStack.length=0; pushNav('홈'); }
   
   if(!searchHistory.length){
     area.innerHTML=`<div class="state-box"><div class="state-icon">🕐</div><div class="state-title">검색 히스토리 없음</div></div>`;
