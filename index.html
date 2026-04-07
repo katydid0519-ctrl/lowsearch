@@ -1000,9 +1000,15 @@ async function searchLaws(query){
 
 async function loadArticles(mst, name){
   showLoading(name+' 조문 불러오는 중...');
-  currentView='articles'; if(_navStack[_navStack.length-1]!=='법령목록') pushNav('법령목록'); updateBackBtn(); currentLaw={mst,name}; currentKeyword='';
+  currentView='articles';
+  if(_navStack[_navStack.length-1]!=='법령목록') pushNav('법령목록');
+  updateBackBtn();
+  currentLaw={mst,name}; currentKeyword='';
   document.getElementById('searchInput').value='';
   selectedArticles.clear();
+  // 필터를 항상 '전체'로 리셋
+  currentFilter='all'; currentPage=1;
+  document.querySelectorAll('.filter-item').forEach((el,i)=>el.classList.toggle('on',i===0));
   const oc=getOC();
   try{
     const data = await lawApiFetch('service', {OC:oc, target:'law', MST:mst, type:'JSON'});
@@ -1174,6 +1180,14 @@ function applyFilter(){
   if(currentKeyword){ const kw=currentKeyword.toLowerCase(); r=r.filter(a=>a.num.includes(kw)||a.title.toLowerCase().includes(kw)||a.content.toLowerCase().includes(kw)); }
   filteredArticles=r; updateCounts();
 }
+function resetFilter(){
+  currentFilter='all'; currentKeyword=''; currentPage=1;
+  // 사이드바 필터 버튼 UI 초기화
+  document.querySelectorAll('.filter-item').forEach((el,i)=>{
+    el.classList.toggle('on', i===0);
+  });
+}
+
 function setFilter(type,el){
   document.querySelectorAll('.filter-item').forEach(e=>e.classList.remove('on'));
   el.classList.add('on'); currentFilter=type; currentPage=1;
@@ -1579,15 +1593,29 @@ function updateLawFavList(){
   });
   el.innerHTML=html;
 }
-function loadLawFavByIdx(idx){ const f=lawFavorites[idx]; if(f) loadArticles(f.mst, f.name); }
+function loadLawFavByIdx(idx){ const f=lawFavorites[idx]; if(f){ resetFilter(); loadArticles(f.mst, f.name); } }
 function toggleLawFavByIdx(idx){ const f=lawFavorites[idx]; if(f) toggleLawFav(f.mst, f.name, f.type, f.dept); }
 
 async function jumpToFav(id){
-  const c=localStorage.getItem('v63c_'+id);if(!c)return;
+  const c=localStorage.getItem('v63c_'+id); if(!c){ toast('캐시된 조문 정보가 없습니다. 법령을 다시 열어주세요.'); return; }
   const art=JSON.parse(c);
-  if(!currentLaw||currentLaw.mst!==art.lawMst) await loadArticles(art.lawMst,art.lawName);
-  setTimeout(()=>{ const idx=filteredArticles.findIndex(a=>a.id===id); if(idx>=0){currentPage=Math.floor(idx/PAGE_SIZE)+1;renderArticles();} setTimeout(()=>{ const sid=id.replace(/[^a-zA-Z0-9_]/g,'_');const card=document.getElementById('card_'+sid); if(card){card.scrollIntoView({behavior:'smooth',block:'center'});}},150); },300);
+  resetFilter();
+  if(!currentLaw||currentLaw.mst!==art.lawMst){ await loadArticles(art.lawMst,art.lawName); }
+  else { applyFilter(); renderArticles(); }
+  setTimeout(()=>{
+    const idx=filteredArticles.findIndex(a=>a.id===id);
+    if(idx>=0){ currentPage=Math.floor(idx/PAGE_SIZE)+1; renderArticles(); }
+    setTimeout(()=>{
+      const sid=id.replace(/[^a-zA-Z0-9_]/g,'_');
+      const card=document.getElementById('card_'+sid);
+      if(card){ card.scrollIntoView({behavior:'smooth',block:'center'}); card.style.outline='2px solid var(--accent)'; setTimeout(()=>card.style.outline='',1500); }
+    },200);
+  },350);
 }
+
+function updateCounts(){
+
+
 
 function updateCounts(){
   document.getElementById('cnt-all').textContent=articleList.length||'-';
