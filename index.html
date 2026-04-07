@@ -1614,10 +1614,6 @@ async function jumpToFav(id){
 }
 
 function updateCounts(){
-
-
-
-function updateCounts(){
   document.getElementById('cnt-all').textContent=articleList.length||'-';
   document.getElementById('cnt-fav').textContent=favorites.size;
   document.getElementById('cnt-memo').textContent=Object.values(memos).filter(m=>m?.trim()).length;
