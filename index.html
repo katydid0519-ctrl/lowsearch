@@ -1187,7 +1187,7 @@ function resetFilter(){
   });
 }
 
-function setFilter(type, el){
+async function setFilter(type, el){
   document.querySelectorAll('.filter-item').forEach(e=>e.classList.remove('on'));
   el.classList.add('on');
   currentFilter=type; currentPage=1;
@@ -1197,58 +1197,83 @@ function setFilter(type, el){
     return;
   }
 
-  // fav / memo: 캐시에서 해당 조문 전부 수집해 표시
   if(type==='fav' || type==='memo'){
-    const collected=[];
-    const seen=new Set();
+    const area=document.getElementById('resultArea');
+    document.getElementById('initState').style.display='none';
+    area.style.display='block';
+    const label=type==='fav'?'즐겨찾기':'메모';
+    area.innerHTML='<div class="state-box"><div class="spinner"></div><div class="state-title">'+label+' 조문 불러오는 중...</div></div>';
 
+    // 1단계: 대상 ID 목록
+    const targetIds=new Set();
     if(type==='fav'){
-      favorites.forEach(id=>{
-        if(seen.has(id)) return;
-        seen.add(id);
-        const c=localStorage.getItem('v63c_'+id);
-        if(!c) return;
-        try{ collected.push(JSON.parse(c)); }catch(e){}
-      });
-    } else { // memo
-      Object.keys(memos).forEach(id=>{
-        if(!memos[id]?.trim()) return;
-        if(seen.has(id)) return;
-        seen.add(id);
-        // 1) 캐시에서 먼저 시도
-        const c=localStorage.getItem('v63c_'+id);
-        if(c){
-          try{ collected.push({...JSON.parse(c), _memo: memos[id]}); return; }catch(e){}
-        }
-        // 2) 현재 열린 articleList에서 시도
-        const fromList = articleList.find(a=>a.id===id);
-        if(fromList){
-          // 캐시에도 저장
-          try{ localStorage.setItem('v63c_'+id, JSON.stringify({id:fromList.id,num:fromList.num,title:fromList.title,lawName:fromList.lawName,lawMst:fromList.lawMst,content:fromList.content.substring(0,300),paras:fromList.paras.slice(0,30)})); }catch(e){}
-          collected.push({...fromList, _memo: memos[id]});
-          return;
-        }
-        // 3) ID 패턴에서 lawMst 파싱: v63_${lawMst}_${num}_${i}
-        const mstMatch = id.match(/^v63_([^_]+)_/);
-        const lawMst = mstMatch ? mstMatch[1] : '';
-        collected.push({id, num:'조문', title:'(조문 정보 없음 — 해당 법령을 한번 열어주세요)', lawName:lawMst?'법령MST:'+lawMst:'알 수 없음', lawMst, content:'', paras:[], _memo:memos[id], _noCache:true});
-      });
+      favorites.forEach(id=>targetIds.add(id));
+    } else {
+      Object.keys(memos).forEach(id=>{ if(memos[id] && memos[id].trim()) targetIds.add(id); });
     }
 
-    if(!collected.length){
-      // 현재 법령 내에서라도 필터링
-      if(currentView==='articles'){ applyFilter(); renderArticles(); }
-      else {
-        const area=document.getElementById('resultArea');
-        document.getElementById('initState').style.display='none';
-        area.style.display='block';
-        const label = type==='fav'?'즐겨찾기':'메모';
-        area.innerHTML=`<div class="state-box"><div class="state-icon">${type==='fav'?'⭐':'📝'}</div><div class="state-title">${label}한 조문이 없습니다</div><div class="state-desc">조문을 열어 ${label}를 추가해보세요.</div></div>`;
-      }
+    if(!targetIds.size){
+      area.innerHTML='<div class="state-box"><div class="state-icon">'+(type==='fav'?'⭐':'📝')+'</div><div class="state-title">'+label+'한 조문이 없습니다</div><div class="state-desc">조문 팝업에서 '+label+'를 추가해보세요.</div></div>';
       return;
     }
 
-    // 수집된 조문으로 articles 화면 표시
+    // 2단계: 캐시 확인, 없으면 lawMst별로 분류
+    const collected=[];
+    const needLoad={};
+
+    targetIds.forEach(function(id){
+      const c=localStorage.getItem('v63c_'+id);
+      if(c){
+        try{ const obj=JSON.parse(c); collected.push(type==='memo'?Object.assign({},obj,{_memo:memos[id]}):obj); return; }catch(e){}
+      }
+      const fromList=articleList.find(function(a){return a.id===id;});
+      if(fromList){
+        try{ localStorage.setItem('v63c_'+id, JSON.stringify({id:fromList.id,num:fromList.num,title:fromList.title,lawName:fromList.lawName,lawMst:fromList.lawMst,content:fromList.content.substring(0,300),paras:fromList.paras.slice(0,30)})); }catch(e){}
+        collected.push(type==='memo'?Object.assign({},fromList,{_memo:memos[id]}):fromList);
+        return;
+      }
+      const mstMatch=id.match(/^v63_([^_]+)_/);
+      const mst=mstMatch?mstMatch[1]:'';
+      if(mst){
+        if(!needLoad[mst]) needLoad[mst]=[];
+        needLoad[mst].push(id);
+      }
+    });
+
+    // 3단계: 캐시 없는 법령 API 로드
+    const mstKeys=Object.keys(needLoad);
+    if(mstKeys.length){
+      area.innerHTML='<div class="state-box"><div class="spinner"></div><div class="state-title">법령 데이터 로딩 중... ('+mstKeys.length+'개 법령)</div></div>';
+      const oc=getOC();
+      await Promise.all(mstKeys.map(async function(mst){
+        try{
+          const data=await lawApiFetch('service',{OC:oc,target:'law',MST:mst,type:'JSON'});
+          const bi=data && data['법령'] && data['법령']['기본정보'];
+          const lawNameRaw=(bi && (bi['법령명한글']||bi['법령명칭'])) || '';
+          const arts=parseArticlesJSON(data,lawNameRaw,mst);
+          needLoad[mst].forEach(function(id){
+            const art=arts.find(function(a){return a.id===id;});
+            if(art){
+              try{ localStorage.setItem('v63c_'+id, JSON.stringify({id:art.id,num:art.num,title:art.title,lawName:art.lawName,lawMst:art.lawMst,content:art.content.substring(0,300),paras:art.paras.slice(0,30)})); }catch(e){}
+              collected.push(type==='memo'?Object.assign({},art,{_memo:memos[id]}):art);
+            }
+          });
+        }catch(e){
+          needLoad[mst].forEach(function(id){
+            const numMatch=id.match(/^v63_[^_]+_(\d+)_/);
+            const num=numMatch?'제'+numMatch[1]+'조':'조문';
+            collected.push({id:id,num:num,title:'(법령 로드 실패 — 네트워크 확인)',lawName:'MST:'+mst,lawMst:mst,content:'',paras:[],_memo:memos[id]||'',_loadFail:true});
+          });
+        }
+      }));
+    }
+
+    if(!collected.length){
+      area.innerHTML='<div class="state-box"><div class="state-icon">'+(type==='fav'?'⭐':'📝')+'</div><div class="state-title">'+label+'한 조문이 없습니다</div></div>';
+      return;
+    }
+
+    // 4단계: 표시
     articleList=collected;
     currentView='articles';
     currentLaw=null;
@@ -1257,47 +1282,39 @@ function setFilter(type, el){
     currentPage=1;
     updateCounts();
 
-    const area=document.getElementById('resultArea');
-    document.getElementById('initState').style.display='none';
-    area.style.display='block';
+    let html='<div class="status-bar"><span class="status-text">'+label+' 조문 <span class="status-count">'+collected.length+'</span>개</span></div>';
 
-    const label=type==='fav'?'즐겨찾기':'메모';
-    let html=`<div class="status-bar">
-      <span class="status-text">${label} 조문 <span class="status-count">${collected.length}</span>개</span>
-    </div>`;
-
-    // 법령별 그룹핑
     const groups={};
-    collected.forEach(a=>{
+    collected.forEach(function(a){
       const ln=a.lawName||'기타';
       if(!groups[ln]) groups[ln]=[];
       groups[ln].push(a);
     });
 
-    Object.keys(groups).sort().forEach(lawName=>{
-      html+=`<div class="chapter-section" style="font-size:12px;cursor:default;">${eh(lawName)}</div>`;
-      groups[lawName].forEach(art=>{
+    Object.keys(groups).sort().forEach(function(lawName){
+      html+='<div class="chapter-section" style="font-size:12px;cursor:default;">'+eh(lawName)+'</div>';
+      groups[lawName].forEach(function(art){
         const isFav=favorites.has(art.id);
-        const hasMemo=!!(memos[art.id]?.trim());
+        const hasMemo=!!(memos[art.id] && memos[art.id].trim());
         const sid=art.id.replace(/[^a-zA-Z0-9_]/g,'_');
-        html+=`<div class="article-card" id="card_${sid}" style="cursor:pointer;">
-          <div class="article-header" onclick="openArticleModal('${sid}')">
-            <span class="article-num">${eh(art.num)}</span>
-            <span class="article-title-text">${eh(art.title||'(제목 없음)')}</span>
-            <div class="article-actions">
-              ${isFav?'<span style="font-size:13px;color:var(--accent)">★</span>':''}
-              ${hasMemo?'<span style="font-size:12px;color:var(--text-dim)">📝</span>':''}
-            </div>
-          </div>
-          ${hasMemo?`<div style="padding:4px 14px 10px;font-size:11px;color:var(--text-dim);border-top:1px solid var(--border);">📝 ${eh(memos[art.id].substring(0,80))}${memos[art.id].length>80?'…':''}</div>`:''}
-        </div>`;
+        const memoText=memos[art.id]||'';
+        html+='<div class="article-card" id="card_'+sid+'" style="cursor:pointer;">'
+          +'<div class="article-header" onclick="openArticleModal(''+sid+'')">'
+          +'<span class="article-num">'+eh(art.num)+'</span>'
+          +'<span class="article-title-text">'+eh(art.title||'(제목 없음)')+'</span>'
+          +'<div class="article-actions">'
+          +(isFav?'<span style="font-size:13px;color:var(--accent)">★</span>':'')
+          +(hasMemo?'<span style="font-size:12px;color:var(--text-dim)">📝</span>':'')
+          +'</div></div>'
+          +(memoText?'<div style="padding:4px 14px 10px;font-size:11px;color:var(--text-dim);border-top:1px solid var(--border);">📝 '+eh(memoText.substring(0,80))+(memoText.length>80?'…':'')+'</div>':'')
+          +'</div>';
       });
     });
 
     area.innerHTML=html;
-    return;
   }
 }
+
 
 function renderLawList(){
   const area=document.getElementById('resultArea');
