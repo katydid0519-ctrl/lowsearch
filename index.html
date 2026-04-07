@@ -1615,7 +1615,32 @@ function updateModalTags(tags){
 }
 
 function copyArticleReference(){ if(!currentModalArticle) return; const text = `${currentModalArticle.lawName} ${currentModalArticle.num}`; navigator.clipboard.writeText(text).then(() => { toast(`인용: "${text}" 복사됨`); }); }
-function generateShareLink(){ if(!currentModalArticle) return; const params = new URLSearchParams({law: currentModalArticle.lawMst, article: currentModalArticle.num, lawName: currentModalArticle.lawName}); const url = window.location.href.split('?')[0] + '?' + params.toString(); navigator.clipboard.writeText(url).then(() => { toast(`공유링크 복사됨`); }); }
+function generateShareLink(){
+  if(!currentModalArticle) return;
+  const art = currentModalArticle;
+  const lawMst = art.lawMst || (currentLaw ? currentLaw.mst : '');
+  const lawName = art.lawName || (currentLaw ? currentLaw.name : '');
+  const params = new URLSearchParams({law: lawMst, article: art.num, lawName});
+  const url = window.location.href.split('?')[0] + '?' + params.toString();
+  const copyText = (text) => {
+    if(navigator.clipboard && window.isSecureContext){
+      navigator.clipboard.writeText(text).catch(()=>fallbackCopy(text));
+    } else { fallbackCopy(text); }
+  };
+  const fallbackCopy = (text) => {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try{ document.execCommand('copy'); toast('🔗 공유링크 복사됨'); }
+    catch(e){ toast('수동으로 복사해주세요'); }
+    document.body.removeChild(ta);
+  };
+  const el = document.getElementById('modalAiSummary');
+  el.innerHTML = '<div class="ai-summary-box"><div class="ai-label">🔗 공유링크</div>' +
+    '<div style="word-break:break-all;font-size:11px;color:var(--text-muted);background:var(--bg);border-radius:6px;padding:8px 10px;margin-top:6px;border:1px solid var(--border);user-select:all;">' + url + '</div></div>';
+  copyText(url);
+  toast('🔗 공유링크 복사됨');
+}
 function searchRelatedArticle(articleNum){ const foundArticle = articleList.find(a => a.num === articleNum); if(foundArticle){ const sid = foundArticle.id.replace(/[^a-zA-Z0-9_]/g,'_'); closeArticleModal(); setTimeout(() => openArticleModal(sid), 100); }else{ toast('해당 조문을 찾을 수 없습니다'); } }
 
 function openCompareModal(){
@@ -2262,43 +2287,77 @@ async function searchCrossLaw(lawName,artNum){
 }
 
 async function loadArticleHistory(){
-  if(!currentModalArticle||!currentLaw)return;
-  const el=document.getElementById('modalAiSummary');
-  el.innerHTML='<div class="ai-summary-box"><div class="ai-label">📜 변경이력 조회</div><div class="ai-loading">시행일자별 법령 조회 중...</div></div>';
+  if(!currentModalArticle) return;
+  const lawMst = (currentLaw && currentLaw.mst) || currentModalArticle.lawMst;
+  const lawName = (currentLaw && currentLaw.name) || currentModalArticle.lawName;
+  if(!lawMst){ toast('법령 정보를 찾을 수 없습니다'); return; }
+  const el = document.getElementById('modalAiSummary');
+  el.innerHTML = '<div class="ai-summary-box"><div class="ai-label">📜 변경이력 조회</div><div class="ai-loading">시행일자별 법령 조회 중...</div></div>';
   try{
-    const oc=getOC();
-    const data=await lawApiFetch('search', {OC:oc, target:'law', type:'JSON', query:currentLaw.name, display:20, sort:'efdes'});
-    const items=data?.LawSearch?.law||data?.law||[];
-    const arr=Array.isArray(items)?items:(items?[items]:[]);
-    if(arr.length<2){ el.innerHTML='<div class="ai-summary-box"><div class="ai-label">📜 변경이력</div><div>과거 버전을 찾을 수 없습니다.</div></div>'; return; }
-    let html='<div class="ai-summary-box"><div class="ai-label">📜 시행일자별 버전</div><div style="margin-top:8px;">';
-    arr.slice(0,10).forEach(l=>{
-      const nm=l['법령명한글']||l['법령명칭']||l['법령명']||'';
-      const efDate=l['시행일자']||''; const rrCls=l['제개정구분명']||'';
-      let mst=l['법령MST']||''; if(!mst){const link=l['법령상세링크']||'';const m=link.match(/MST=(\d+)/);if(m)mst=m[1];}
-      html+=`<div style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;">${eh(efDate)} (${eh(rrCls)})</span><button class="btn-xs" onclick="compareWithVersion('${mst}','${eh(nm)}','${efDate}')">비교</button></div>`;
+    const oc = getOC();
+    const data = await lawApiFetch('search', {OC:oc, target:'law', type:'JSON', query:lawName, display:20, sort:'efdes'});
+    const items = data && (data.LawSearch && data.LawSearch.law || data.law) || [];
+    const arr = Array.isArray(items) ? items : (items ? [items] : []);
+    if(!arr.length){ el.innerHTML='<div class="ai-summary-box"><div class="ai-label">📜 변경이력</div><div>과거 버전을 찾을 수 없습니다.</div></div>'; return; }
+    window._historyVersions = [];
+    arr.slice(0,15).forEach(function(l){
+      const nm = l['법령명한글']||l['법령명칭']||l['법령명']||'';
+      const efDate = l['시행일자']||'';
+      const rrCls = l['제개정구분명']||'';
+      let mst = l['법령MST']||'';
+      if(!mst){ const link=l['법령상세링크']||''; const m=link.match(/MST=(\d+)/); if(m) mst=m[1]; }
+      window._historyVersions.push({mst:mst, nm:nm, efDate:efDate, rrCls:rrCls});
     });
-    html+='</div></div>';
-    el.innerHTML=html;
-  }catch(e){ el.innerHTML='<div class="ai-summary-box"><div class="ai-label">📜 변경이력</div><div>조회 실패: '+eh(e.message)+'</div></div>'; }
+    let html = '<div class="ai-summary-box"><div class="ai-label">📜 시행일자별 버전 (' + eh(lawName) + ')</div><div style="margin-top:8px;">';
+    window._historyVersions.forEach(function(v, idx){
+      const isCurrent = v.mst === lawMst;
+      html += '<div style="padding:7px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;">'
+        + '<div><span style="font-size:12px;font-weight:' + (isCurrent?'700':'400') + ';color:' + (isCurrent?'var(--accent)':'var(--text)') + ';">' + eh(v.efDate||'날짜미상') + '</span>'
+        + '<span style="font-size:10px;color:var(--text-dim);margin-left:6px;">' + eh(v.rrCls) + '</span>'
+        + (isCurrent ? '<span style="font-size:9px;background:var(--accent);color:#fff;border-radius:3px;padding:1px 5px;margin-left:4px;">현행</span>' : '')
+        + '</div>'
+        + (!isCurrent ? '<button class="btn-xs" onclick="compareWithVersion(' + idx + ')">조문 비교</button>' : '')
+        + '</div>';
+    });
+    html += '</div></div>';
+    el.innerHTML = html;
+  }catch(e){
+    el.innerHTML = '<div class="ai-summary-box"><div class="ai-label">📜 변경이력</div><div>조회 실패: ' + eh(e.message) + '</div></div>';
+  }
 }
 
-async function compareWithVersion(oldMst,lawName,efDate){
-  if(!currentModalArticle)return;
-  const el=document.getElementById('modalAiSummary');
-  el.innerHTML='<div class="ai-summary-box"><div class="ai-label">📜 비교 중...</div><div class="ai-loading">과거 버전 조문 로드 중...</div></div>';
+async function compareWithVersion(idx){
+  if(!currentModalArticle) return;
+  const v = window._historyVersions && window._historyVersions[idx];
+  if(!v){ toast('버전 정보 없음'); return; }
+  const el = document.getElementById('modalAiSummary');
+  el.innerHTML = '<div class="ai-summary-box"><div class="ai-label">📜 비교 중...</div><div class="ai-loading">과거 버전 조문 로드 중...</div></div>';
   try{
-    const oc=getOC();
-    const data=await lawApiFetch('service', {OC:oc, target:'law', MST:oldMst, type:'JSON'});
-    const oldArticles=parseArticlesJSON(data,lawName,oldMst);
-    const curArt=currentModalArticle;
-    const oldArt=oldArticles.find(a=>a.num===curArt.num);
-    let html='<div class="ai-summary-box"><div class="ai-label">📜 변경 비교: '+eh(curArt.num)+' (현행 vs '+eh(efDate)+')</div><div class="history-diff">';
-    if(!oldArt){ html+=`<div class="diff-added">이 조문은 ${efDate} 시점에는 존재하지 않았습니다 (신설)</div>`; }
-    else{ const oldText=oldArt.content;const newText=curArt.content; if(oldText===newText){ html+='<div style="color:var(--text-muted);font-size:12px;">변경 없음 (동일)</div>'; }else{ html+=`<div class="diff-removed">[구] ${eh(oldText.substring(0,500))}</div><div class="diff-added">[현행] ${eh(newText.substring(0,500))}</div>`; } }
-    html+='</div></div>';
-    el.innerHTML=html;
-  }catch(e){ el.innerHTML='<div class="ai-summary-box"><div class="ai-label">📜 비교 실패</div><div>'+eh(e.message)+'</div></div>'; }
+    const oc = getOC();
+    const data = await lawApiFetch('service', {OC:oc, target:'law', MST:v.mst, type:'JSON'});
+    const oldArticles = parseArticlesJSON(data, v.nm, v.mst);
+    const curArt = currentModalArticle;
+    const oldArt = oldArticles.find(function(a){ return a.num === curArt.num; });
+    let html = '<div class="ai-summary-box"><div class="ai-label">📜 ' + eh(curArt.num) + ' — 현행 vs ' + eh(v.efDate) + ' (' + eh(v.rrCls) + ')</div><div class="history-diff">';
+    if(!oldArt){
+      html += '<div class="diff-added">✅ 이 조문은 ' + eh(v.efDate) + ' 시점에 존재하지 않았습니다 (신설된 조문)</div>';
+    } else {
+      const oldText = oldArt.content.trim();
+      const newText = curArt.content.trim();
+      if(oldText === newText){
+        html += '<div style="color:var(--text-muted);font-size:12px;padding:8px;">변경 없음 — 두 버전이 동일합니다.</div>';
+      } else {
+        html += '<div style="margin-bottom:8px;font-size:11px;font-weight:600;color:var(--text-dim);">과거 (' + eh(v.efDate) + ')</div>';
+        html += '<div class="diff-removed">' + eh(oldText.substring(0,600)) + (oldText.length>600?'…':'') + '</div>';
+        html += '<div style="margin:10px 0 8px;font-size:11px;font-weight:600;color:var(--text-dim);">현행</div>';
+        html += '<div class="diff-added">' + eh(newText.substring(0,600)) + (newText.length>600?'…':'') + '</div>';
+      }
+    }
+    html += '</div></div>';
+    el.innerHTML = html;
+  }catch(e){
+    el.innerHTML = '<div class="ai-summary-box"><div class="ai-label">📜 비교 실패</div><div>' + eh(e.message) + '</div></div>';
+  }
 }
 
 function isClaudeArtifact(){ return location.hostname.includes('claude.ai') || location.hostname.includes('artifacts') || document.referrer.includes('claude.ai'); }
