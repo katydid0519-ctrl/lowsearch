@@ -1299,7 +1299,7 @@ async function setFilter(type, el){
         const sid=art.id.replace(/[^a-zA-Z0-9_]/g,'_');
         const memoText=memos[art.id]||'';
         html+='<div class="article-card" id="card_'+sid+'" style="cursor:pointer;">'
-          +'<div class="article-header" onclick="openArticleModal(''+sid+'')">'
+          +'<div class="article-header" onclick="openArticleModal(\''+sid+'\')">'
           +'<span class="article-num">'+eh(art.num)+'</span>'
           +'<span class="article-title-text">'+eh(art.title||'(제목 없음)')+'</span>'
           +'<div class="article-actions">'
