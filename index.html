@@ -2349,16 +2349,122 @@ function updateFavListGrouped(){
 function linkifyLawRefs(text){
   return text.replace(/(?:「|&lt;「)([^」&]+)(?:」|」&gt;)\s*(제\d+조(?:의\d+)?)/g, (match,lawName,artNum)=>{
     const cleanName=lawName.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"');
-    return `<span class="modal-related-link" onclick="searchCrossLaw('${eh(cleanName)}','${artNum}')" title="${cleanName} ${artNum} 바로가기">${match}</span>`;
+    // 법제처 직접 링크 (새 창)
+    const lawGoUrl='https://www.law.go.kr/법령/'+encodeURIComponent(cleanName)+'/'+encodeURIComponent(artNum);
+    return `<span class="modal-related-link"
+      onclick="openLawRefPopup(event,'${eh(cleanName)}','${artNum}')"
+      title="${cleanName} ${artNum} — 클릭: 팝업 / Ctrl+클릭: 새 탭"
+      data-law="${eh(cleanName)}" data-art="${artNum}"
+      style="position:relative;">${match}
+      <span style="font-size:9px;vertical-align:super;margin-left:2px;color:var(--accent-light);">↗</span>
+    </span>`;
   });
 }
-async function searchCrossLaw(lawName,artNum){
-  closeArticleModal(); toast(`${lawName} 검색 중...`);
-  document.getElementById('searchInput').value=lawName;
-  await searchLaws(lawName);
-  const found=lawList.find(l=>l.name.includes(lawName));
-  if(found){ await loadArticles(found.mst,found.name); const art=articleList.find(a=>a.num===artNum); if(art){ const sid=art.id.replace(/[^a-zA-Z0-9_]/g,'_'); setTimeout(()=>openArticleModal(sid),300); } }
+
+function openLawRefPopup(event, lawName, artNum){
+  event.stopPropagation();
+  // Ctrl/Cmd+클릭 → 법제처 새 탭
+  if(event.ctrlKey || event.metaKey){
+    const url='https://www.law.go.kr/법령/'+encodeURIComponent(lawName)+'/'+encodeURIComponent(artNum);
+    window.open(url,'_blank');
+    return;
+  }
+  // 일반 클릭 → 앱 내 팝업 (현재 법령 유지)
+  openCrossLawPopup(lawName, artNum);
 }
+
+async function openCrossLawPopup(lawName, artNum){
+  // 현재 상태 저장
+  const savedLaw=currentLaw;
+  const savedArticleList=[...articleList];
+  const savedFilteredArticles=[...filteredArticles];
+  const savedView=currentView;
+
+  toast(`${lawName} ${artNum} 조회 중...`);
+
+  // 기존 모달 닫지 않고 별도 팝업창으로 열기
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  const oc=getOC();
+
+  try{
+    // 법령 검색
+    const searchData=await lawApiFetch('search',{OC:oc,target:'law',type:'JSON',query:lawName,display:10});
+    const items=searchData?.LawSearch?.law||searchData?.law||[];
+    const arr=Array.isArray(items)?items:(items?[items]:[]);
+    const found=arr.find(l=>{
+      const n=l['법령명한글']||l['법령명칭']||l['법령명']||'';
+      return n===lawName||n.includes(lawName)||lawName.includes(n);
+    });
+    if(!found){ toast('법령을 찾을 수 없습니다: '+lawName); return; }
+
+    let mst=found['법령MST']||'';
+    if(!mst){const link=found['법령상세링크']||'';const m=link.match(/MST=(\d+)/);if(m)mst=m[1];}
+
+    // 조문 로드
+    const data=await lawApiFetch('service',{OC:oc,target:'law',MST:mst,type:'JSON'});
+    const arts=parseArticlesJSON(data,lawName,mst);
+    const art=arts.find(a=>a.num===artNum);
+
+    if(!art){ toast(lawName+' '+artNum+' 조문을 찾을 수 없습니다'); return; }
+
+    // 팝업창으로 표시
+    let parasHtml='';
+    if(art.paras&&art.paras.length){
+      art.paras.forEach(p=>{
+        let lvStyle='';
+        if(p.level==='ho'||p.num.includes('호')) lvStyle='padding-left:18px;';
+        else if(p.level==='mok'||p.num==='목') lvStyle='padding-left:36px;';
+        parasHtml+=`<div style="background:${isDark?'#2e2e2e':'#f5f5f5'};border-radius:6px;padding:9px 12px;margin-top:7px;font-size:13px;line-height:1.85;color:${isDark?'#a0a0a0':'#555'};border-left:2px solid ${isDark?'#3a3a3a':'#ddd'};${lvStyle}">
+          <span style="font-family:monospace;font-size:10px;color:${isDark?'#666':'#999'};margin-right:6px;">${eh(p.num)}</span>${eh(p.text.trim())}
+        </div>`;
+      });
+    } else {
+      parasHtml=`<div style="font-size:13px;line-height:1.85;color:${isDark?'#a0a0a0':'#555'};">${eh(art.content||'내용 없음')}</div>`;
+    }
+
+    const lawGoUrl='https://www.law.go.kr/법령/'+encodeURIComponent(lawName)+'/'+encodeURIComponent(artNum);
+    const bg=isDark?'#1a1d1f':'#fff';
+    const textColor=isDark?'#e0e0e0':'#1a1a1a';
+    const htmlDoc=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+      <title>${eh(lawName)} ${eh(artNum)}</title>
+      <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+      <style>
+        body{font-family:'Noto Sans KR',sans-serif;margin:0;padding:24px 32px;background:${bg};color:${textColor};}
+        .num{font-family:monospace;font-size:12px;font-weight:600;color:#f0a500;background:rgba(240,165,0,.1);padding:4px 10px;border-radius:4px;display:inline-block;margin-bottom:8px;}
+        .title{font-size:17px;font-weight:700;margin-bottom:6px;}
+        .lawname{font-size:11px;color:#999;margin-bottom:16px;}
+        .footer{margin-top:20px;padding-top:12px;border-top:1px solid #ddd;display:flex;gap:8px;}
+        a.btn{display:inline-block;padding:6px 14px;background:#f0a500;color:#000;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600;}
+        a.btn2{display:inline-block;padding:6px 14px;background:#eee;color:#333;border-radius:6px;text-decoration:none;font-size:12px;}
+      </style></head><body>
+      <div class="num">${eh(artNum)}</div>
+      <div class="title">${eh(art.title||'(제목 없음)')}</div>
+      <div class="lawname">📖 ${eh(lawName)}</div>
+      ${parasHtml}
+      <div class="footer">
+        <a class="btn" href="${lawGoUrl}" target="_blank">🔗 법제처 원문</a>
+        <a class="btn2" href="javascript:window.close()">닫기</a>
+      </div>
+    </body></html>`;
+
+    const popup=window.open('','crossLawPopup','width=680,height=700,scrollbars=yes,resizable=yes');
+    if(popup){popup.document.write(htmlDoc);popup.document.close();}
+    else{
+      // 팝업 차단 시 법제처로 이동
+      window.open(lawGoUrl,'_blank');
+    }
+  }catch(e){
+    toast('조회 실패: '+e.message);
+  }
+
+  // 현재 상태 복원 (변경 안 됨 — loadArticles 호출 안 했으므로 자동 유지)
+}
+
+async function searchCrossLaw(lawName,artNum){
+  // 하위 호환 — linkifyLawRefs 구버전에서 혹시 호출될 경우
+  openCrossLawPopup(lawName, artNum);
+}
+
 
 async function loadArticleHistory(){
   if(!currentModalArticle) return;
