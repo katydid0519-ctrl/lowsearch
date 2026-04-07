@@ -1215,9 +1215,23 @@ function setFilter(type, el){
         if(!memos[id]?.trim()) return;
         if(seen.has(id)) return;
         seen.add(id);
+        // 1) 캐시에서 먼저 시도
         const c=localStorage.getItem('v63c_'+id);
-        if(!c) return;
-        try{ collected.push({...JSON.parse(c), _memo: memos[id]}); }catch(e){}
+        if(c){
+          try{ collected.push({...JSON.parse(c), _memo: memos[id]}); return; }catch(e){}
+        }
+        // 2) 현재 열린 articleList에서 시도
+        const fromList = articleList.find(a=>a.id===id);
+        if(fromList){
+          // 캐시에도 저장
+          try{ localStorage.setItem('v63c_'+id, JSON.stringify({id:fromList.id,num:fromList.num,title:fromList.title,lawName:fromList.lawName,lawMst:fromList.lawMst,content:fromList.content.substring(0,300),paras:fromList.paras.slice(0,30)})); }catch(e){}
+          collected.push({...fromList, _memo: memos[id]});
+          return;
+        }
+        // 3) ID 패턴에서 lawMst 파싱: v63_${lawMst}_${num}_${i}
+        const mstMatch = id.match(/^v63_([^_]+)_/);
+        const lawMst = mstMatch ? mstMatch[1] : '';
+        collected.push({id, num:'조문', title:'(조문 정보 없음 — 해당 법령을 한번 열어주세요)', lawName:lawMst?'법령MST:'+lawMst:'알 수 없음', lawMst, content:'', paras:[], _memo:memos[id], _noCache:true});
       });
     }
 
@@ -1469,6 +1483,13 @@ function openArticleModal(sid){
   const art=filteredArticles.find(a=>a.id.replace(/[^a-zA-Z0-9_]/g,'_')===sid);
   if(!art)return;
   currentModalArticle=art;
+
+  // 조문 열 때마다 항상 캐시 저장 (즐겨찾기/메모 필터용)
+  try{
+    const cacheObj={id:art.id,num:art.num,title:art.title,lawName:art.lawName,lawMst:art.lawMst,content:art.content.substring(0,300),paras:art.paras.slice(0,30)};
+    localStorage.setItem('v63c_'+art.id, JSON.stringify(cacheObj));
+  }catch(err){}
+
   document.getElementById('modalNum').textContent=eh(art.num);
   document.getElementById('modalTitle').textContent=eh(art.title||'(제목 없음)');
   document.getElementById('modalAiSummary').innerHTML='';
@@ -1604,9 +1625,19 @@ function modalSaveMemo(){
   if(!currentModalArticle)return;
   const val=document.getElementById('modalMemoInput').value||'';
   const tags=document.getElementById('modalTagInput').value.split(',').map(t=>t.trim()).filter(t=>t).join(',');
-  memos[currentModalArticle.id]=val; articleTags[currentModalArticle.id]=tags;
-  localStorage.setItem(LS_MEMO,JSON.stringify(memos)); localStorage.setItem(LS_TAGS,JSON.stringify(articleTags));
-  updateFavList();updateCounts();toast(val || tags?'저장 ✓':'메모 삭제');
+  memos[currentModalArticle.id]=val;
+  articleTags[currentModalArticle.id]=tags;
+  localStorage.setItem(LS_MEMO,JSON.stringify(memos));
+  localStorage.setItem(LS_TAGS,JSON.stringify(articleTags));
+
+  // 메모 저장 시 조문 캐시도 항상 저장 (메모 있음 필터에서 사용)
+  try{
+    const art=currentModalArticle;
+    const cacheObj={id:art.id,num:art.num,title:art.title,lawName:art.lawName,lawMst:art.lawMst,content:art.content.substring(0,300),paras:art.paras.slice(0,30)};
+    localStorage.setItem('v63c_'+art.id, JSON.stringify(cacheObj));
+  }catch(err){}
+
+  updateFavList();updateCounts();toast(val||tags?'저장 ✓':'메모 삭제');
 }
 
 function updateModalTags(tags){
@@ -1614,32 +1645,58 @@ function updateModalTags(tags){
   container.innerHTML = tags.filter(t=>t).map(t => `<div class="modal-tag">${eh(t)}</div>`).join('');
 }
 
-function copyArticleReference(){ if(!currentModalArticle) return; const text = `${currentModalArticle.lawName} ${currentModalArticle.num}`; navigator.clipboard.writeText(text).then(() => { toast(`인용: "${text}" 복사됨`); }); }
+function copyArticleReference(){ if(!currentModalArticle) return; const text = currentModalArticle.lawName + ' ' + currentModalArticle.num; copyText(text, '인용: "' + text + '" 복사됨'); }
 function generateShareLink(){
   if(!currentModalArticle) return;
   const art = currentModalArticle;
   const lawMst = art.lawMst || (currentLaw ? currentLaw.mst : '');
   const lawName = art.lawName || (currentLaw ? currentLaw.name : '');
-  const params = new URLSearchParams({law: lawMst, article: art.num, lawName});
-  const url = window.location.href.split('?')[0] + '?' + params.toString();
-  const copyText = (text) => {
-    if(navigator.clipboard && window.isSecureContext){
-      navigator.clipboard.writeText(text).catch(()=>fallbackCopy(text));
-    } else { fallbackCopy(text); }
-  };
-  const fallbackCopy = (text) => {
+
+  // 법제처 실제 작동하는 URL 패턴:
+  // https://www.law.go.kr/법령/산업안전보건법/제38조
+  // MST 기반: https://www.law.go.kr/lsInfoP.do?lsiSeq=법령일련번호#0000
+  const artNum = art.num; // 예: "제38조"
+  const lawGoUrl = 'https://www.law.go.kr/법령/' + encodeURIComponent(lawName) + '/' + encodeURIComponent(artNum);
+  const lawGoMstUrl = lawMst ? 'https://www.law.go.kr/lsInfoP.do?lsiSeq=' + lawMst : '';
+
+  // 인용 텍스트
+  const citation = lawName + ' ' + art.num + (art.title ? '(' + art.title + ')' : '');
+
+  const el = document.getElementById('modalAiSummary');
+  el.innerHTML = '<div class="ai-summary-box">'
+    + '<div class="ai-label">🔗 공유 정보</div>'
+    + '<div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;">'
+      // 인용 텍스트
+      + '<div>'
+        + '<div style="font-size:10px;color:var(--text-dim);margin-bottom:3px;font-weight:600;">📋 인용 텍스트</div>'
+        + '<div style="word-break:break-all;font-size:12px;color:var(--text);background:var(--bg);border-radius:6px;padding:8px 10px;border:1px solid var(--border);user-select:all;">' + eh(citation) + '</div>'
+        + '<button class="btn-xs" style="margin-top:5px;" onclick="copyText(\'' + citation.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\', \'인용 텍스트 복사됨\')">📋 복사</button>'
+      + '</div>'
+      // 법제처 조문 직접 링크
+      + '<div>'
+        + '<div style="font-size:10px;color:var(--text-dim);margin-bottom:3px;font-weight:600;">🌐 법제처 조문 링크</div>'
+        + '<div style="word-break:break-all;font-size:11px;color:var(--text-muted);background:var(--bg);border-radius:6px;padding:8px 10px;border:1px solid var(--border);user-select:all;">' + eh(lawGoUrl) + '</div>'
+        + '<div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;">'
+          + '<button class="btn-xs" onclick="copyText(\'' + lawGoUrl.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\', \'링크 복사됨\')">📋 복사</button>'
+          + '<a href="' + lawGoUrl + '" target="_blank" class="btn-xs" style="text-decoration:none;">🔗 조문 바로가기</a>'
+          + (lawGoMstUrl ? '<a href="' + lawGoMstUrl + '" target="_blank" class="btn-xs" style="text-decoration:none;">🔗 법령 전체보기</a>' : '')
+        + '</div>'
+      + '</div>'
+    + '</div>'
+  + '</div>';
+}
+
+function copyText(text, msg){
+  const fallback = () => {
     const ta = document.createElement('textarea');
     ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
     document.body.appendChild(ta); ta.focus(); ta.select();
-    try{ document.execCommand('copy'); toast('🔗 공유링크 복사됨'); }
-    catch(e){ toast('수동으로 복사해주세요'); }
+    try{ document.execCommand('copy'); toast(msg||'복사됨'); }catch(e){ toast('수동으로 복사해주세요'); }
     document.body.removeChild(ta);
   };
-  const el = document.getElementById('modalAiSummary');
-  el.innerHTML = '<div class="ai-summary-box"><div class="ai-label">🔗 공유링크</div>' +
-    '<div style="word-break:break-all;font-size:11px;color:var(--text-muted);background:var(--bg);border-radius:6px;padding:8px 10px;margin-top:6px;border:1px solid var(--border);user-select:all;">' + url + '</div></div>';
-  copyText(url);
-  toast('🔗 공유링크 복사됨');
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(()=>toast(msg||'복사됨')).catch(fallback);
+  } else { fallback(); }
 }
 function searchRelatedArticle(articleNum){ const foundArticle = articleList.find(a => a.num === articleNum); if(foundArticle){ const sid = foundArticle.id.replace(/[^a-zA-Z0-9_]/g,'_'); closeArticleModal(); setTimeout(() => openArticleModal(sid), 100); }else{ toast('해당 조문을 찾을 수 없습니다'); } }
 
