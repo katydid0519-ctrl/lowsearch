@@ -8,20 +8,24 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&display=swap');
 :root{
-  --bg:#f8f9fa;--surface:#ffffff;--surface2:#f1f4f5;--border:#e5e9eb;--border2:#dee3e6;
-  --accent:#a33f00;--accent2:#e05c00;--accent-light:#fc7127;
-  --text:#1e2629;--text-muted:#5a6062;--text-dim:#8a9295;
+  --bg:#fdf8f5;--surface:#ffffff;--surface2:#faf2ed;--border:#edd9ce;--border2:#e4c9ba;
+  --accent:#c45e2a;--accent2:#d4733a;--accent-light:#e8834a;
+  --accent-soft:rgba(196,94,42,.1);--accent-glow:rgba(196,94,42,.18);
+  --warm1:#f4a06a;--warm2:#e87d45;--warm3:#c45e2a;
+  --text:#2d1f18;--text-muted:#6b4e3d;--text-dim:#a08070;
   --radius:12px;--radius-lg:20px;--radius-xl:24px;
   --modal-bg:#ffffff;
   --sidebar-w:240px;
-  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);
-  --shadow-lg:0 4px 24px rgba(0,0,0,.1);
+  --shadow:0 1px 3px rgba(100,40,10,.06),0 4px 16px rgba(100,40,10,.05);
+  --shadow-lg:0 4px 24px rgba(100,40,10,.12);
 }
 [data-theme="dark"]{
-  --bg:#0f1113;--surface:#1a1d1f;--surface2:#242729;--border:#2e3335;--border2:#3a3d40;
-  --accent:#fc7127;--accent2:#e05c00;--accent-light:#fc7127;
-  --text:#e8ecef;--text-muted:#9ba3a8;--text-dim:#606870;
-  --modal-bg:#1a1d1f;
+  --bg:#1a1210;--surface:#241a16;--surface2:#2e201a;--border:#3d2a22;--border2:#4a3228;
+  --accent:#e8834a;--accent2:#d4733a;--accent-light:#f4a06a;
+  --accent-soft:rgba(232,131,74,.12);--accent-glow:rgba(232,131,74,.2);
+  --warm1:#f4a06a;--warm2:#e87d45;--warm3:#c45e2a;
+  --text:#f5ede8;--text-muted:#c4a090;--text-dim:#7a5a4a;
+  --modal-bg:#241a16;
 }
 [data-theme="dark"] .logo-badge{color:#fff;}
 [data-theme="dark"] .btn-search{color:#000;}
@@ -39,9 +43,9 @@ header{background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backd
 .header-tabs{display:flex;gap:2px;}
 .tab-btn{padding:6px 14px;border-radius:8px;border:none;background:transparent;color:var(--text-muted);font-size:12px;cursor:pointer;font-family:'Inter',inherit;font-weight:500;transition:all .15s;}
 .tab-btn:hover{color:var(--text);background:var(--surface2);}
-.tab-btn.active{background:rgba(163,63,0,.1);color:var(--accent);font-weight:600;}
+.tab-btn.active{background:var(--accent-soft);color:var(--accent);font-weight:600;}
 .layout{display:flex;flex:1;height:calc(100vh - 110px);overflow:hidden;}
-aside{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;transition:all .2s;}
+aside{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--bg);border-right:none;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;transition:all .2s;}
 aside.collapsed{width:0;min-width:0;overflow:hidden;border-right:none;}
 aside.collapsed *{display:none;}
 .sidebar-toggle{background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-size:16px;cursor:pointer;padding:3px 8px;transition:all .15s;}
@@ -51,7 +55,7 @@ aside.collapsed *{display:none;}
 .side-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px;padding:0 4px;}
 .filter-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;font-size:12px;transition:all .12s;border:none;font-weight:500;}
 .filter-item:hover{background:var(--surface2);}
-.filter-item.on{background:rgba(163,63,0,.08);color:var(--accent);font-weight:600;}
+.filter-item.on{background:var(--accent-soft);color:var(--accent);font-weight:600;}
 .filter-item.on .fdot{background:var(--accent);}
 .right-sidebar{width:220px;min-width:220px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:all .2s;}
 .right-sidebar.collapsed{width:0;min-width:0;overflow:hidden;border-left:none;}
@@ -75,7 +79,7 @@ aside.collapsed *{display:none;}
 .ai-summary-box{background:rgba(240,165,0,.06);border:1px solid rgba(240,165,0,.2);border-radius:var(--radius);padding:14px 16px;margin-top:12px;font-size:12px;line-height:1.8;}
 .ai-summary-box .ai-label{font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.5px;margin-bottom:6px;}
 .ai-loading{color:var(--text-dim);font-style:italic;}
-.law-card-count{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--accent);background:rgba(163,63,0,.08);padding:2px 8px;border-radius:5px;white-space:nowrap;font-weight:600;}
+.law-card-count{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--accent);background:var(--accent-soft);padding:2px 8px;border-radius:5px;white-space:nowrap;font-weight:600;}
 .modal-nav{display:flex;justify-content:space-between;padding:8px 20px;border-top:1px solid var(--border);background:var(--surface);}
 .modal-nav-btn{padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;font-family:inherit;transition:all .12s;}
 .modal-nav-btn:hover{border-color:var(--accent);color:var(--accent);}
@@ -119,7 +123,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .mode-btn{padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;font-family:inherit;transition:all .12s;}
 .mode-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(240,165,0,.08);}
 .law-search-box{display:flex;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:0 12px;gap:7px;transition:all .15s;flex:1;}
-.law-search-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(163,63,0,.08);}
+.law-search-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
 .search-input{flex:1;background:transparent;border:none;color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;padding:10px 0;outline:none;}
 .search-input::placeholder{color:var(--text-dim);}
 .btn-search{padding:8px 18px;background:var(--accent-light);border:none;border-radius:10px;color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:'Manrope',inherit;transition:all .15s;white-space:nowrap;letter-spacing:.2px;}
@@ -130,22 +134,22 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .law-card:hover{border-left-color:var(--accent);box-shadow:var(--shadow-lg);transform:translateY(-1px);}
 .law-card-type{font-size:11px;font-weight:700;color:#fff;padding:4px 10px;border-radius:6px;white-space:nowrap;flex-shrink:0;letter-spacing:.3px;}
 .law-card-name{flex:1;font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.2px;line-height:1.3;}
-.law-card-name mark{background:rgba(240,165,0,.25);color:var(--accent);border-radius:2px;padding:0 2px;}
+.law-card-name mark{background:rgba(232,131,74,.2);color:var(--accent);border-radius:2px;padding:0 2px;}
 .law-card-dept{font-size:11px;color:var(--text-dim);white-space:nowrap;background:var(--surface2);padding:3px 9px;border-radius:5px;}
 .back-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:14px;transition:all .12s;}
 .back-btn:hover{border-color:var(--accent);color:var(--accent);}
 .law-title-bar{font-size:16px;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;justify-content:space-between;}
-.law-badge{font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(240,165,0,.1);color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:600;}
+.law-badge{font-size:10px;padding:3px 8px;border-radius:4px;background:var(--accent-soft);color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:600;}
 .article-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:6px;overflow:hidden;transition:all .15s;box-shadow:var(--shadow);}
-.article-card.expanded{border-color:var(--accent);box-shadow:0 0 0 2px rgba(163,63,0,.12);}
-.article-card.selected{background:rgba(163,63,0,.04);border-color:var(--accent);}
+.article-card.expanded{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-glow);}
+.article-card.selected{background:rgba(196,94,42,.04);border-color:var(--accent);}
 .article-header{display:flex;align-items:center;padding:12px 14px;cursor:pointer;gap:10px;user-select:none;}
 .article-checkbox{width:18px;height:18px;cursor:pointer;}
-.article-num{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--accent);background:rgba(240,165,0,.1);padding:3px 8px;border-radius:4px;white-space:nowrap;min-width:64px;text-align:center;}
+.article-num{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:3px 8px;border-radius:4px;white-space:nowrap;min-width:64px;text-align:center;}
 .article-title-text{flex:1;font-size:13px;font-weight:500;line-height:1.4;}
-.article-title-text mark,.para-item mark{background:rgba(240,165,0,.25);color:var(--accent);border-radius:2px;padding:0 1px;}
+.article-title-text mark,.para-item mark{background:rgba(232,131,74,.2);color:var(--accent);border-radius:2px;padding:0 1px;}
 .article-meta{font-size:10px;color:var(--text-dim);}
-.chapter-section{background:#f0f0f0;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:7px;padding:12px 16px;font-size:13px;font-weight:600;color:#666;border-left:3px solid var(--accent);cursor:default;}
+.chapter-section{background:#f0f0f0;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:7px;padding:12px 16px;font-size:13px;font-weight:600;color:#666;border-left:3px solid var(--warm1);cursor:default;}
 .article-actions{display:flex;gap:5px;align-items:center;}
 .btn-fav{background:none;border:none;cursor:pointer;font-size:16px;line-height:1;transition:transform .15s;color:var(--text-dim);}
 .btn-fav:hover{transform:scale(1.2);}
@@ -172,7 +176,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .pagination{display:flex;gap:5px;justify-content:center;padding:18px 0;flex-wrap:wrap;}
 .page-btn{padding:5px 11px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:12px;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .12s;}
 .page-btn:hover{border-color:var(--accent);color:var(--accent);}
-.page-btn.active{background:var(--accent);border-color:var(--accent);color:#000;font-weight:700;}
+.page-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
 .status-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
 .status-text{font-size:12px;color:var(--text-muted);}
 .status-count{font-family:'JetBrains Mono',monospace;color:var(--accent);font-weight:600;}
@@ -215,7 +219,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .modal-close{background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;transition:color .2s;}
 .modal-close:hover{color:var(--text);}
 .modal-body{padding:20px;}
-.modal-article-num{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--accent);background:rgba(240,165,0,.1);padding:4px 10px;border-radius:4px;display:inline-block;margin-bottom:10px;}
+.modal-article-num{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:4px 10px;border-radius:4px;display:inline-block;margin-bottom:10px;}
 .modal-article-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:12px;}
 .modal-para-list{list-style:none;padding:0;margin:0;}
 .modal-para-item{background:transparent;border-radius:0;padding:12px 0;margin-bottom:8px;font-size:13px;line-height:1.85;color:var(--text-muted);border-left:none;border-bottom:1px solid rgba(220,220,220,.5);}
@@ -225,7 +229,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .modal-meta{background:#f9f9f9;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:var(--text-muted);border-left:3px solid var(--accent2);}
 .modal-related{background:#f9f9f9;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:12px;}
 .modal-related-title{font-weight:600;margin-bottom:8px;color:var(--text);}
-.modal-related-link{display:inline-block;margin-right:8px;margin-bottom:5px;padding:3px 8px;background:rgba(240,165,0,.1);border-radius:4px;color:var(--accent);cursor:pointer;transition:all .2s;}
+.modal-related-link{display:inline-block;margin-right:8px;margin-bottom:5px;padding:3px 8px;background:var(--accent-soft);border-radius:4px;color:var(--accent);cursor:pointer;transition:all .2s;}
 .modal-related-link:hover{background:var(--accent);color:#fff;}
 .modal-memo{margin-top:16px;border-top:1px solid var(--border);padding-top:16px;}
 .modal-memo-label{font-size:10px;color:var(--text-dim);margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px;}
@@ -242,7 +246,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .modal-btn:hover{border-color:var(--accent);color:var(--accent);}
 .modal-btn.fav{color:var(--accent2);}
 .modal-btn.fav.on{color:var(--accent);}
-.modal-btn.primary{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600;}
+.modal-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600;}
 .modal-btn.primary:hover{opacity:.9;}
 .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:10px;}
 .compare-col{padding:15px;background:var(--surface2);border-radius:6px;}
@@ -276,7 +280,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .hw-incident-badge.invest{color:#b45309;background:rgba(245,158,11,.08);}
 .hw-incident-name{font-size:13px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:2px;}
 .hw-incident-name:hover{color:var(--accent);}
-.hw-weather-card{background:linear-gradient(135deg,#1a1f22 0%,#2d3a3f 60%,#1a2428 100%);border-radius:var(--radius-xl);padding:20px 22px;color:#fff;position:relative;overflow:hidden;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;}
+.hw-weather-card{background:linear-gradient(135deg,#2d1a10 0%,#3d2415 60%,#261508 100%);border-radius:var(--radius-xl);padding:20px 22px;color:#fff;position:relative;overflow:hidden;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;}
 .hw-weather-card::before{content:'';position:absolute;top:-30px;right:-30px;width:160px;height:160px;background:radial-gradient(circle,rgba(252,113,39,.2) 0%,transparent 70%);}
 .hw-weather-card::after{content:'';position:absolute;bottom:-10px;left:30px;width:100px;height:100px;background:radial-gradient(circle,rgba(240,165,0,.12) 0%,transparent 70%);}
 .hw-weather-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.45);text-transform:uppercase;margin-bottom:4px;}
@@ -299,14 +303,14 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .cal-day.other-month{color:var(--text-dim);opacity:.5;}
 .cal-day.has-event::after{content:'';position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--accent-light);}
 .cal-day.today.has-event::after{background:#fff;}
-.cal-day.selected{background:rgba(163,63,0,.12);color:var(--accent);font-weight:700;}
+.cal-day.selected{background:var(--accent-glow);color:var(--accent);font-weight:700;}
 .cal-event-input{margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
 .cal-event-list{margin-top:8px;display:flex;flex-direction:column;gap:4px;max-height:80px;overflow-y:auto;}
 .cal-event-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);padding:4px 6px;background:var(--surface2);border-radius:6px;}
 .cal-event-dot{width:6px;height:6px;border-radius:50%;background:var(--accent-light);flex-shrink:0;}
 .cal-event-del{margin-left:auto;color:var(--text-dim);cursor:pointer;font-size:12px;line-height:1;}
 .cal-event-del:hover{color:#e74040;}
-.home-hero{background:linear-gradient(135deg,#1e2629 0%,#2d3a3f 50%,#1a2428 100%);border-radius:var(--radius-xl);padding:32px;margin-bottom:20px;position:relative;overflow:hidden;}
+.home-hero{background:linear-gradient(135deg,#2d1a10 0%,#3d2415 50%,#261508 100%);border-radius:var(--radius-xl);padding:32px;margin-bottom:20px;position:relative;overflow:hidden;}
 .home-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(252,113,39,.25) 0%,transparent 70%);pointer-events:none;}
 .home-hero::after{content:'';position:absolute;bottom:-20px;left:40px;width:140px;height:140px;background:radial-gradient(circle,rgba(240,165,0,.15) 0%,transparent 70%);pointer-events:none;}
 .home-hero-title{font-family:'Manrope',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:14px;letter-spacing:-.5px;}
@@ -331,7 +335,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .hw-list-title{font-size:12px;color:var(--text);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .hw-list-link:hover .hw-list-title{color:var(--accent);}
 .hw-list-date{font-size:10px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;white-space:nowrap;flex-shrink:0;margin-top:2px;}
-.hw-badge{font-size:9px;color:var(--accent);background:rgba(240,165,0,.1);padding:1px 5px;border-radius:3px;white-space:nowrap;flex-shrink:0;margin-top:2px;}
+.hw-badge{font-size:9px;color:var(--accent);background:var(--accent-soft);padding:1px 5px;border-radius:3px;white-space:nowrap;flex-shrink:0;margin-top:2px;}
 .hw-more-link{font-size:11px;color:var(--accent);text-decoration:none;margin-top:auto;padding-top:6px;display:block;}
 .hw-more-link:hover{text-decoration:underline;}
 .msds-section{padding:14px 20px;border-bottom:1px solid var(--border);}
@@ -360,11 +364,12 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
   align-items:center;
 }
 .db-mode-btn{
-  padding:6px 12px;font-size:11px;font-weight:600;border:none;
+  padding:6px 16px;font-size:12px;font-weight:600;border:1.5px solid var(--border);
   background:transparent;color:var(--text-dim);cursor:pointer;
-  font-family:inherit;transition:all .12s;white-space:nowrap;
+  font-family:inherit;transition:all .15s;white-space:nowrap;
+  border-radius:20px;
 }
-.db-mode-active{color:var(--accent)!important;background:rgba(163,63,0,.08)!important;}
+.db-mode-active{color:var(--accent)!important;background:var(--accent-soft)!important;border-color:var(--accent)!important;}
 .db-search-input{
   flex:1;border:none;background:transparent;color:var(--text);
   font-size:13px;padding:9px 12px;outline:none;font-family:inherit;min-width:200px;
@@ -379,10 +384,10 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .db-quick-tags{display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0;}
 .db-qtag{
   padding:3px 10px;background:var(--surface2);border:1px solid var(--border);
-  border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;
+  border-radius:20px;font-size:11px;color:var(--text-muted);cursor:pointer;
   transition:all .12s;white-space:nowrap;
 }
-.db-qtag:hover{border-color:var(--accent);color:var(--accent);background:rgba(163,63,0,.06);}
+.db-qtag:hover{border-color:var(--accent);color:var(--accent);background:rgba(196,94,42,.06);}
 
 .db-grid{
   display:grid;
@@ -407,7 +412,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
   transition:box-shadow .2s;
 }
 .db-card:hover{box-shadow:var(--shadow-lg);}
-.db-card-main{border-left:3px solid var(--accent-light);}
+.db-card-main{}
 
 .db-card-header{
   display:flex;align-items:center;justify-content:space-between;
@@ -437,7 +442,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 }
 .db-fav-num{
   font-family:"JetBrains Mono",monospace;font-size:9px;font-weight:700;
-  color:var(--accent);background:rgba(163,63,0,.1);
+  color:var(--accent);background:var(--accent-soft);
   padding:2px 5px;border-radius:3px;flex-shrink:0;margin-top:1px;
 }
 .db-fav-title{color:var(--text-muted);line-height:1.4;flex:1;}
@@ -497,11 +502,11 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 }
 /* 재해사례 첫번째 항목 강조 */
 .accident-featured{
-  background:rgba(163,63,0,.04);border:1px solid rgba(163,63,0,.12);
+  background:rgba(196,94,42,.04);border:1px solid var(--accent-glow);
   border-radius:8px;padding:10px 12px;margin-bottom:8px;cursor:pointer;
   transition:all .15s;
 }
-.accident-featured:hover{border-color:var(--accent);background:rgba(163,63,0,.08);}
+.accident-featured:hover{border-color:var(--accent);background:var(--accent-soft);}
 .accident-featured-date{font-size:10px;font-weight:700;color:var(--accent);margin-bottom:4px;}
 .accident-featured-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;line-height:1.4;}
 .accident-featured-desc{font-size:11px;color:var(--text-dim);line-height:1.5;}
@@ -549,23 +554,23 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
   </div>
 </div>
 <div class="layout">
-  <aside id="sidebarEl" style="width:var(--sidebar-w);min-width:var(--sidebar-w);overflow-y:auto;display:flex;flex-direction:column;gap:0;">
+  <aside id="sidebarEl" style="width:var(--sidebar-w);min-width:var(--sidebar-w);overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:10px;background:var(--bg);">
 
     <!-- 날씨 위젯 -->
-    <div class="hw-weather-card" id="hwWeather" style="border-radius:0;margin:0;flex-shrink:0;">
+    <div class="hw-weather-card" id="hwWeather" style="border-radius:16px;margin:0;flex-shrink:0;min-height:238px;overflow:hidden;">
       <div id="hwWeatherBody"><div style="color:rgba(255,255,255,.5);font-size:11px;">날씨 로딩 중...</div></div>
     </div>
 
     <!-- 캘린더 위젯 -->
-    <div style="padding:14px 14px 10px;border-bottom:1px solid var(--border);flex-shrink:0;">
-      <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text-dim);text-transform:uppercase;margin-bottom:10px;">📅 캘린더</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;flex-shrink:0;box-shadow:var(--shadow);">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--text-muted);margin-bottom:10px;">📅 캘린더</div>
       <div id="hwCalendarBody"><div class="hw-loading">로딩 중...</div></div>
     </div>
 
     <!-- 안전보건환경 사이트 링크 -->
-    <div class="side-sec" style="border-top:1px solid var(--border);flex:1;overflow-y:auto;">
-      <div class="side-label" style="display:flex;align-items:center;justify-content:space-between;">
-        🔗 안전보건환경 사이트
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:12px 14px;flex:1;overflow-y:auto;box-shadow:var(--shadow);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span style="font-size:11px;font-weight:700;color:var(--text-muted);">🔗 안전보건환경 사이트</span>
         <span class="btn-xs" style="font-size:9px;padding:2px 6px;" onclick="toggleSiteLinks()">접기/펼치기</span>
       </div>
       <div id="siteLinksArea">
@@ -1610,13 +1615,13 @@ function renderLawList(){
   if(!lawList.length){ area.innerHTML=`<div class="state-box"><div class="state-icon">🔍</div><div class="state-title">검색 결과 없음</div></div>`; return; }
   const hl=str=>currentKeyword?eh(str).replace(new RegExp(er(currentKeyword),'gi'),m=>`<mark>${m}</mark>`):eh(str);
 
-  // 법령 유형별 색상
+  // 법령 유형별 색상 — 봄웜톤
   const typeColor = (type) => {
-    if(type.includes('법률')) return '#a33f00';
-    if(type.includes('대통령령')||type.includes('시행령')) return '#1d6fa4';
-    if(type.includes('부령')||type.includes('시행규칙')) return '#2e7d32';
-    if(type.includes('훈령')||type.includes('예규')||type.includes('고시')) return '#6a1b9a';
-    return '#555';
+    if(type.includes('법률')) return '#C0392B';           // 웜 레드
+    if(type.includes('대통령령')||type.includes('시행령')) return '#D35400';  // 번트 오렌지
+    if(type.includes('부령')||type.includes('시행규칙')) return '#CA6F1E';    // 황토색
+    if(type.includes('훈령')||type.includes('예규')||type.includes('고시')) return '#B7950B'; // 머스타드
+    return '#7D6608'; // 올리브 골드
   };
 
   let html=`<div class="status-bar">
@@ -1727,7 +1732,7 @@ function renderArticles(){
   if(appendixList && appendixList.length > 0){
     html += '<div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid var(--border);">';
     html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:15px;">
-      <span class="law-badge" style="background:rgba(224,92,0,.15);color:#e05c00;font-size:11px;">별표</span>
+      <span class="law-badge" style="background:rgba(224,92,0,.15);color:var(--accent2);font-size:11px;">별표</span>
       <span style="font-size:15px;font-weight:700;">${eh(currentLaw.name)} 별표</span>
       <span style="font-size:12px;color:var(--text-dim);">${appendixList.length}개</span>
     </div>`;
@@ -1738,7 +1743,7 @@ function renderArticles(){
       html += `<div class="article-card ${isSelected?'selected':''}" id="card_${appSid}" style="cursor:pointer;">
           <div class="article-header" onclick="openAppendixModal('${appSid}')">
             <input type="checkbox" class="article-checkbox" ${isSelected?'checked':''} onchange="toggleArticleSelection('${app.id}', this.checked)" onclick="event.stopPropagation()">
-            <span class="article-num" style="color:#e05c00;background:rgba(224,92,0,.1);min-width:70px;">${eh(app.num)}</span>
+            <span class="article-num" style="color:var(--accent2);background:rgba(224,92,0,.1);min-width:70px;">${eh(app.num)}</span>
             <div style="flex:1;min-width:0;">
               <div class="article-title-text" style="font-weight:600;">${eh(app.title || '(제목 없음)')}</div>
               ${app.revDate ? `<div style="font-size:11px;color:var(--text-dim);margin-top:2px;">${eh(app.revDate)}</div>` : ''}
@@ -1761,7 +1766,7 @@ function renderAppendixList(){
   area.style.display='block';
   let html=`<button class="back-btn" onclick="goBack()">◀ 법령 목록</button>
     <div class="law-title-bar">
-      <div style="flex:1;"><span class="law-badge" style="background:rgba(224,92,0,.15);color:#e05c00;">별표</span>${eh(currentLaw.name)} 별표</div>
+      <div style="flex:1;"><span class="law-badge" style="background:rgba(224,92,0,.15);color:var(--accent2);">별표</span>${eh(currentLaw.name)} 별표</div>
     </div>`;
   if(!appendixList.length){ html+=`<div class="state-box"><div class="state-icon">📋</div><div class="state-title">별표 없음</div></div>`; area.innerHTML=html; return; }
   html+=`<div class="status-bar"><span class="status-text">별표 <span class="status-count">${appendixList.length}</span>개</span></div>`;
@@ -1771,7 +1776,7 @@ function renderAppendixList(){
     html+=`<div class="article-card" style="padding:0;">
       <div class="article-header" style="cursor:pointer;" onclick="showAppendixDetail('${eh(app.id)}')">
         <input type="checkbox" class="article-checkbox" ${checked} onchange="toggleArticleSelection('${eh(app.id)}', this.checked)" onclick="event.stopPropagation()">
-        <span class="article-num" style="color:#e05c00;background:rgba(224,92,0,.1);min-width:70px;">${eh(app.num)}</span>
+        <span class="article-num" style="color:var(--accent2);background:rgba(224,92,0,.1);min-width:70px;">${eh(app.num)}</span>
         <div style="flex:1;min-width:0;">
           <div style="font-size:13px;font-weight:600;color:var(--text);">${eh(app.title || '(제목 없음)')}</div>
           ${app.revDate ? `<div style="font-size:11px;color:var(--text-dim);margin-top:2px;">${eh(app.revDate)}</div>` : ''}
@@ -1926,7 +1931,7 @@ function openArticlePopup(){
       parasHtml += `<div style="background:${isDark?'#2e2e2e':'#f5f5f5'};border-radius:6px;padding:9px 12px;margin-top:7px;font-size:13px;line-height:1.85;color:${isDark?'#a0a0a0':'#666'};border-left:2px solid ${isDark?'#3a3a3a':'#dcdcdc'};${lvClass}"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:${isDark?'#707070':'#999'};margin-right:6px;">${eh(p.num)}</span>${eh(p.text.trim())}</div>`;
     });
   } else { parasHtml = `<div style="background:${isDark?'#2e2e2e':'#f5f5f5'};border-radius:6px;padding:9px 12px;margin-top:7px;font-size:13px;line-height:1.85;color:${isDark?'#a0a0a0':'#666'};">${eh(art.content || '내용 없음')}</div>`; }
-  const htmlDoc = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${eh(art.lawName)} ${eh(art.num)}</title><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet"><style>body{font-family:'Noto Sans KR',sans-serif;margin:0;padding:30px 40px;background:${isDark?'#1a1a1a':'#fff'};color:${isDark?'#e0e0e0':'#1a1a1a'};}  .num{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:#f0a500;background:rgba(240,165,0,.1);padding:4px 10px;border-radius:4px;display:inline-block;margin-bottom:8px;}.title{font-size:18px;font-weight:700;margin-bottom:16px;}.law-name{font-size:12px;color:${isDark?'#707070':'#999'};margin-bottom:16px;}.meta{background:${isDark?'#242424':'#f9f9f9'};border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:${isDark?'#a0a0a0':'#666'};border-left:3px solid #e05c00;}.chapter{background:${isDark?'#2a2a2a':'#f0f0f0'};border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:13px;font-weight:600;color:${isDark?'#a0a0a0':'#666'};border-left:3px solid #f0a500;}</style></head><body><div class="num">${eh(art.num)}</div><div class="title">${eh(art.title || '(제목 없음)')}</div><div class="law-name">${eh(art.lawName)}</div>${art.effDate ? `<div class="meta">시행일: ${eh(art.effDate)}</div>` : ''}${art.chapter ? `<div class="chapter">${eh(art.chapter)}</div>` : ''}${parasHtml}</body></html>`;
+  const htmlDoc = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${eh(art.lawName)} ${eh(art.num)}</title><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet"><style>body{font-family:'Noto Sans KR',sans-serif;margin:0;padding:30px 40px;background:${isDark?'#1a1a1a':'#fff'};color:${isDark?'#e0e0e0':'#1a1a1a'};}  .num{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:#f0a500;background:var(--accent-soft);padding:4px 10px;border-radius:4px;display:inline-block;margin-bottom:8px;}.title{font-size:18px;font-weight:700;margin-bottom:16px;}.law-name{font-size:12px;color:${isDark?'#707070':'#999'};margin-bottom:16px;}.meta{background:${isDark?'#242424':'#f9f9f9'};border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:${isDark?'#a0a0a0':'#666'};border-left:3px solid var(--accent2);}.chapter{background:${isDark?'#2a2a2a':'#f0f0f0'};border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:13px;font-weight:600;color:${isDark?'#a0a0a0':'#666'};border-left:3px solid #f0a500;}</style></head><body><div class="num">${eh(art.num)}</div><div class="title">${eh(art.title || '(제목 없음)')}</div><div class="law-name">${eh(art.lawName)}</div>${art.effDate ? `<div class="meta">시행일: ${eh(art.effDate)}</div>` : ''}${art.chapter ? `<div class="chapter">${eh(art.chapter)}</div>` : ''}${parasHtml}</body></html>`;
   const popup = window.open('', '_blank', 'width=700,height=800,scrollbars=yes,resizable=yes');
   if(popup){ popup.document.write(htmlDoc); popup.document.close(); } else { toast('팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요.'); }
 }
@@ -2054,7 +2059,7 @@ function openRelatedArticlePopup(articleNum){
       <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
       <style>
         body{font-family:'Noto Sans KR',sans-serif;margin:0;padding:24px 32px;background:${bg};color:${textColor};}
-        .num{font-family:monospace;font-size:12px;font-weight:600;color:#f0a500;background:rgba(240,165,0,.1);padding:4px 10px;border-radius:4px;display:inline-block;margin-bottom:8px;}
+        .num{font-family:monospace;font-size:12px;font-weight:600;color:#f0a500;background:var(--accent-soft);padding:4px 10px;border-radius:4px;display:inline-block;margin-bottom:8px;}
         .title{font-size:17px;font-weight:700;margin-bottom:6px;}
         .lawname{font-size:11px;color:#999;margin-bottom:16px;}
         .footer{margin-top:20px;padding-top:12px;border-top:1px solid ${isDark?'#333':'#ddd'};display:flex;gap:8px;}
@@ -2358,22 +2363,29 @@ function parseGoogleTrendsRSS(text){
 
 // ── 뉴스 RSS 파싱 ─────────────────────────────────
 function parseNewsRSS(text){
-  // XML 또는 HTML 파싱
   let doc;
   try{ doc = new DOMParser().parseFromString(text, 'text/xml'); }catch(e){ return null; }
   const items = doc.querySelectorAll('item');
   if(!items.length) return null;
+
+  // 한국어 뉴스 필터링 정규식
+  const koreanRe = /[가-힣]/;
+  // 영문/베트남어 등 외국 매체 제외 키워드
+  const foreignRe = /TTXVN|Vietnam|Reuters|AFP|AP News|Bloomberg|CNN|BBC|xinhua|Xinhua/i;
+
   const result = [];
   items.forEach((item, idx) => {
-    if(idx >= 15) return;
+    if(result.length >= 10) return;
     const title = item.querySelector('title')?.textContent?.replace(/<!\[CDATA\[|\]\]>/g,'').trim() || '';
     const link  = item.querySelector('link')?.textContent?.trim()
                || item.querySelector('link')?.nextSibling?.textContent?.trim() || '';
     const pubDate = item.querySelector('pubDate')?.textContent?.trim() || '';
-    const desc  = (item.querySelector('description')?.textContent || '').replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim().substring(0,80);
+    const desc  = (item.querySelector('description')?.textContent || '').replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim().substring(0,100);
     const source = item.querySelector('source')?.textContent?.trim() || '';
-    if(title.length > 3){
-      result.push({ rank:idx+1, title, link, pubDate, desc, source, type:'news' });
+
+    // 한국어 제목만, 외국 매체 제외
+    if(title.length > 3 && koreanRe.test(title) && !foreignRe.test(title) && !foreignRe.test(source)){
+      result.push({ rank:result.length+1, title, link, pubDate, desc, source, type:'news' });
     }
   });
   return result.length ? result : null;
@@ -2423,13 +2435,15 @@ function renderTrendContent(el, items, tab){
     html += '<div style="display:flex;flex-direction:column;gap:2px;">';
     items.forEach(item => {
       const dateStr = item.pubDate ? formatRSSDate(item.pubDate) : '';
-      html += '<a href="'+eh(item.link||'#')+'" target="_blank" class="signal-rank-item" style="align-items:flex-start;flex-direction:column;gap:2px;padding:7px 6px;">'
+      // desc에서 &nbsp; 등 잔여 엔티티 제거
+      const cleanDesc = (item.desc||'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/\s+/g,' ').trim();
+      html += '<a href="'+eh(item.link||'#')+'" target="_blank" class="signal-rank-item" style="align-items:flex-start;flex-direction:column;gap:3px;padding:8px 6px;border-bottom:1px solid var(--border);">'
         + '<div style="display:flex;align-items:center;gap:6px;width:100%;">'
-        + (item.source ? '<span style="font-size:9px;color:var(--accent);font-weight:700;background:rgba(163,63,0,.08);padding:1px 5px;border-radius:3px;flex-shrink:0;">'+eh(item.source)+'</span>' : '')
-        + '<span style="flex:1;font-size:12px;color:var(--text);line-height:1.4;font-weight:500;">'+eh(item.title)+'</span>'
+        + (item.source ? '<span style="font-size:9px;color:var(--accent);font-weight:700;background:var(--accent-soft);padding:1px 6px;border-radius:3px;flex-shrink:0;">'+eh(item.source)+'</span>' : '')
+        + '<span style="flex:1;font-size:12px;color:var(--text);line-height:1.4;font-weight:600;">'+eh(item.title)+'</span>'
         + (dateStr ? '<span style="font-size:10px;color:var(--text-dim);flex-shrink:0;font-family:monospace;">'+dateStr+'</span>' : '')
         + '</div>'
-        + (item.desc ? '<div style="font-size:10px;color:var(--text-dim);line-height:1.4;padding-left:2px;">'+eh(item.desc)+'…</div>' : '')
+        + (cleanDesc ? '<div style="font-size:10px;color:var(--text-dim);line-height:1.5;padding-left:2px;">'+eh(cleanDesc)+'</div>' : '')
         + '</a>';
     });
     html += '</div>';
@@ -2513,7 +2527,7 @@ function renderDbLawFavWidget(){
   }
   el.innerHTML = lawFavorites.slice(0,6).map((f,idx)=>`
     <div class="db-lawfav-item" onclick="loadLawFavByIdx(${idx})">
-      <span style="font-size:10px;padding:2px 6px;background:rgba(163,63,0,.1);color:var(--accent);border-radius:3px;font-weight:700;flex-shrink:0;">${eh(f.type||'법령')}</span>
+      <span style="font-size:10px;padding:2px 6px;background:var(--accent-soft);color:var(--accent);border-radius:3px;font-weight:700;flex-shrink:0;">${eh(f.type||'법령')}</span>
       <span style="flex:1;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${eh(f.name)}</span>
     </div>`).join('');
 }
@@ -2681,7 +2695,7 @@ async function loadKoshaSafetyWidget(type){
           data-boardno="${eh(item.boardno||'')}"
           data-type="accident"
           data-date="${eh(item.date)}">
-          <div class="accident-featured-date">${eh(item.date)} <span style="font-size:9px;font-weight:700;color:var(--accent);background:rgba(163,63,0,.1);padding:1px 6px;border-radius:3px;margin-left:4px;">최신</span></div>
+          <div class="accident-featured-date">${eh(item.date)} <span style="font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:1px 6px;border-radius:3px;margin-left:4px;">최신</span></div>
           <div class="accident-featured-title">${eh(item.title)}</div>
           <div class="accident-featured-desc">${eh(item.desc.substring(0, 80))}${item.desc.length>80?'…':''}</div>
         </div>`;
@@ -2920,7 +2934,7 @@ async function openMsdsDetail(chemId, chemNm){
   if(!chemId){toast('화학물질ID 없음');return;}
   const modal=document.getElementById('msdsModal');
   if(!modal) return;
-  document.getElementById('msdsModalTitle').innerHTML='🧪 '+chemNm+'<a href="https://msds.kosha.or.kr/MSDSInfo/kcic/msdssearchAll.do" target="_blank" style="margin-left:12px;font-size:11px;font-weight:500;color:var(--accent);background:rgba(163,63,0,.08);padding:3px 10px;border-radius:6px;text-decoration:none;vertical-align:middle;">🔗 MSDS 검색 사이트</a>';
+  document.getElementById('msdsModalTitle').innerHTML='🧪 '+chemNm+'<a href="https://msds.kosha.or.kr/MSDSInfo/kcic/msdssearchAll.do" target="_blank" style="margin-left:12px;font-size:11px;font-weight:500;color:var(--accent);background:var(--accent-soft);padding:3px 10px;border-radius:6px;text-decoration:none;vertical-align:middle;">🔗 MSDS 검색 사이트</a>';
   document.getElementById('msdsModalBody').innerHTML='<div style="padding:20px;text-align:center;color:var(--text-dim);">MSDS 로딩 중...</div>';
   modal.classList.add('open');
   const results=await Promise.allSettled(MSDS_SECTIONS.map(sec=>publicApiFetch('https://apis.data.go.kr/B552468/msdschem/getChemDetail'+sec.no, {serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361', chemId:chemId})));
@@ -3358,7 +3372,7 @@ async function openCrossLawPopup(lawName, artNum){
       <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
       <style>
         body{font-family:'Noto Sans KR',sans-serif;margin:0;padding:24px 32px;background:${bg};color:${textColor};}
-        .num{font-family:monospace;font-size:12px;font-weight:600;color:#f0a500;background:rgba(240,165,0,.1);padding:4px 10px;border-radius:4px;display:inline-block;margin-bottom:8px;}
+        .num{font-family:monospace;font-size:12px;font-weight:600;color:#f0a500;background:var(--accent-soft);padding:4px 10px;border-radius:4px;display:inline-block;margin-bottom:8px;}
         .title{font-size:17px;font-weight:700;margin-bottom:6px;}
         .lawname{font-size:11px;color:#999;margin-bottom:16px;}
         .footer{margin-top:20px;padding-top:12px;border-top:1px solid #ddd;display:flex;gap:8px;}
