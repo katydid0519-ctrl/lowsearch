@@ -41,7 +41,7 @@ header{background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backd
 .tab-btn:hover{color:var(--text);background:var(--surface2);}
 .tab-btn.active{background:rgba(163,63,0,.1);color:var(--accent);font-weight:600;}
 .layout{display:flex;flex:1;height:calc(100vh - 58px);overflow:hidden;}
-aside{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:all .2s;}
+aside{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;transition:all .2s;}
 aside.collapsed{width:0;min-width:0;overflow:hidden;border-right:none;}
 aside.collapsed *{display:none;}
 .sidebar-toggle{background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-size:16px;cursor:pointer;padding:3px 8px;transition:all .15s;}
@@ -342,6 +342,133 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .msds-field-val{color:var(--text);flex:1;line-height:1.6;word-break:break-all;}
 .msds-field-empty{font-size:11px;color:var(--text-dim);font-style:italic;}
 
+/* ── 대시보드 레이아웃 ── */
+.db-searchbar{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:10px 20px;
+  position:sticky;top:0;z-index:10;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+.db-searchbar-inner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.db-mode-btn{
+  padding:6px 12px;font-size:11px;font-weight:600;border:none;
+  background:transparent;color:var(--text-dim);cursor:pointer;
+  font-family:inherit;transition:all .12s;white-space:nowrap;
+}
+.db-mode-active{color:var(--accent)!important;background:rgba(163,63,0,.08)!important;}
+.db-search-input{
+  flex:1;border:none;background:transparent;color:var(--text);
+  font-size:13px;padding:9px 12px;outline:none;font-family:inherit;min-width:200px;
+}
+.db-search-input::placeholder{color:var(--text-dim);}
+.db-search-btn{
+  padding:8px 18px;background:var(--accent-light);border:none;
+  color:#fff;font-weight:700;font-size:13px;cursor:pointer;
+  font-family:'Manrope',inherit;transition:opacity .15s;white-space:nowrap;
+}
+.db-search-btn:hover{opacity:.9;}
+.db-quick-tags{display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0;}
+.db-qtag{
+  padding:3px 10px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;
+  transition:all .12s;white-space:nowrap;
+}
+.db-qtag:hover{border-color:var(--accent);color:var(--accent);background:rgba(163,63,0,.06);}
+
+.db-grid{
+  display:grid;
+  grid-template-columns:1fr 230px;
+  gap:16px;
+  padding:16px 20px;
+  flex:1;
+  align-items:start;
+  width:100%;
+}
+.db-col-center{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;}
+.db-col-center-left{display:flex;flex-direction:column;gap:14px;}
+.db-col-center-right{display:flex;flex-direction:column;gap:14px;}
+.db-col-right{display:flex;flex-direction:column;gap:14px;}
+
+.db-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:16px;
+  box-shadow:var(--shadow);
+  transition:box-shadow .2s;
+}
+.db-card:hover{box-shadow:var(--shadow-lg);}
+.db-card-main{border-left:3px solid var(--accent-light);}
+
+.db-card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--border);
+}
+.db-card-icon{font-size:15px;flex-shrink:0;}
+.db-card-title{font-family:"Manrope",sans-serif;font-size:13px;font-weight:700;color:var(--text);}
+
+.db-chip{
+  display:inline-block;padding:3px 10px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:20px;font-size:10px;color:var(--text-muted);
+  cursor:pointer;transition:all .12px;
+}
+.db-chip:hover{border-color:var(--accent);color:var(--accent);}
+
+/* 우측 위젯 항목 */
+.db-fav-item,.db-memo-item,.db-lawfav-item{
+  display:flex;align-items:flex-start;gap:8px;
+  padding:7px 9px;border-radius:8px;cursor:pointer;
+  border:1px solid transparent;transition:all .12s;font-size:11px;
+}
+.db-fav-item:hover,.db-memo-item:hover,.db-lawfav-item:hover{
+  background:var(--surface2);border-color:var(--border);
+}
+.db-fav-num{
+  font-family:"JetBrains Mono",monospace;font-size:9px;font-weight:700;
+  color:var(--accent);background:rgba(163,63,0,.1);
+  padding:2px 5px;border-radius:3px;flex-shrink:0;margin-top:1px;
+}
+.db-fav-title{color:var(--text-muted);line-height:1.4;flex:1;}
+.db-fav-law{font-size:9px;color:var(--text-dim);margin-top:1px;}
+.db-empty{color:var(--text-dim);font-size:11px;text-align:center;padding:16px 8px;line-height:1.6;}
+
+/* 실시간 검색어 위젯 */
+.signal-rank-list{display:flex;flex-direction:column;gap:2px;}
+.signal-rank-item{
+  display:flex;align-items:center;gap:8px;padding:5px 6px;
+  border-radius:6px;cursor:pointer;transition:background .12s;
+  font-size:12px;text-decoration:none;color:var(--text);
+}
+.signal-rank-item:hover{background:var(--surface2);}
+.signal-rank-num{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+  width:18px;text-align:center;flex-shrink:0;color:var(--text-dim);
+}
+.signal-rank-num.top3{color:var(--accent);font-size:12px;}
+.signal-rank-text{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.signal-rank-icon{font-size:10px;flex-shrink:0;width:12px;text-align:center;}
+.signal-rank-up{color:#e74040;}
+.signal-rank-dn{color:#3182f6;}
+.signal-rank-eq{color:var(--text-dim);}
+.signal-rank-new{color:#f59e0b;}
+.signal-updated{font-size:10px;color:var(--text-dim);margin-top:6px;text-align:right;}
+
+@media(max-width:1100px){
+  .db-col-center{grid-template-columns:1fr;}
+}
+@media(max-width:900px){
+  .db-grid{grid-template-columns:1fr;}
+  .db-col-right{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+}
+@media(max-width:600px){
+  .db-col-right{grid-template-columns:1fr;}
+  .db-quick-tags{display:none;}
+}
 /* ── 재해사례 탭 버튼 스타일 ── */
 .safety-tab-btn{
   font-size:10px;font-weight:700;padding:4px 10px;border-radius:6px;
@@ -386,26 +513,21 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
   </div>
 </header>
 <div class="layout">
-  <aside id="sidebarEl">
-    <div class="side-sec">
-      <div class="side-label">📂 필터</div>
-      <div class="filter-list">
-        <div class="filter-item on" onclick="setFilter('all',this)"><div class="fdot"></div>전체<span class="fcnt" id="cnt-all">-</span></div>
-        <div class="filter-item" onclick="setFilter('fav',this)"><div class="fdot"></div>⭐ 즐겨찾기<span class="fcnt" id="cnt-fav">0</span></div>
-        <div class="filter-item" onclick="setFilter('memo',this)"><div class="fdot"></div>📝 메모 있음<span class="fcnt" id="cnt-memo">0</span></div>
-      </div>
+  <aside id="sidebarEl" style="width:var(--sidebar-w);min-width:var(--sidebar-w);overflow-y:auto;display:flex;flex-direction:column;gap:0;">
+
+    <!-- 날씨 위젯 -->
+    <div class="hw-weather-card" id="hwWeather" style="border-radius:0;margin:0;flex-shrink:0;">
+      <div id="hwWeatherBody"><div style="color:rgba(255,255,255,.5);font-size:11px;">날씨 로딩 중...</div></div>
     </div>
-    <div class="side-label" style="padding:12px 14px 5px;font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--text-dim);text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;">
-      📚 법령 즐겨찾기
-      <span class="btn-xs" style="font-size:9px;padding:2px 6px;" onclick="toggleSection('lawFav')">접기/펼치기</span>
+
+    <!-- 캘린더 위젯 -->
+    <div style="padding:14px 14px 10px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text-dim);text-transform:uppercase;margin-bottom:10px;">📅 캘린더</div>
+      <div id="hwCalendarBody"><div class="hw-loading">로딩 중...</div></div>
     </div>
-    <div id="lawFavList" style="padding:4px 8px;max-height:180px;overflow-y:auto;border-bottom:1px solid var(--border);"><div class="fav-empty" style="padding:10px;">즐겨찾기한 법령이 없습니다.</div></div>
-    <div class="side-label" style="padding:12px 14px 5px;font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--text-dim);text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;">
-      ⭐ 조문 즐겨찾기
-      <span class="btn-xs" style="font-size:9px;padding:2px 6px;" onclick="toggleSection('artFav')">접기/펼치기</span>
-    </div>
-    <div class="fav-scroll" id="favList"><div class="fav-empty">즐겨찾기한 조문이<br>없습니다.</div></div>
-    <div class="side-sec" style="border-top:1px solid var(--border);">
+
+    <!-- 안전보건환경 사이트 링크 -->
+    <div class="side-sec" style="border-top:1px solid var(--border);flex:1;overflow-y:auto;">
       <div class="side-label" style="display:flex;align-items:center;justify-content:space-between;">
         🔗 안전보건환경 사이트
         <span class="btn-xs" style="font-size:9px;padding:2px 6px;" onclick="toggleSiteLinks()">접기/펼치기</span>
@@ -418,75 +540,149 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
         </div>
       </div>
     </div>
+
+    <!-- 숨겨진 요소들 (필터 카운트용, UI 없음) -->
+    <span id="cnt-all" style="display:none">-</span>
+    <span id="cnt-fav" style="display:none">0</span>
+    <span id="cnt-memo" style="display:none">0</span>
+    <div id="lawFavList" style="display:none;"></div>
+    <div id="favList" style="display:none;"></div>
+
   </aside>
   <main>
     <div class="content-area" id="contentArea">
-      <div class="state-box" id="initState" style="align-items:flex-start;padding:20px 22px;">
-        <!-- 히어로 검색 배너 -->
-        <div class="home-hero" style="width:100%;margin-bottom:20px;">
-          <div class="home-hero-title">⚖️ 법령 및 규정 통합 검색</div>
-          <div style="display:flex;gap:6px;margin-bottom:10px;">
-            <button class="mode-btn active" id="modeBtn1" onclick="setMode('law')" style="border-radius:8px;padding:6px 14px;font-size:12px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff;position:relative;z-index:2;">법령명 검색</button>
-            <button class="mode-btn" id="modeBtn2" onclick="setMode('keyword')" style="border-radius:8px;padding:6px 14px;font-size:12px;background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.7);position:relative;z-index:2;">조문 키워드</button>
-          </div>
-          <div class="home-hero-input-wrap">
-            <input class="home-hero-input" id="searchInput" placeholder="산업안전보건법, 중대재해처벌법, 화학물질관리법 검색..."
-              onkeydown="if(event.key==='Enter')doSearch()">
-            <button class="home-hero-btn" onclick="doSearch()">검색하기</button>
-          </div>
-          <div class="home-hero-tags">
-            <span class="home-hero-tag" onclick="heroSearch('산업안전보건법')">#산업안전보건법</span>
-            <span class="home-hero-tag" onclick="heroSearch('중대재해 처벌 등에 관한 법률')">#중대재해처벌법</span>
-            <span class="home-hero-tag" onclick="heroSearch('화학물질관리법')">#화학물질관리법</span>
-            <span class="home-hero-tag" onclick="heroSearch('산업안전보건기준에 관한 규칙')">#안전보건규칙</span>
+      <div class="state-box" id="initState" style="align-items:flex-start;padding:0;overflow-y:auto;height:100%;display:flex;flex-direction:column;">
+
+        <!-- ── 상단 검색 바 (컴팩트) ── -->
+        <div class="db-searchbar">
+          <div class="db-searchbar-inner">
+            <div style="display:flex;align-items:center;gap:10px;flex:1;">
+              <span style="font-size:18px;">⚖️</span>
+              <div style="flex:1;display:flex;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .15s;" onfocusin="this.style.borderColor='var(--accent-light)'" onfocusout="this.style.borderColor='var(--border)'">
+                <div style="display:flex;border-right:1px solid var(--border);">
+                  <button id="modeBtn1" onclick="setMode('law')" class="db-mode-btn db-mode-active">법령명</button>
+                  <button id="modeBtn2" onclick="setMode('keyword')" class="db-mode-btn">조문</button>
+                </div>
+                <input class="db-search-input" id="searchInput" placeholder="산업안전보건법, 중대재해처벌법, 화학물질관리법..."
+                  onkeydown="if(event.key==='Enter')doSearch()">
+                <button class="db-search-btn" onclick="doSearch()">검색</button>
+              </div>
+            </div>
+            <div class="db-quick-tags">
+              <span class="db-qtag" onclick="heroSearch('산업안전보건법')">#산안법</span>
+              <span class="db-qtag" onclick="heroSearch('중대재해 처벌 등에 관한 법률')">#중대재해</span>
+              <span class="db-qtag" onclick="heroSearch('화학물질관리법')">#화관법</span>
+              <span class="db-qtag" onclick="heroSearch('산업안전보건기준에 관한 규칙')">#안전보건규칙</span>
+              <span class="db-qtag" onclick="heroSearch('위험물안전관리법')">#위험물</span>
+            </div>
           </div>
         </div>
 
-        <!-- 대시보드: 4개 위젯 -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;width:100%;align-items:start;">
+        <!-- ── 메인 대시보드 그리드 ── -->
+        <div class="db-grid">
 
-          <!-- 1. 캘린더 -->
-          <div class="hw-card" id="hwCalendar" style="min-height:0;">
-            <div class="hw-card-title-row"><div class="hw-card-title">📅 캘린더</div></div>
-            <div id="hwCalendarBody"><div class="hw-loading">로딩 중...</div></div>
-          </div>
+          <!-- ┌ 중앙 컬럼 (2분할) ──────────────────────────── -->
+          <div class="db-col-center">
 
-          <!-- 2. 날씨 -->
-          <div class="hw-weather-card" id="hwWeather" style="display:flex;flex-direction:column;">
-            <div id="hwWeatherBody" style="flex:1;"><div style="color:rgba(255,255,255,.5);font-size:11px;">날씨 로딩 중...</div></div>
-          </div>
-
-          <!-- 3. MSDS -->
-          <div class="hw-card" id="hwMsds" style="min-height:0;">
-            <div class="hw-card-title-row">
-              <div class="hw-card-title">🧪 MSDS 검색</div>
-              <span class="hw-src">KOSHA</span>
-            </div>
-            <div style="display:flex;gap:5px;margin-bottom:7px;">
-              <input type="text" id="msdsInput" class="art-kw-input" placeholder="물질명 (예: 황산)"
-                style="flex:1;font-size:12px;padding:6px 9px;">
-              <button onclick="doMsdsSearch()" class="btn-search" style="padding:6px 12px;font-size:12px;">검색</button>
-            </div>
-            <div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap;">
-              <span style="padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;" onclick="document.getElementById('msdsInput').value='벤젠';doMsdsSearch();">벤젠</span>
-              <span style="padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;" onclick="document.getElementById('msdsInput').value='황산';doMsdsSearch();">황산</span>
-              <span style="padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:10px;color:var(--text-muted);cursor:pointer;" onclick="document.getElementById('msdsInput').value='톨루엔';doMsdsSearch();">톨루엔</span>
-            </div>
-            <div id="msdsResultArea" style="max-height:300px;overflow-y:auto;"></div>
-          </div>
-
-          <!-- 4. 재해사례 / 사망사고 통합 위젯 (탭 방식) -->
-          <div class="hw-card" id="hwSafety" style="min-height:0;">
-            <div class="hw-card-title-row" style="margin-bottom:10px;">
-              <div style="display:flex;gap:5px;align-items:center;">
-                <button class="safety-tab-btn active" id="safetyTab1" onclick="switchSafetyTab('accident',this)">재해사례</button>
-                <button class="safety-tab-btn" id="safetyTab2" onclick="switchSafetyTab('fatality',this)">사망사고</button>
+            <!-- 중앙 좌측: 안전사고 + MSDS -->
+            <div class="db-col-center-left">
+              <div class="hw-card db-card db-card-main" id="hwSafety">
+                <div class="db-card-header" style="margin-bottom:12px;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="db-card-icon">🚨</span>
+                    <span class="db-card-title">안전사고 현황</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <button class="safety-tab-btn active" id="safetyTab1" onclick="switchSafetyTab('accident',this)">재해사례</button>
+                    <button class="safety-tab-btn" id="safetyTab2" onclick="switchSafetyTab('fatality',this)">사망사고</button>
+                    <span class="hw-src">KOSHA</span>
+                  </div>
+                </div>
+                <div id="hwSafetyBody"><div class="hw-loading">로딩 중...</div></div>
               </div>
-              <span class="hw-src">KOSHA</span>
+
+              <div class="hw-card db-card" id="hwMsds">
+                <div class="db-card-header">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="db-card-icon">🧪</span>
+                    <span class="db-card-title">MSDS 화학물질 검색</span>
+                  </div>
+                  <span class="hw-src">KOSHA</span>
+                </div>
+                <div style="display:flex;gap:6px;margin-bottom:8px;">
+                  <input type="text" id="msdsInput" class="art-kw-input" placeholder="물질명 입력 (예: 황산, 벤젠, 톨루엔)"
+                    style="flex:1;font-size:12px;padding:7px 10px;" onkeydown="if(event.key==='Enter')doMsdsSearch()">
+                  <button onclick="doMsdsSearch()" class="btn-search" style="padding:7px 16px;font-size:12px;">검색</button>
+                </div>
+                <div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap;">
+                  <span class="db-chip" onclick="document.getElementById('msdsInput').value='벤젠';doMsdsSearch();">벤젠</span>
+                  <span class="db-chip" onclick="document.getElementById('msdsInput').value='황산';doMsdsSearch();">황산</span>
+                  <span class="db-chip" onclick="document.getElementById('msdsInput').value='톨루엔';doMsdsSearch();">톨루엔</span>
+                  <span class="db-chip" onclick="document.getElementById('msdsInput').value='암모니아';doMsdsSearch();">암모니아</span>
+                  <span class="db-chip" onclick="document.getElementById('msdsInput').value='염산';doMsdsSearch();">염산</span>
+                </div>
+                <div id="msdsResultArea" style="max-height:260px;overflow-y:auto;"></div>
+              </div>
             </div>
-            <div class="hw-card-body" id="hwSafetyBody"><div class="hw-loading">로딩 중...</div></div>
+
+            <!-- 중앙 우측: 실시간 검색어 -->
+            <div class="db-col-center-right">
+              <div class="hw-card db-card" id="hwSignal">
+                <div class="db-card-header">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="db-card-icon">🔥</span>
+                    <span class="db-card-title">실시간 검색어</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="hw-src">signal.bz</span>
+                    <button class="btn-xs" onclick="loadSignalRank()" title="새로고침">↺</button>
+                  </div>
+                </div>
+                <div id="hwSignalBody"><div class="hw-loading">로딩 중...</div></div>
+              </div>
+            </div>
+
           </div>
 
+          <!-- ┌ 우측 컬럼 (즐겨찾기·메모) ─────────────────── -->
+          <div class="db-col-right">
+
+            <!-- 최근 즐겨찾기 -->
+            <div class="hw-card db-card" id="dbFavWidget">
+              <div class="db-card-header">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="db-card-icon">⭐</span>
+                  <span class="db-card-title">즐겨찾기 조문</span>
+                </div>
+                <button class="btn-xs" onclick="switchTab('favorites')">전체보기</button>
+              </div>
+              <div id="dbFavBody" style="display:flex;flex-direction:column;gap:4px;"></div>
+            </div>
+
+            <!-- 최근 메모 -->
+            <div class="hw-card db-card" id="dbMemoWidget">
+              <div class="db-card-header">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="db-card-icon">📝</span>
+                  <span class="db-card-title">최근 메모</span>
+                </div>
+                <button class="btn-xs" onclick="setFilter('memo', document.querySelector('.filter-item:nth-child(3)'))">전체보기</button>
+              </div>
+              <div id="dbMemoBody" style="display:flex;flex-direction:column;gap:4px;"></div>
+            </div>
+
+            <!-- 법령 즐겨찾기 바로가기 -->
+            <div class="hw-card db-card" id="dbLawFavWidget">
+              <div class="db-card-header">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="db-card-icon">📚</span>
+                  <span class="db-card-title">법령 즐겨찾기</span>
+                </div>
+              </div>
+              <div id="dbLawFavBody" style="display:flex;flex-direction:column;gap:3px;"></div>
+            </div>
+
+          </div>
         </div>
       </div>
       <div id="resultArea" style="display:none;"></div>
@@ -957,10 +1153,10 @@ function removeCustomLink(idx){
 
 function setMode(m){
   mode=m;
-  document.getElementById('modeBtn1').classList.toggle('active',m==='law');
-  document.getElementById('modeBtn2').classList.toggle('active',m==='keyword');
+  document.getElementById('modeBtn1').classList.toggle('db-mode-active',m==='law');
+  document.getElementById('modeBtn2').classList.toggle('db-mode-active',m==='keyword');
   document.getElementById('searchInput').placeholder=
-    m==='law'?'법령명 또는 약칭 (예: 산안법, 중대법, 화관법)':'조문 키워드 (예: 사업주)';
+    m==='law'?'법령명 또는 약칭 (예: 산안법, 중대법, 화관법)':'조문 키워드 (예: 사업주, 안전보건관리책임자)';
 }
 
 async function doSearch(){
@@ -1946,10 +2142,222 @@ function updateCounts(){
 // ── 홈 위젯 초기화
 // ══════════════════════════════════════════════════
 function initHomeWidgets(){
-  loadKoshaSafetyWidget('accident'); // 기본: 재해사례 탭
+  loadKoshaSafetyWidget('accident');
   loadWeatherWidget();
   loadCalendarWidget();
   initMsdsWidget();
+  renderDbFavWidget();
+  renderDbMemoWidget();
+  renderDbLawFavWidget();
+  loadSignalRank();
+}
+
+// ── 실시간 검색어 (signal.bz) ───────────────────────────────
+let _signalTimer = null;
+
+async function loadSignalRank(){
+  const el = document.getElementById('hwSignalBody');
+  if(!el) return;
+  el.innerHTML = '<div class="hw-loading">불러오는 중...</div>';
+
+  // signal.bz API는 CORS를 허용하지 않으므로 다단계 프록시 시도
+  const SIGNAL_APIS = [
+    // 공개 프록시 경유 → signal.bz API
+    () => proxyFetch('https://www.signal.bz/api/realtimerank', 8000),
+    () => proxyFetch('https://www.signal.bz/', 8000),
+  ];
+
+  let ranks = null;
+
+  for(const tryFetch of SIGNAL_APIS){
+    try{
+      const text = await tryFetch();
+      if(!text) continue;
+
+      // JSON API 응답 시도
+      try{
+        const json = JSON.parse(text);
+        // signal.bz 응답 구조 파싱
+        const arr = json?.data || json?.result || json?.ranks || findArray(json);
+        if(arr && arr.length){
+          ranks = arr.slice(0,10).map((item, i) => ({
+            rank: item.rank || item.no || i+1,
+            text: item.keyword || item.text || item.title || item.name || '',
+            change: item.change || item.diff || item.status || 0,
+          })).filter(r=>r.text);
+          if(ranks.length) break;
+        }
+      }catch(e){}
+
+      // HTML 파싱 시도 (첨부된 구조 기반)
+      const doc = new DOMParser().parseFromString(text, 'text/html');
+
+      // rank-layer 구조 (첨부 HTML 기준)
+      const rankLayers = doc.querySelectorAll('.rank-layer');
+      if(rankLayers.length){
+        ranks = [];
+        rankLayers.forEach(layer=>{
+          const num = layer.querySelector('.rank-num')?.textContent?.trim() || '';
+          const txt = layer.querySelector('.rank-text')?.textContent?.trim() || '';
+          const iconEl = layer.querySelector('.rank-icon i');
+          let change = 'eq';
+          if(iconEl){
+            const cls = iconEl.className || '';
+            const style = iconEl.getAttribute('style') || '';
+            if(cls.includes('caret-up') || style.includes('red')) change = 'up';
+            else if(cls.includes('caret-down') || style.includes('189')) change = 'dn';
+            else if(cls.includes('plus') || style.includes('burlywood')) change = 'new';
+          }
+          if(num && txt) ranks.push({rank:parseInt(num)||0, text:txt, change});
+        });
+        if(ranks.length) break;
+      }
+
+      // 다른 구조 시도
+      const items = doc.querySelectorAll('[class*="rank"] li, [class*="keyword"] li, [class*="realtime"] li');
+      if(items.length){
+        ranks = [...items].slice(0,10).map((item,i)=>({
+          rank: i+1,
+          text: item.textContent.replace(/\d+/,'').trim(),
+          change: 'eq'
+        })).filter(r=>r.text.length>1);
+        if(ranks.length) break;
+      }
+    }catch(e){ console.warn('[signal.bz]', e.message); }
+  }
+
+  if(!ranks || !ranks.length){
+    // 완전 실패 시 네이버 실시간 검색어 대체 시도
+    ranks = await fetchNaverTrend();
+  }
+
+  renderSignalRank(el, ranks);
+
+  // 5분마다 자동 갱신
+  clearInterval(_signalTimer);
+  _signalTimer = setInterval(()=>loadSignalRank(), 5 * 60 * 1000);
+}
+
+async function fetchNaverTrend(){
+  // 네이버 DataLab 트렌드 (공개 API 없어서 allorigins 경유 시도)
+  try{
+    const text = await proxyFetch('https://datalab.naver.com/keyword/realtimeList.naver?groupId=', 6000);
+    if(text){
+      const doc = new DOMParser().parseFromString(text,'text/html');
+      const items = doc.querySelectorAll('.rank_item, .item_issue, li[data-rank]');
+      if(items.length){
+        return [...items].slice(0,10).map((item,i)=>({
+          rank: i+1,
+          text: (item.querySelector('.issue_tit,.title,.keyword')?.textContent || item.textContent).replace(/\d/g,'').trim(),
+          change:'eq'
+        })).filter(r=>r.text.length>1);
+      }
+    }
+  }catch(e){}
+  return null;
+}
+
+function renderSignalRank(el, ranks){
+  if(!ranks || !ranks.length){
+    el.innerHTML = `<div class="db-empty">
+      실시간 검색어를 불러올 수 없습니다.<br>
+      <small style="font-size:10px;">CORS 제한으로 직접 접근이 차단됩니다.</small><br>
+      <a href="https://www.signal.bz" target="_blank" class="hw-more-link" style="margin-top:6px;display:inline-block;">signal.bz 바로가기 →</a>
+    </div>`;
+    return;
+  }
+
+  const changeIcon = (change) => {
+    if(change === 'up' || change > 0) return '<span class="signal-rank-icon signal-rank-up">▲</span>';
+    if(change === 'dn' || change < 0) return '<span class="signal-rank-icon signal-rank-dn">▼</span>';
+    if(change === 'new') return '<span class="signal-rank-icon signal-rank-new">N</span>';
+    return '<span class="signal-rank-icon signal-rank-eq">—</span>';
+  };
+
+  const now = new Date().toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'});
+  const half = Math.ceil(ranks.length / 2);
+  const left = ranks.slice(0, half);
+  const right = ranks.slice(half);
+
+  let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 8px;">';
+  [left, right].forEach(col => {
+    html += '<div>';
+    col.forEach(item => {
+      const isTop3 = item.rank <= 3;
+      const searchUrl = `https://search.naver.com/search.naver?query=${encodeURIComponent(item.text)}`;
+      html += `<a href="${searchUrl}" target="_blank" class="signal-rank-item">
+        <span class="signal-rank-num${isTop3?' top3':''}">${item.rank}</span>
+        <span class="signal-rank-text">${eh(item.text)}</span>
+        ${changeIcon(item.change)}
+      </a>`;
+    });
+    html += '</div>';
+  });
+  html += '</div>';
+  html += `<div class="signal-updated">🕐 ${now} 기준</div>`;
+  el.innerHTML = html;
+}
+
+function renderDbFavWidget(){
+  const el = document.getElementById('dbFavBody');
+  if(!el) return;
+  const items = [...favorites].slice(0,6).map(id=>{
+    const c = localStorage.getItem('v63c_'+id);
+    try{ return c ? JSON.parse(c) : null; }catch(e){ return null; }
+  }).filter(Boolean);
+
+  if(!items.length){
+    el.innerHTML = '<div class="db-empty">즐겨찾기한 조문이 없습니다.<br>조문 팝업에서 ☆ 버튼을 눌러 추가하세요.</div>';
+    return;
+  }
+  el.innerHTML = items.map(a=>`
+    <div class="db-fav-item" onclick="jumpToFav('${a.id}')">
+      <span class="db-fav-num">${eh(a.num)}</span>
+      <div style="flex:1;min-width:0;">
+        <div class="db-fav-title">${eh((a.title||'').substring(0,28))}${(a.title||'').length>28?'…':''}</div>
+        <div class="db-fav-law">${eh(a.lawName||'')}</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderDbMemoWidget(){
+  const el = document.getElementById('dbMemoBody');
+  if(!el) return;
+  const entries = Object.entries(memos)
+    .filter(([,v])=>v&&v.trim())
+    .slice(0,5);
+
+  if(!entries.length){
+    el.innerHTML = '<div class="db-empty">메모한 조문이 없습니다.<br>조문 팝업에서 메모를 추가하세요.</div>';
+    return;
+  }
+  el.innerHTML = entries.map(([id, memo])=>{
+    const c = localStorage.getItem('v63c_'+id);
+    let num='조문', lawName='', title='';
+    try{ if(c){ const o=JSON.parse(c); num=o.num||'조문'; lawName=o.lawName||''; title=o.title||''; } }catch(e){}
+    return `<div class="db-memo-item" onclick="jumpToFav('${id}')">
+      <span class="db-fav-num">${eh(num)}</span>
+      <div style="flex:1;min-width:0;">
+        <div class="db-fav-title" style="color:var(--text);">${eh(memo.substring(0,32))}${memo.length>32?'…':''}</div>
+        <div class="db-fav-law">${eh(lawName)} ${eh(title.substring(0,16))}</div>
+      </div>
+      <span style="font-size:11px;flex-shrink:0;">📝</span>
+    </div>`;
+  }).join('');
+}
+
+function renderDbLawFavWidget(){
+  const el = document.getElementById('dbLawFavBody');
+  if(!el) return;
+  if(!lawFavorites.length){
+    el.innerHTML = '<div class="db-empty">즐겨찾기한 법령이 없습니다.</div>';
+    return;
+  }
+  el.innerHTML = lawFavorites.slice(0,6).map((f,idx)=>`
+    <div class="db-lawfav-item" onclick="loadLawFavByIdx(${idx})">
+      <span style="font-size:10px;padding:2px 6px;background:rgba(163,63,0,.1);color:var(--accent);border-radius:3px;font-weight:700;flex-shrink:0;">${eh(f.type||'법령')}</span>
+      <span style="flex:1;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${eh(f.name)}</span>
+    </div>`).join('');
 }
 
 // ── KOSHA 팝업 ──
