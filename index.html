@@ -40,7 +40,7 @@ header{background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backd
 .tab-btn{padding:6px 14px;border-radius:8px;border:none;background:transparent;color:var(--text-muted);font-size:12px;cursor:pointer;font-family:'Inter',inherit;font-weight:500;transition:all .15s;}
 .tab-btn:hover{color:var(--text);background:var(--surface2);}
 .tab-btn.active{background:rgba(163,63,0,.1);color:var(--accent);font-weight:600;}
-.layout{display:flex;flex:1;height:calc(100vh - 58px);overflow:hidden;}
+.layout{display:flex;flex:1;height:calc(100vh - 110px);overflow:hidden;}
 aside{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;transition:all .2s;}
 aside.collapsed{width:0;min-width:0;overflow:hidden;border-right:none;}
 aside.collapsed *{display:none;}
@@ -75,7 +75,7 @@ aside.collapsed *{display:none;}
 .ai-summary-box{background:rgba(240,165,0,.06);border:1px solid rgba(240,165,0,.2);border-radius:var(--radius);padding:14px 16px;margin-top:12px;font-size:12px;line-height:1.8;}
 .ai-summary-box .ai-label{font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.5px;margin-bottom:6px;}
 .ai-loading{color:var(--text-dim);font-style:italic;}
-.law-card-count{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-dim);background:var(--surface2);padding:2px 6px;border-radius:4px;white-space:nowrap;}
+.law-card-count{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--accent);background:rgba(163,63,0,.08);padding:2px 8px;border-radius:5px;white-space:nowrap;font-weight:600;}
 .modal-nav{display:flex;justify-content:space-between;padding:8px 20px;border-top:1px solid var(--border);background:var(--surface);}
 .modal-nav-btn{padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;font-family:inherit;transition:all .12s;}
 .modal-nav-btn:hover{border-color:var(--accent);color:var(--accent);}
@@ -126,12 +126,12 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .btn-search:hover{opacity:.9;transform:translateY(-1px);}
 .content-area{flex:1;overflow-y:auto;background:var(--bg);}
 .content-area > *:not(#initState){padding:20px 22px;} /* 결과 화면엔 패딩 유지 */
-.law-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:6px;transition:all .15s;cursor:pointer;display:flex;align-items:center;padding:12px 16px;gap:12px;box-shadow:var(--shadow);}
-.law-card:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:var(--shadow-lg);}
-.law-card-type{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--accent);background:rgba(240,165,0,.1);padding:2px 7px;border-radius:4px;white-space:nowrap;}
-.law-card-name{flex:1;font-size:13px;font-weight:500;}
-.law-card-name mark{background:rgba(240,165,0,.25);color:var(--accent);border-radius:2px;padding:0 1px;}
-.law-card-dept{font-size:11px;color:var(--text-dim);white-space:nowrap;}
+.law-card{background:var(--surface);border:1px solid var(--border);border-left:4px solid transparent;border-radius:var(--radius-lg);margin-bottom:10px;transition:all .15s;cursor:pointer;display:flex;align-items:center;padding:16px 20px;gap:16px;box-shadow:var(--shadow);}
+.law-card:hover{border-left-color:var(--accent);box-shadow:var(--shadow-lg);transform:translateY(-1px);}
+.law-card-type{font-size:11px;font-weight:700;color:#fff;padding:4px 10px;border-radius:6px;white-space:nowrap;flex-shrink:0;letter-spacing:.3px;}
+.law-card-name{flex:1;font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.2px;line-height:1.3;}
+.law-card-name mark{background:rgba(240,165,0,.25);color:var(--accent);border-radius:2px;padding:0 2px;}
+.law-card-dept{font-size:11px;color:var(--text-dim);white-space:nowrap;background:var(--surface2);padding:3px 9px;border-radius:5px;}
 .back-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:14px;transition:all .12s;}
 .back-btn:hover{border-color:var(--accent);color:var(--accent);}
 .law-title-bar{font-size:16px;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;justify-content:space-between;}
@@ -529,6 +529,25 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
     <button class="right-toggle" onclick="toggleRightSidebar()" title="시세 정보">📊</button>
   </div>
 </header>
+<!-- ── 전체너비 검색바 ── -->
+<div id="globalSearchBar" style="background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;position:sticky;top:58px;z-index:90;backdrop-filter:blur(8px);">
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span style="font-size:17px;flex-shrink:0;">⚖️</span>
+    <button id="modeBtn1" onclick="setMode('law')" class="db-mode-btn db-mode-active" style="flex-shrink:0;">법령명</button>
+    <button id="modeBtn2" onclick="setMode('keyword')" class="db-mode-btn" style="flex-shrink:0;">조문</button>
+    <div style="width:680px;flex-shrink:0;display:flex;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .15s;" onfocusin="this.style.borderColor='var(--accent-light)'" onfocusout="this.style.borderColor='var(--border)'">
+      <input class="db-search-input" id="searchInput" placeholder="법령명 검색..." onkeydown="if(event.key==='Enter')doSearch()" style="padding:8px 12px;">
+      <button class="db-search-btn" onclick="doSearch()" style="border-radius:0;padding:8px 16px;">검색</button>
+    </div>
+    <div style="display:flex;gap:5px;flex-wrap:nowrap;flex:1;">
+      <span class="db-qtag" onclick="heroSearch('산업안전보건법')">#산업안전법</span>
+      <span class="db-qtag" onclick="heroSearch('중대재해 처벌 등에 관한 법률')">#중대재해</span>
+      <span class="db-qtag" onclick="heroSearch('화학물질관리법')">#화관법</span>
+      <span class="db-qtag" onclick="heroSearch('위험물안전관리법')">#위험물</span>
+      <span class="db-qtag" onclick="heroSearch('대기환경보전법')">#대기환경</span>
+    </div>
+  </div>
+</div>
 <div class="layout">
   <aside id="sidebarEl" style="width:var(--sidebar-w);min-width:var(--sidebar-w);overflow-y:auto;display:flex;flex-direction:column;gap:0;">
 
@@ -570,27 +589,6 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
     <div class="content-area" id="contentArea">
       <div class="state-box" id="initState" style="align-items:flex-start;padding:0;overflow-y:auto;height:100%;display:flex;flex-direction:column;width:100%;">
 
-
-
-         <!-- ── 검색바 ── -->
-         <div style="position:sticky;top:0;z-index:10;background:var(--surface);border-bottom:1px solid var(--border);backdrop-filter:blur(8px);padding:10px 20px;">
-           <div style="display:flex;align-items:center;gap:8px;">
-             <span style="font-size:17px;">⚖️</span>
-             <div style="flex:1;display:flex;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .15s;" onfocusin="this.style.borderColor='var(--accent-light)'" onfocusout="this.style.borderColor='var(--border)'">
-               <div style="display:flex;border-right:1px solid var(--border);">
-                 <button id="modeBtn1" onclick="setMode('law')" class="db-mode-btn db-mode-active">법령명</button>
-                 <button id="modeBtn2" onclick="setMode('keyword')" class="db-mode-btn">조문</button>
-               </div>
-               <input class="db-search-input" id="searchInput" placeholder="법령명 또는 약칭 (예: 산안법, 중대법, 화관법)..." onkeydown="if(event.key==='Enter')doSearch()">
-               <button class="db-search-btn" onclick="doSearch()">검색</button>
-             </div>
-             <span class="db-qtag" onclick="heroSearch('산업안전보건법')">#산안법</span>
-             <span class="db-qtag" onclick="heroSearch('중대재해 처벌 등에 관한 법률')">#중대재해</span>
-             <span class="db-qtag" onclick="heroSearch('화학물질관리법')">#화관법</span>
-             <span class="db-qtag" onclick="heroSearch('산업안전보건기준에 관한 규칙')">#안전보건규칙</span>
-             <span class="db-qtag" onclick="heroSearch('위험물안전관리법')">#위험물</span>
-           </div>
-         </div>
 
          <!-- ── 메인 대시보드 그리드 ── -->
          <div class="db-grid">
@@ -1611,24 +1609,48 @@ function renderLawList(){
   if(!_navStack.length||_navStack[_navStack.length-1]!=='홈') { _navStack.length=0; pushNav('홈'); }
   if(!lawList.length){ area.innerHTML=`<div class="state-box"><div class="state-icon">🔍</div><div class="state-title">검색 결과 없음</div></div>`; return; }
   const hl=str=>currentKeyword?eh(str).replace(new RegExp(er(currentKeyword),'gi'),m=>`<mark>${m}</mark>`):eh(str);
-  let html=`<div class="status-bar"><span class="status-text">법령 <span class="status-count">${lawList.length}</span>개 — 클릭하면 조문 보기</span></div>`;
+
+  // 법령 유형별 색상
+  const typeColor = (type) => {
+    if(type.includes('법률')) return '#a33f00';
+    if(type.includes('대통령령')||type.includes('시행령')) return '#1d6fa4';
+    if(type.includes('부령')||type.includes('시행규칙')) return '#2e7d32';
+    if(type.includes('훈령')||type.includes('예규')||type.includes('고시')) return '#6a1b9a';
+    return '#555';
+  };
+
+  let html=`<div class="status-bar">
+    <span class="status-text">법령 <span class="status-count">${lawList.length}</span>개</span>
+    <span class="status-text" style="font-size:11px;color:var(--text-dim);">클릭하면 조문 보기</span>
+  </div>`;
+
   lawList.forEach(law=>{
     const isLawFav=lawFavorites.some(f=>f.mst===law.mst);
-    html+=`<div class="law-card" onclick="loadArticles('${eh(law.mst||law.id)}','${eh(law.name)}')">
-      <span class="btn-fav ${isLawFav?'on':''}" onclick="event.stopPropagation();toggleLawFav('${eh(law.mst)}','${eh(law.name)}','${eh(law.type)}','${eh(law.dept)}')" title="법령 즐겨찾기">${isLawFav?'★':'☆'}</span>
-      <span class="law-card-type">${eh(law.type)}</span>
-      <span class="law-card-name">${hl(law.name)}</span>
-      ${law.articleCount?`<span class="law-card-count">조문${law.articleCount}개</span>`:''}
-      ${law.appendixCount?`<span class="law-card-count">별표${law.appendixCount}개</span>`:''}
+    const tColor = typeColor(law.type);
+    html+=`
+    <div class="law-card" onclick="loadArticles('${eh(law.mst||law.id)}','${eh(law.name)}')" style="border-left:4px solid ${tColor}20;">
+      <button class="btn-fav ${isLawFav?'on':''}" onclick="event.stopPropagation();toggleLawFav('${eh(law.mst)}','${eh(law.name)}','${eh(law.type)}','${eh(law.dept)}')" title="법령 즐겨찾기" style="font-size:17px;flex-shrink:0;">${isLawFav?'★':'☆'}</button>
+      <span class="law-card-type" style="background:${tColor};">${eh(law.type)}</span>
+      <div style="flex:1;min-width:0;">
+        <div class="law-card-name">${hl(law.name)}</div>
+        <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;">
+          ${law.articleCount?`<span class="law-card-count">📄 조문 ${law.articleCount}개</span>`:''}
+          ${law.appendixCount?`<span class="law-card-count">📋 별표 ${law.appendixCount}개</span>`:''}
+        </div>
+      </div>
       <span class="law-card-dept">${eh(law.dept)}</span>
-      <span style="color:var(--text-dim)">›</span>
+      <span style="color:var(--text-dim);font-size:18px;margin-left:4px;">›</span>
     </div>`;
+
     if(law.hasAppendix){
-      html+=`<div class="law-card" style="margin-left:20px;background:#ffffff;border:1px solid #ddd;border-left:3px solid #333;" onclick="loadAppendixOnly('${eh(law.mst||law.id)}','${eh(law.name)}')">
-        <span class="law-card-type" style="background:#333;color:#fff;">별표</span>
-        <span class="law-card-name">${hl(law.name)} 별표</span>
-        <span class="law-card-dept" style="color:#666;">별표</span>
-        <span style="color:var(--text-dim)">›</span>
+      html+=`
+      <div style="background:var(--surface);border:1px solid var(--border);border-left:4px solid #888;border-radius:var(--radius-lg);margin-bottom:10px;margin-left:40px;cursor:pointer;display:flex;align-items:center;padding:12px 18px;gap:12px;transition:all .15s;opacity:.8;" 
+        onmouseover="this.style.opacity='1';this.style.borderLeftColor='var(--accent)'"
+        onmouseout="this.style.opacity='.8';this.style.borderLeftColor='#888'"
+        onclick="loadAppendixOnly('${eh(law.mst||law.id)}','${eh(law.name)}')">
+        <span style="font-size:11px;font-weight:700;color:#fff;background:#888;padding:3px 9px;border-radius:5px;flex-shrink:0;">별표</span>
+        <span style="flex:1;font-size:13px;color:var(--text-muted);">${hl(law.name)} 별표·서식</span>
+        <span style="font-size:12px;color:var(--text-dim);">보기 ›</span>
       </div>`;
     }
   });
@@ -2247,54 +2269,47 @@ async function loadTrendWidget(tab){
   const src = TREND_SOURCES[tab];
   let items = null;
 
-  // 각 URL을 시도: allorigins JSON API 방식이 가장 안정적
   for(const url of src.urls){
     if(items && items.length) break;
     try{
-      // 방법1: allorigins JSON API (content-type: json 반환, CORS OK)
-      const aoUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+      // 1순위: allorigins (항상 JSON 반환, CORS OK)
       try{
-        const res = await fetchWithTimeout(aoUrl, 14000);
+        const res = await fetchWithTimeout('https://api.allorigins.win/get?url='+encodeURIComponent(url), 14000);
         if(res.ok){
-          const j = await res.json();  // allorigins는 항상 JSON으로 반환
-          let text = j.contents || '';
-          // HTML entity 디코딩
-          if(text.includes('&lt;') || text.includes('&#')){
-            const d = document.createElement('div'); d.innerHTML = text; text = d.innerText || text;
-          }
-          if(text.length > 200){
-            items = src.parse(text, url);
+          const j = await res.json();
+          let t = j.contents||'';
+          if(t.includes('&lt;')){ const d=document.createElement('div'); d.innerHTML=t; t=d.innerHTML; }
+          if(t.length>300){ items=src.parse(t,url); if(items&&items.length) break; }
+        }
+      }catch(e){}
+
+      // 2순위: 직접 fetch (Google News는 CORS 허용)
+      try{
+        const res = await fetchWithTimeout(url, 12000);
+        if(res.ok){
+          const t = await res.text();
+          if(t.length>300){ items=src.parse(t,url); if(items&&items.length) break; }
+        }
+      }catch(e){}
+
+      // 3순위: rss2json.com (무료 RSS→JSON 변환 API)
+      try{
+        const rss2 = 'https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(url)+'&api_key=public';
+        const res = await fetchWithTimeout(rss2, 12000);
+        if(res.ok){
+          const j = await res.json();
+          if(j.status==='ok' && j.items && j.items.length){
+            items = j.items.slice(0,15).map((item,i)=>({
+              rank:i+1, title:item.title||'', link:item.link||'',
+              pubDate:item.pubDate||'', desc:(item.description||'').replace(/<[^>]*>/g,'').substring(0,80),
+              source:item.author||j.feed&&j.feed.title||'', type:'news'
+            })).filter(it=>it.title.length>2);
             if(items && items.length) break;
           }
         }
-      }catch(e){ console.warn('[allorigins]', e.message); }
+      }catch(e){}
 
-      // 방법2: corsproxy.io (원문 그대로 반환)
-      try{
-        const cpUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
-        const res = await fetchWithTimeout(cpUrl, 12000);
-        if(res.ok){
-          const text = await res.text();
-          if(text.length > 200){
-            items = src.parse(text, url);
-            if(items && items.length) break;
-          }
-        }
-      }catch(e){ console.warn('[corsproxy]', e.message); }
-
-      // 방법3: 직접 fetch (CORS 허용 사이트만 가능 - news.google.com은 허용)
-      try{
-        const res = await fetchWithTimeout(url, 10000);
-        if(res.ok){
-          const text = await res.text();
-          if(text.length > 200){
-            items = src.parse(text, url);
-            if(items && items.length) break;
-          }
-        }
-      }catch(e){ /* CORS 차단은 정상 */ }
-
-    }catch(e){ console.warn('[trend url]', url, e.message); }
+    }catch(e){ console.warn('[trend]', url, e.message); }
   }
 
   if(items && items.length){
@@ -2302,64 +2317,38 @@ async function loadTrendWidget(tab){
   }
   renderTrendContent(el, items, tab);
 
-  // 자동 갱신
   clearInterval(_trendTimer);
   _trendTimer = setInterval(()=>{
     delete _trendCache[_currentTrendTab];
     loadTrendWidget(_currentTrendTab);
   }, src.interval);
 }
+
 function parseGoogleTrendsRSS(text){
-  // XML 파싱 먼저 시도
-  let doc = null;
+  let doc;
   try{
     doc = new DOMParser().parseFromString(text, 'text/xml');
-    // XML 파싱 오류 시 HTML로 재시도
-    if(doc.querySelector('parsererror')){
-      doc = new DOMParser().parseFromString(text, 'text/html');
-    }
+    if(doc.querySelector('parsererror')) doc = new DOMParser().parseFromString(text, 'text/html');
   }catch(e){
     try{ doc = new DOMParser().parseFromString(text, 'text/html'); }catch(e2){ return null; }
   }
-
   const items = doc.querySelectorAll('item');
   if(!items.length) return null;
-
   const result = [];
   let rank = 1;
   items.forEach(item => {
-    // CDATA 포함 title 처리
     let title = item.querySelector('title')?.textContent?.trim() || '';
-    title = title.replace(/<!\[CDATA\[|\]\]>/g,'').trim();
-
-    // link는 텍스트 노드로 들어올 수 있음
+    title = title.replace(/<![CDATA[|]]>/g,'').trim();
     let link = '';
     const linkEl = item.querySelector('link');
-    if(linkEl){
-      link = linkEl.textContent?.trim() || linkEl.nextSibling?.textContent?.trim() || '';
-    }
-
-    // 검색량 (네임스페이스 무시하고 tagName으로 탐색)
+    if(linkEl) link = linkEl.textContent?.trim() || linkEl.nextSibling?.textContent?.trim() || '';
     let traffic = '';
     item.querySelectorAll('*').forEach(el=>{
-      if(el.tagName && el.tagName.toLowerCase().includes('approx_traffic')){
-        traffic = el.textContent?.trim() || '';
-      }
+      if(el.tagName && el.tagName.toLowerCase().includes('approx_traffic')) traffic = el.textContent?.trim()||'';
     });
-    if(!traffic){
-      const all = item.getElementsByTagName('ht:approx_traffic');
-      if(all.length) traffic = all[0].textContent?.trim() || '';
-    }
-
-    // 검색어 링크 (title이 없을 시 URL에서 추출)
-    if(!title && link){
-      const m = link.match(/query=([^&]+)/);
-      if(m) title = decodeURIComponent(m[1]);
-    }
-
+    if(!title && link){ const m=link.match(/query=([^&]+)/); if(m) title=decodeURIComponent(m[1]); }
     if(title && rank <= 20){
-      const searchUrl = 'https://search.naver.com/search.naver?query=' + encodeURIComponent(title);
-      result.push({ rank, title, link: link || searchUrl, traffic, type:'trend' });
+      result.push({ rank, title, link: link||'https://search.naver.com/search.naver?query='+encodeURIComponent(title), traffic, type:'trend' });
       rank++;
     }
   });
