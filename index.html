@@ -571,37 +571,29 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
       <div class="state-box" id="initState" style="align-items:flex-start;padding:0;overflow-y:auto;height:100%;display:flex;flex-direction:column;width:100%;">
 
 
-         <!-- ── 상단 검색 바 ── -->
-         <div class="db-searchbar">
-           <!-- db-grid와 완전히 동일한 컬럼 구조 적용 -->
-           <div style="display:grid;grid-template-columns:1fr 230px;gap:16px;align-items:center;">
-             <!-- 1fr: 검색창이 db-col-center 전체 너비 차지 -->
-             <div style="display:flex;align-items:center;gap:10px;">
-               <span style="font-size:18px;">⚖️</span>
-               <div style="flex:1;display:flex;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .15s;" onfocusin="this.style.borderColor='var(--accent-light)'" onfocusout="this.style.borderColor='var(--border)'">
-                 <div style="display:flex;border-right:1px solid var(--border);">
-                   <button id="modeBtn1" onclick="setMode('law')" class="db-mode-btn db-mode-active">법령명</button>
-                   <button id="modeBtn2" onclick="setMode('keyword')" class="db-mode-btn">조문</button>
-                 </div>
-                 <input class="db-search-input" id="searchInput" placeholder="산업안전보건법, 중대재해처벌법, 화학물질관리법..."
-                   onkeydown="if(event.key==='Enter')doSearch()">
-                 <button class="db-search-btn" onclick="doSearch()">검색</button>
+
+         <!-- ── 검색바 ── -->
+         <div style="position:sticky;top:0;z-index:10;background:var(--surface);border-bottom:1px solid var(--border);backdrop-filter:blur(8px);padding:10px 20px;">
+           <div style="display:flex;align-items:center;gap:8px;">
+             <span style="font-size:17px;">⚖️</span>
+             <div style="flex:1;display:flex;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .15s;" onfocusin="this.style.borderColor='var(--accent-light)'" onfocusout="this.style.borderColor='var(--border)'">
+               <div style="display:flex;border-right:1px solid var(--border);">
+                 <button id="modeBtn1" onclick="setMode('law')" class="db-mode-btn db-mode-active">법령명</button>
+                 <button id="modeBtn2" onclick="setMode('keyword')" class="db-mode-btn">조문</button>
                </div>
+               <input class="db-search-input" id="searchInput" placeholder="법령명 또는 약칭 (예: 산안법, 중대법, 화관법)..." onkeydown="if(event.key==='Enter')doSearch()">
+               <button class="db-search-btn" onclick="doSearch()">검색</button>
              </div>
-             <!-- 230px: 빠른태그가 db-col-right 너비와 일치 -->
-             <div style="display:flex;gap:4px;flex-wrap:wrap;">
-               <span class="db-qtag" onclick="heroSearch('산업안전보건법')">#산안법</span>
-               <span class="db-qtag" onclick="heroSearch('중대재해 처벌 등에 관한 법률')">#중대재해</span>
-               <span class="db-qtag" onclick="heroSearch('화학물질관리법')">#화관법</span>
-               <span class="db-qtag" onclick="heroSearch('산업안전보건기준에 관한 규칙')">#안전보건규칙</span>
-               <span class="db-qtag" onclick="heroSearch('위험물안전관리법')">#위험물</span>
-             </div>
+             <span class="db-qtag" onclick="heroSearch('산업안전보건법')">#산안법</span>
+             <span class="db-qtag" onclick="heroSearch('중대재해 처벌 등에 관한 법률')">#중대재해</span>
+             <span class="db-qtag" onclick="heroSearch('화학물질관리법')">#화관법</span>
+             <span class="db-qtag" onclick="heroSearch('산업안전보건기준에 관한 규칙')">#안전보건규칙</span>
+             <span class="db-qtag" onclick="heroSearch('위험물안전관리법')">#위험물</span>
            </div>
          </div>
 
-
-        <!-- ── 메인 대시보드 그리드 ── -->
-        <div class="db-grid">
+         <!-- ── 메인 대시보드 그리드 ── -->
+         <div class="db-grid">
 
           <!-- ┌ 중앙 컬럼 (2분할) ──────────────────────────── -->
           <div class="db-col-center">
@@ -2193,32 +2185,34 @@ const TREND_SOURCES = {
     label: '구글 트렌드',
     urls: [
       'https://trends.google.com/trends/trendingsearches/daily/rss?geo=KR',
+      'https://trends.google.com/trending/rss?geo=KR',
     ],
     parse: parseGoogleTrendsRSS,
     src: 'Google Trends KR',
-    interval: 10 * 60 * 1000,  // 10분
+    interval: 10 * 60 * 1000,
   },
   safety: {
     label: '안전보건 뉴스',
     urls: [
-      'https://www.kosha.or.kr/rss/kosha.do',                           // KOSHA 공식 RSS
-      'https://www.moel.go.kr/rss/rssInfo.do?infoType=news',            // 고용노동부 보도자료
-      'https://news.google.com/rss/search?q=산업안전+OR+중대재해+OR+안전사고&hl=ko&gl=KR&ceid=KR:ko',
+      // Google News RSS - CORS 허용, 가장 안정적
+      'https://news.google.com/rss/search?q=%EC%82%B0%EC%97%85%EC%95%88%EC%A0%84+%EC%82%AC%EA%B3%A0+%EC%82%AC%EB%A7%9D&hl=ko&gl=KR&ceid=KR:ko',
+      'https://news.google.com/rss/search?q=%EC%A4%91%EB%8C%80%EC%9E%AC%ED%95%B4+%EC%95%88%EC%A0%84%EC%82%AC%EA%B3%A0&hl=ko&gl=KR&ceid=KR:ko',
+      'https://www.kosha.or.kr/rss/kosha.do',
     ],
     parse: parseNewsRSS,
-    src: 'KOSHA·고용부·Google News',
-    interval: 15 * 60 * 1000,  // 15분
+    src: 'Google News · KOSHA',
+    interval: 15 * 60 * 1000,
   },
   labor: {
     label: '노동·법령 뉴스',
     urls: [
-      'https://www.moel.go.kr/rss/rssInfo.do?infoType=law',             // 고용노동부 법령
-      'https://news.google.com/rss/search?q=산업안전보건법+OR+중대재해처벌법+OR+노동부+법령&hl=ko&gl=KR&ceid=KR:ko',
-      'https://www.law.go.kr/LSW/rss/rssNews.do',                       // 법제처 RSS
+      'https://news.google.com/rss/search?q=%EC%82%B0%EC%97%85%EC%95%88%EC%A0%84%EB%B3%B4%EA%B1%B4%EB%B2%95+%EB%85%B8%EB%8F%99%EB%B6%80+%EB%B2%95%EB%A0%B9&hl=ko&gl=KR&ceid=KR:ko',
+      'https://news.google.com/rss/search?q=%EC%A4%91%EB%8C%80%EC%9E%AC%ED%95%B4%EC%B2%98%EB%B2%8C%EB%B2%95+%EA%B3%A0%EC%9A%A9%EB%85%B8%EB%8F%99%EB%B6%80&hl=ko&gl=KR&ceid=KR:ko',
+      'https://www.moel.go.kr/rss/rssInfo.do?infoType=news',
     ],
     parse: parseNewsRSS,
-    src: '고용노동부·법제처·Google News',
-    interval: 30 * 60 * 1000,  // 30분
+    src: 'Google News · 고용노동부',
+    interval: 30 * 60 * 1000,
   },
 };
 
@@ -2253,38 +2247,54 @@ async function loadTrendWidget(tab){
   const src = TREND_SOURCES[tab];
   let items = null;
 
+  // 각 URL을 시도: allorigins JSON API 방식이 가장 안정적
   for(const url of src.urls){
+    if(items && items.length) break;
     try{
-      const proxyUrls = [
-        'https://api.allorigins.win/get?url=' + encodeURIComponent(url),
-        'https://corsproxy.io/?' + encodeURIComponent(url),
-        'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url),
-      ];
-      for(const proxyUrl of proxyUrls){
-        try{
-          const res = await fetchWithTimeout(proxyUrl, 12000);
-          if(!res.ok) continue;
-          const raw = await res.text();
-          if(!raw || raw.length < 100) continue;
-
-          // allorigins는 {"contents":"...","status":{}} 형태로 감싸서 반환
-          let text = raw;
-          try{ const j=JSON.parse(raw); if(j.contents) text=j.contents; }catch(e){}
-
-          // HTML entity 디코딩 (allorigins가 &lt; &gt; 등으로 인코딩하는 경우)
+      // 방법1: allorigins JSON API (content-type: json 반환, CORS OK)
+      const aoUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+      try{
+        const res = await fetchWithTimeout(aoUrl, 14000);
+        if(res.ok){
+          const j = await res.json();  // allorigins는 항상 JSON으로 반환
+          let text = j.contents || '';
+          // HTML entity 디코딩
           if(text.includes('&lt;') || text.includes('&#')){
-            const tmp = document.createElement('textarea');
-            tmp.innerHTML = text;
-            text = tmp.value;
+            const d = document.createElement('div'); d.innerHTML = text; text = d.innerText || text;
           }
+          if(text.length > 200){
+            items = src.parse(text, url);
+            if(items && items.length) break;
+          }
+        }
+      }catch(e){ console.warn('[allorigins]', e.message); }
 
-          if(!text || text.length < 100) continue;
-          items = src.parse(text, url);
-          if(items && items.length) break;
-        }catch(e){ continue; }
-      }
-      if(items && items.length) break;
-    }catch(e){ console.warn('[trend]', url, e.message); }
+      // 방법2: corsproxy.io (원문 그대로 반환)
+      try{
+        const cpUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
+        const res = await fetchWithTimeout(cpUrl, 12000);
+        if(res.ok){
+          const text = await res.text();
+          if(text.length > 200){
+            items = src.parse(text, url);
+            if(items && items.length) break;
+          }
+        }
+      }catch(e){ console.warn('[corsproxy]', e.message); }
+
+      // 방법3: 직접 fetch (CORS 허용 사이트만 가능 - news.google.com은 허용)
+      try{
+        const res = await fetchWithTimeout(url, 10000);
+        if(res.ok){
+          const text = await res.text();
+          if(text.length > 200){
+            items = src.parse(text, url);
+            if(items && items.length) break;
+          }
+        }
+      }catch(e){ /* CORS 차단은 정상 */ }
+
+    }catch(e){ console.warn('[trend url]', url, e.message); }
   }
 
   if(items && items.length){
@@ -2299,8 +2309,6 @@ async function loadTrendWidget(tab){
     loadTrendWidget(_currentTrendTab);
   }, src.interval);
 }
-
-// ── Google Trends RSS 파싱 ────────────────────────
 function parseGoogleTrendsRSS(text){
   // XML 파싱 먼저 시도
   let doc = null;
