@@ -124,7 +124,8 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .search-input::placeholder{color:var(--text-dim);}
 .btn-search{padding:8px 18px;background:var(--accent-light);border:none;border-radius:10px;color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:'Manrope',inherit;transition:all .15s;white-space:nowrap;letter-spacing:.2px;}
 .btn-search:hover{opacity:.9;transform:translateY(-1px);}
-.content-area{flex:1;overflow-y:auto;padding:20px 22px;background:var(--bg);}
+.content-area{flex:1;overflow-y:auto;background:var(--bg);}
+.content-area > *:not(#initState){padding:20px 22px;} /* 결과 화면엔 패딩 유지 */
 .law-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:6px;transition:all .15s;cursor:pointer;display:flex;align-items:center;padding:12px 16px;gap:12px;box-shadow:var(--shadow);}
 .law-card:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:var(--shadow-lg);}
 .law-card-type{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--accent);background:rgba(240,165,0,.1);padding:2px 7px;border-radius:4px;white-space:nowrap;}
@@ -351,7 +352,22 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
   backdrop-filter:blur(8px);
   -webkit-backdrop-filter:blur(8px);
 }
-.db-searchbar-inner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+/* 그리드와 searchbar 내부 컬럼이 정확히 일치하도록 동일한 gap/padding 사용 */
+.db-searchbar-grid{
+  display:grid;
+  grid-template-columns:1fr 230px;
+  gap:16px;
+  align-items:center;
+}
+.db-grid{
+  display:grid;
+  grid-template-columns:1fr 230px;
+  gap:16px;
+  padding:16px 20px;
+  flex:1;
+  align-items:start;
+  width:100%;
+}
 .db-mode-btn{
   padding:6px 12px;font-size:11px;font-weight:600;border:none;
   background:transparent;color:var(--text-dim);cursor:pointer;
@@ -436,6 +452,16 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .db-fav-title{color:var(--text-muted);line-height:1.4;flex:1;}
 .db-fav-law{font-size:9px;color:var(--text-dim);margin-top:1px;}
 .db-empty{color:var(--text-dim);font-size:11px;text-align:center;padding:16px 8px;line-height:1.6;}
+
+/* 트렌드 탭 버튼 */
+.trend-tab-btn{
+  flex:1;padding:5px 4px;border-radius:6px;border:none;
+  background:transparent;color:var(--text-dim);font-size:10px;
+  font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;
+  white-space:nowrap;
+}
+.trend-tab-btn.active{background:var(--surface);color:var(--accent);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.trend-tab-btn:hover:not(.active){color:var(--text);}
 
 /* 실시간 검색어 위젯 */
 .signal-rank-list{display:flex;flex-direction:column;gap:2px;}
@@ -553,30 +579,33 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
     <div class="content-area" id="contentArea">
       <div class="state-box" id="initState" style="align-items:flex-start;padding:0;overflow-y:auto;height:100%;display:flex;flex-direction:column;">
 
-        <!-- ── 상단 검색 바 (컴팩트) ── -->
-        <div class="db-searchbar">
-          <div class="db-searchbar-inner">
-            <div style="display:flex;align-items:center;gap:10px;flex:1;">
-              <span style="font-size:18px;">⚖️</span>
-              <div style="flex:1;display:flex;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .15s;" onfocusin="this.style.borderColor='var(--accent-light)'" onfocusout="this.style.borderColor='var(--border)'">
-                <div style="display:flex;border-right:1px solid var(--border);">
-                  <button id="modeBtn1" onclick="setMode('law')" class="db-mode-btn db-mode-active">법령명</button>
-                  <button id="modeBtn2" onclick="setMode('keyword')" class="db-mode-btn">조문</button>
-                </div>
-                <input class="db-search-input" id="searchInput" placeholder="산업안전보건법, 중대재해처벌법, 화학물질관리법..."
-                  onkeydown="if(event.key==='Enter')doSearch()">
-                <button class="db-search-btn" onclick="doSearch()">검색</button>
-              </div>
-            </div>
-            <div class="db-quick-tags">
-              <span class="db-qtag" onclick="heroSearch('산업안전보건법')">#산안법</span>
-              <span class="db-qtag" onclick="heroSearch('중대재해 처벌 등에 관한 법률')">#중대재해</span>
-              <span class="db-qtag" onclick="heroSearch('화학물질관리법')">#화관법</span>
-              <span class="db-qtag" onclick="heroSearch('산업안전보건기준에 관한 규칙')">#안전보건규칙</span>
-              <span class="db-qtag" onclick="heroSearch('위험물안전관리법')">#위험물</span>
-            </div>
-          </div>
-        </div>
+         <!-- ── 상단 검색 바 (컴팩트) ── -->
+         <div class="db-searchbar">
+           <!-- 그리드와 동일한 컬럼 구조: [중앙 1fr] [우측 230px] -->
+           <div style="display:grid;grid-template-columns:1fr 230px;gap:16px;align-items:center;">
+             <!-- 검색창 (중앙 컬럼 너비) -->
+             <div style="display:flex;align-items:center;gap:10px;">
+               <span style="font-size:18px;">⚖️</span>
+               <div style="flex:1;display:flex;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .15s;" onfocusin="this.style.borderColor='var(--accent-light)'" onfocusout="this.style.borderColor='var(--border)'">
+                 <div style="display:flex;border-right:1px solid var(--border);">
+                   <button id="modeBtn1" onclick="setMode('law')" class="db-mode-btn db-mode-active">법령명</button>
+                   <button id="modeBtn2" onclick="setMode('keyword')" class="db-mode-btn">조문</button>
+                 </div>
+                 <input class="db-search-input" id="searchInput" placeholder="산업안전보건법, 중대재해처벌법, 화학물질관리법..."
+                   onkeydown="if(event.key==='Enter')doSearch()">
+                 <button class="db-search-btn" onclick="doSearch()">검색</button>
+               </div>
+             </div>
+             <!-- 빠른태그 (우측 컬럼 너비) -->
+             <div class="db-quick-tags" style="flex-wrap:wrap;gap:4px;">
+               <span class="db-qtag" onclick="heroSearch('산업안전보건법')">#산안법</span>
+               <span class="db-qtag" onclick="heroSearch('중대재해 처벌 등에 관한 법률')">#중대재해</span>
+               <span class="db-qtag" onclick="heroSearch('화학물질관리법')">#화관법</span>
+               <span class="db-qtag" onclick="heroSearch('산업안전보건기준에 관한 규칙')">#안전보건규칙</span>
+               <span class="db-qtag" onclick="heroSearch('위험물안전관리법')">#위험물</span>
+             </div>
+           </div>
+         </div>
 
         <!-- ── 메인 대시보드 그리드 ── -->
         <div class="db-grid">
@@ -625,18 +654,23 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
               </div>
             </div>
 
-            <!-- 중앙 우측: 실시간 검색어 -->
+            <!-- 중앙 우측: 복합 트렌드 위젯 -->
             <div class="db-col-center-right">
               <div class="hw-card db-card" id="hwSignal">
-                <div class="db-card-header">
+                <div class="db-card-header" style="margin-bottom:10px;">
                   <div style="display:flex;align-items:center;gap:8px;">
-                    <span class="db-card-icon">🔥</span>
-                    <span class="db-card-title">실시간 검색어</span>
+                    <span class="db-card-icon">📡</span>
+                    <span class="db-card-title">트렌드 &amp; 뉴스</span>
                   </div>
-                  <div style="display:flex;align-items:center;gap:6px;">
-                    <span class="hw-src">signal.bz</span>
-                    <button class="btn-xs" onclick="loadSignalRank()" title="새로고침">↺</button>
+                  <div style="display:flex;align-items:center;gap:5px;">
+                    <button class="btn-xs" id="signalRefreshBtn" onclick="refreshTrendWidget()" title="새로고침">↺</button>
                   </div>
+                </div>
+                <!-- 탭 -->
+                <div style="display:flex;gap:3px;margin-bottom:12px;background:var(--surface2);border-radius:8px;padding:3px;">
+                  <button class="trend-tab-btn active" id="trendTab1" onclick="switchTrendTab('trend',this)">🔥 구글 트렌드</button>
+                  <button class="trend-tab-btn" id="trendTab2" onclick="switchTrendTab('safety',this)">🦺 안전뉴스</button>
+                  <button class="trend-tab-btn" id="trendTab3" onclick="switchTrendTab('labor',this)">⚖️ 노동뉴스</button>
                 </div>
                 <div id="hwSignalBody"><div class="hw-loading">로딩 중...</div></div>
               </div>
@@ -685,7 +719,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
           </div>
         </div>
       </div>
-      <div id="resultArea" style="display:none;"></div>
+      <div id="resultArea" style="display:none;padding:20px 22px;"></div>
     </div>
   </main>
   <aside id="rightSidebar" class="right-sidebar">
@@ -2153,150 +2187,242 @@ function initHomeWidgets(){
 }
 
 // ── 실시간 검색어 (signal.bz) ───────────────────────────────
-let _signalTimer = null;
 
-async function loadSignalRank(){
+// ══════════════════════════════════════════════════
+// ── 트렌드 & 뉴스 복합 위젯
+// ══════════════════════════════════════════════════
+let _trendTimer = null;
+let _currentTrendTab = 'trend';
+
+// RSS 소스 정의
+const TREND_SOURCES = {
+  trend: {
+    label: '구글 트렌드',
+    urls: [
+      'https://trends.google.com/trends/trendingsearches/daily/rss?geo=KR',
+    ],
+    parse: parseGoogleTrendsRSS,
+    src: 'Google Trends KR',
+    interval: 10 * 60 * 1000,  // 10분
+  },
+  safety: {
+    label: '안전보건 뉴스',
+    urls: [
+      'https://www.kosha.or.kr/rss/kosha.do',                           // KOSHA 공식 RSS
+      'https://www.moel.go.kr/rss/rssInfo.do?infoType=news',            // 고용노동부 보도자료
+      'https://news.google.com/rss/search?q=산업안전+OR+중대재해+OR+안전사고&hl=ko&gl=KR&ceid=KR:ko',
+    ],
+    parse: parseNewsRSS,
+    src: 'KOSHA·고용부·Google News',
+    interval: 15 * 60 * 1000,  // 15분
+  },
+  labor: {
+    label: '노동·법령 뉴스',
+    urls: [
+      'https://www.moel.go.kr/rss/rssInfo.do?infoType=law',             // 고용노동부 법령
+      'https://news.google.com/rss/search?q=산업안전보건법+OR+중대재해처벌법+OR+노동부+법령&hl=ko&gl=KR&ceid=KR:ko',
+      'https://www.law.go.kr/LSW/rss/rssNews.do',                       // 법제처 RSS
+    ],
+    parse: parseNewsRSS,
+    src: '고용노동부·법제처·Google News',
+    interval: 30 * 60 * 1000,  // 30분
+  },
+};
+
+// 캐시
+const _trendCache = {};
+
+function switchTrendTab(tab, btn){
+  _currentTrendTab = tab;
+  document.querySelectorAll('.trend-tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  loadTrendWidget(tab);
+}
+
+function refreshTrendWidget(){
+  delete _trendCache[_currentTrendTab];
+  loadTrendWidget(_currentTrendTab);
+}
+
+async function loadTrendWidget(tab){
+  tab = tab || _currentTrendTab;
   const el = document.getElementById('hwSignalBody');
   if(!el) return;
-  el.innerHTML = '<div class="hw-loading">불러오는 중...</div>';
 
-  // signal.bz API는 CORS를 허용하지 않으므로 다단계 프록시 시도
-  const SIGNAL_APIS = [
-    // 공개 프록시 경유 → signal.bz API
-    () => proxyFetch('https://www.signal.bz/api/realtimerank', 8000),
-    () => proxyFetch('https://www.signal.bz/', 8000),
-  ];
-
-  let ranks = null;
-
-  for(const tryFetch of SIGNAL_APIS){
-    try{
-      const text = await tryFetch();
-      if(!text) continue;
-
-      // JSON API 응답 시도
-      try{
-        const json = JSON.parse(text);
-        // signal.bz 응답 구조 파싱
-        const arr = json?.data || json?.result || json?.ranks || findArray(json);
-        if(arr && arr.length){
-          ranks = arr.slice(0,10).map((item, i) => ({
-            rank: item.rank || item.no || i+1,
-            text: item.keyword || item.text || item.title || item.name || '',
-            change: item.change || item.diff || item.status || 0,
-          })).filter(r=>r.text);
-          if(ranks.length) break;
-        }
-      }catch(e){}
-
-      // HTML 파싱 시도 (첨부된 구조 기반)
-      const doc = new DOMParser().parseFromString(text, 'text/html');
-
-      // rank-layer 구조 (첨부 HTML 기준)
-      const rankLayers = doc.querySelectorAll('.rank-layer');
-      if(rankLayers.length){
-        ranks = [];
-        rankLayers.forEach(layer=>{
-          const num = layer.querySelector('.rank-num')?.textContent?.trim() || '';
-          const txt = layer.querySelector('.rank-text')?.textContent?.trim() || '';
-          const iconEl = layer.querySelector('.rank-icon i');
-          let change = 'eq';
-          if(iconEl){
-            const cls = iconEl.className || '';
-            const style = iconEl.getAttribute('style') || '';
-            if(cls.includes('caret-up') || style.includes('red')) change = 'up';
-            else if(cls.includes('caret-down') || style.includes('189')) change = 'dn';
-            else if(cls.includes('plus') || style.includes('burlywood')) change = 'new';
-          }
-          if(num && txt) ranks.push({rank:parseInt(num)||0, text:txt, change});
-        });
-        if(ranks.length) break;
-      }
-
-      // 다른 구조 시도
-      const items = doc.querySelectorAll('[class*="rank"] li, [class*="keyword"] li, [class*="realtime"] li');
-      if(items.length){
-        ranks = [...items].slice(0,10).map((item,i)=>({
-          rank: i+1,
-          text: item.textContent.replace(/\d+/,'').trim(),
-          change: 'eq'
-        })).filter(r=>r.text.length>1);
-        if(ranks.length) break;
-      }
-    }catch(e){ console.warn('[signal.bz]', e.message); }
-  }
-
-  if(!ranks || !ranks.length){
-    // 완전 실패 시 네이버 실시간 검색어 대체 시도
-    ranks = await fetchNaverTrend();
-  }
-
-  renderSignalRank(el, ranks);
-
-  // 5분마다 자동 갱신
-  clearInterval(_signalTimer);
-  _signalTimer = setInterval(()=>loadSignalRank(), 5 * 60 * 1000);
-}
-
-async function fetchNaverTrend(){
-  // 네이버 DataLab 트렌드 (공개 API 없어서 allorigins 경유 시도)
-  try{
-    const text = await proxyFetch('https://datalab.naver.com/keyword/realtimeList.naver?groupId=', 6000);
-    if(text){
-      const doc = new DOMParser().parseFromString(text,'text/html');
-      const items = doc.querySelectorAll('.rank_item, .item_issue, li[data-rank]');
-      if(items.length){
-        return [...items].slice(0,10).map((item,i)=>({
-          rank: i+1,
-          text: (item.querySelector('.issue_tit,.title,.keyword')?.textContent || item.textContent).replace(/\d/g,'').trim(),
-          change:'eq'
-        })).filter(r=>r.text.length>1);
-      }
-    }
-  }catch(e){}
-  return null;
-}
-
-function renderSignalRank(el, ranks){
-  if(!ranks || !ranks.length){
-    el.innerHTML = `<div class="db-empty">
-      실시간 검색어를 불러올 수 없습니다.<br>
-      <small style="font-size:10px;">CORS 제한으로 직접 접근이 차단됩니다.</small><br>
-      <a href="https://www.signal.bz" target="_blank" class="hw-more-link" style="margin-top:6px;display:inline-block;">signal.bz 바로가기 →</a>
-    </div>`;
+  // 캐시 확인 (5분 이내)
+  const cached = _trendCache[tab];
+  if(cached && Date.now() - cached.ts < 5 * 60 * 1000){
+    renderTrendContent(el, cached.items, tab);
     return;
   }
 
-  const changeIcon = (change) => {
-    if(change === 'up' || change > 0) return '<span class="signal-rank-icon signal-rank-up">▲</span>';
-    if(change === 'dn' || change < 0) return '<span class="signal-rank-icon signal-rank-dn">▼</span>';
-    if(change === 'new') return '<span class="signal-rank-icon signal-rank-new">N</span>';
-    return '<span class="signal-rank-icon signal-rank-eq">—</span>';
-  };
+  el.innerHTML = '<div class="hw-loading">불러오는 중...</div>';
+  const src = TREND_SOURCES[tab];
+  let items = null;
 
-  const now = new Date().toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'});
-  const half = Math.ceil(ranks.length / 2);
-  const left = ranks.slice(0, half);
-  const right = ranks.slice(half);
+  for(const url of src.urls){
+    try{
+      const proxyUrls = [
+        'https://api.allorigins.win/get?url=' + encodeURIComponent(url),
+        'https://corsproxy.io/?' + encodeURIComponent(url),
+      ];
+      for(const proxyUrl of proxyUrls){
+        try{
+          const res = await fetchWithTimeout(proxyUrl, 10000);
+          if(!res.ok) continue;
+          const ct = res.headers.get('content-type') || '';
+          let text = '';
+          if(ct.includes('json')){
+            const j = await res.json();
+            text = j.contents || j.data || '';
+          } else {
+            text = await res.text();
+            // allorigins JSON 래핑 시도
+            try{ const j=JSON.parse(text); if(j.contents) text=j.contents; }catch(e){}
+          }
+          if(!text || text.length < 50) continue;
+          items = src.parse(text, url);
+          if(items && items.length){ break; }
+        }catch(e){ continue; }
+      }
+      if(items && items.length) break;
+    }catch(e){ console.warn('[trend]', url, e.message); }
+  }
 
-  let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 8px;">';
-  [left, right].forEach(col => {
-    html += '<div>';
-    col.forEach(item => {
-      const isTop3 = item.rank <= 3;
-      const searchUrl = `https://search.naver.com/search.naver?query=${encodeURIComponent(item.text)}`;
-      html += `<a href="${searchUrl}" target="_blank" class="signal-rank-item">
-        <span class="signal-rank-num${isTop3?' top3':''}">${item.rank}</span>
-        <span class="signal-rank-text">${eh(item.text)}</span>
-        ${changeIcon(item.change)}
-      </a>`;
+  if(items && items.length){
+    _trendCache[tab] = { items, ts: Date.now() };
+  }
+  renderTrendContent(el, items, tab);
+
+  // 자동 갱신
+  clearInterval(_trendTimer);
+  _trendTimer = setInterval(()=>{
+    delete _trendCache[_currentTrendTab];
+    loadTrendWidget(_currentTrendTab);
+  }, src.interval);
+}
+
+// ── Google Trends RSS 파싱 ────────────────────────
+function parseGoogleTrendsRSS(text){
+  const doc = new DOMParser().parseFromString(text, 'text/xml');
+  const items = doc.querySelectorAll('item');
+  if(!items.length) return null;
+  const result = [];
+  let rank = 1;
+  items.forEach(item => {
+    const title = item.querySelector('title')?.textContent?.trim() || '';
+    const link  = item.querySelector('link')?.textContent?.trim()
+               || item.querySelector('link')?.nextSibling?.textContent?.trim() || '';
+    const traffic = item.querySelector('approx_traffic')?.textContent?.trim()
+                 || item.getElementsByTagNameNS('*','approx_traffic')[0]?.textContent?.trim() || '';
+    const desc = item.querySelector('description')?.textContent?.replace(/<[^>]*>/g,'').trim() || '';
+    if(title && rank <= 20){
+      result.push({ rank, title, link, traffic, desc, type:'trend' });
+      rank++;
+    }
+  });
+  return result.length ? result : null;
+}
+
+// ── 뉴스 RSS 파싱 ─────────────────────────────────
+function parseNewsRSS(text){
+  // XML 또는 HTML 파싱
+  let doc;
+  try{ doc = new DOMParser().parseFromString(text, 'text/xml'); }catch(e){ return null; }
+  const items = doc.querySelectorAll('item');
+  if(!items.length) return null;
+  const result = [];
+  items.forEach((item, idx) => {
+    if(idx >= 15) return;
+    const title = item.querySelector('title')?.textContent?.replace(/<!\[CDATA\[|\]\]>/g,'').trim() || '';
+    const link  = item.querySelector('link')?.textContent?.trim()
+               || item.querySelector('link')?.nextSibling?.textContent?.trim() || '';
+    const pubDate = item.querySelector('pubDate')?.textContent?.trim() || '';
+    const desc  = (item.querySelector('description')?.textContent || '').replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim().substring(0,80);
+    const source = item.querySelector('source')?.textContent?.trim() || '';
+    if(title.length > 3){
+      result.push({ rank:idx+1, title, link, pubDate, desc, source, type:'news' });
+    }
+  });
+  return result.length ? result : null;
+}
+
+// ── 렌더링 ────────────────────────────────────────
+function renderTrendContent(el, items, tab){
+  const src = TREND_SOURCES[tab];
+  const now = new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+
+  if(!items || !items.length){
+    el.innerHTML = '<div class="db-empty" style="padding:20px 8px;">'
+      + (tab==='trend'
+        ? '🔥 구글 트렌드를 불러올 수 없습니다.<br><a href="https://trends.google.com/trending?geo=KR" target="_blank" class="hw-more-link">Google Trends →</a>'
+        : tab==='safety'
+        ? '🦺 안전보건 뉴스를 불러올 수 없습니다.<br><a href="https://www.kosha.or.kr" target="_blank" class="hw-more-link">KOSHA 바로가기 →</a>'
+        : '⚖️ 노동·법령 뉴스를 불러올 수 없습니다.<br><a href="https://www.moel.go.kr" target="_blank" class="hw-more-link">고용노동부 →</a>'
+      )
+      + '</div>';
+    return;
+  }
+
+  let html = '';
+
+  if(tab === 'trend'){
+    // 구글 트렌드: 2열 순위 목록
+    const half = Math.ceil(Math.min(items.length,20) / 2);
+    const left  = items.slice(0, half);
+    const right = items.slice(half, half*2);
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 6px;">';
+    [left, right].forEach(col => {
+      html += '<div>';
+      col.forEach(item => {
+        const isTop = item.rank <= 3;
+        const searchUrl = item.link || ('https://search.naver.com/search.naver?query='+encodeURIComponent(item.title));
+        html += '<a href="'+searchUrl+'" target="_blank" class="signal-rank-item">'
+          + '<span class="signal-rank-num'+(isTop?' top3':'')+'">'+item.rank+'</span>'
+          + '<span class="signal-rank-text">'+eh(item.title)+'</span>'
+          + (item.traffic ? '<span style="font-size:9px;color:var(--text-dim);flex-shrink:0;">'+eh(item.traffic)+'</span>' : '')
+          + '</a>';
+      });
+      html += '</div>';
     });
     html += '</div>';
-  });
-  html += '</div>';
-  html += `<div class="signal-updated">🕐 ${now} 기준</div>`;
+  } else {
+    // 뉴스: 세로 카드 리스트
+    html += '<div style="display:flex;flex-direction:column;gap:2px;">';
+    items.forEach(item => {
+      const dateStr = item.pubDate ? formatRSSDate(item.pubDate) : '';
+      html += '<a href="'+eh(item.link||'#')+'" target="_blank" class="signal-rank-item" style="align-items:flex-start;flex-direction:column;gap:2px;padding:7px 6px;">'
+        + '<div style="display:flex;align-items:center;gap:6px;width:100%;">'
+        + (item.source ? '<span style="font-size:9px;color:var(--accent);font-weight:700;background:rgba(163,63,0,.08);padding:1px 5px;border-radius:3px;flex-shrink:0;">'+eh(item.source)+'</span>' : '')
+        + '<span style="flex:1;font-size:12px;color:var(--text);line-height:1.4;font-weight:500;">'+eh(item.title)+'</span>'
+        + (dateStr ? '<span style="font-size:10px;color:var(--text-dim);flex-shrink:0;font-family:monospace;">'+dateStr+'</span>' : '')
+        + '</div>'
+        + (item.desc ? '<div style="font-size:10px;color:var(--text-dim);line-height:1.4;padding-left:2px;">'+eh(item.desc)+'…</div>' : '')
+        + '</a>';
+    });
+    html += '</div>';
+  }
+
+  html += '<div class="signal-updated">'+src.src+' · 🕐 '+now+'</div>';
   el.innerHTML = html;
 }
+
+function formatRSSDate(dateStr){
+  try{
+    const d = new Date(dateStr);
+    if(isNaN(d)) return '';
+    const now = new Date();
+    const diff = Math.floor((now - d) / 60000);
+    if(diff < 1)   return '방금';
+    if(diff < 60)  return diff+'분 전';
+    if(diff < 1440) return Math.floor(diff/60)+'시간 전';
+    return (d.getMonth()+1)+'/'+d.getDate();
+  }catch(e){ return ''; }
+}
+
+// initHomeWidgets에서 호출
+function loadSignalRank(){ loadTrendWidget('trend'); }
+
 
 function renderDbFavWidget(){
   const el = document.getElementById('dbFavBody');
