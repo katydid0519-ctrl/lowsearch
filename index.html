@@ -516,13 +516,10 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 <!-- 조문 모달 -->
 <div class="modal-overlay" id="articleModal" onclick="if(event.target===this)closeArticleModal()">
   <div class="modal-content">
-    <div class="modal-header">
-      <div style="flex:1;">
-        <div class="modal-article-num" id="modalNum"></div>
-        <div class="modal-article-title" id="modalTitle"></div>
-      </div>
-      <!-- 상단 PDF/CSV 버튼 -->
-      <div style="display:flex;gap:5px;align-items:center;margin-right:8px;">
+    <div class="modal-header" style="padding:12px 20px;">
+      <!-- 상단: PDF/CSV + 팝업 + 닫기만 -->
+      <div style="flex:1;"></div>
+      <div style="display:flex;gap:5px;align-items:center;">
         <button onclick="exportModalArticle('pdf')" title="PDF 저장"
           style="display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:7px;border:1.5px solid #e74040;background:#fff0f0;color:#e74040;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;"
           onmouseover="this.style.background='#e74040';this.style.color='#fff'" onmouseout="this.style.background='#fff0f0';this.style.color='#e74040'">
@@ -533,16 +530,20 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
           onmouseover="this.style.background='#1d6f42';this.style.color='#fff'" onmouseout="this.style.background='#f0fff6';this.style.color='#1d6f42'">
           📊 CSV
         </button>
+        <button class="btn-xs" onclick="openArticlePopup()" style="font-size:13px;padding:4px 8px;">↗</button>
+        <button class="modal-close" onclick="closeArticleModal()">&times;</button>
       </div>
-      <button class="btn-xs" onclick="openArticlePopup()" style="margin-right:8px;font-size:13px;padding:4px 8px;">↗</button>
-      <button class="modal-close" onclick="closeArticleModal()">&times;</button>
     </div>
-    <div class="modal-body">
-      <div id="modalMeta"></div>
-      <div id="modalContent"></div>
-      <div id="modalRelated"></div>
-      <div id="modalAiSummary"></div>
-      <div class="modal-memo" id="modalMemoContainer">
+    <div class="modal-body" style="padding:0;">
+      <!-- 조문 내용 영역 (JS에서 동적 렌더링) -->
+      <div id="modalContent" style="padding:20px 24px 0;"></div>
+      <div id="modalRelated" style="padding:0 24px;"></div>
+      <div id="modalAiSummary" style="padding:0 24px;"></div>
+      <!-- 숨겨진 레거시 필드 (JS 호환용) -->
+      <div id="modalNum" style="display:none;"></div>
+      <div id="modalTitle" style="display:none;"></div>
+      <div id="modalMeta" style="display:none;"></div>
+      <div class="modal-memo" id="modalMemoContainer" style="padding:16px 24px;border-top:1px solid var(--border);margin-top:16px;">
         <div class="modal-memo-label">📝 메모 &amp; 태그</div>
         <textarea class="modal-memo-input" id="modalMemoInput" placeholder="메모..."></textarea>
         <input type="text" class="modal-tag-input" id="modalTagInput" placeholder="태그 입력 (쉼표로 구분)">
@@ -1191,35 +1192,79 @@ function openArticleModal(sid){
   if(!art)return;
   currentModalArticle=art;
   try{const cacheObj={id:art.id,num:art.num,title:art.title,lawName:art.lawName,lawMst:art.lawMst,content:art.content.substring(0,300),paras:art.paras.slice(0,30)};localStorage.setItem('v63c_'+art.id,JSON.stringify(cacheObj));}catch(err){}
+
+  // 레거시 필드 (copyArticleReference 등에서 사용)
   document.getElementById('modalNum').textContent=art.num;
   document.getElementById('modalTitle').textContent=art.title||'(제목 없음)';
   document.getElementById('modalAiSummary').innerHTML='';
-  document.getElementById('modalMeta').innerHTML=art.effDate?`<div class="modal-meta">시행일: ${art.effDate}</div>`:'';
+
+  // ── 새 레이아웃: 장 → 시행일 → 조문번호+제목 → 내용 ──
   let html='';
-  if(art.chapter)html+=`<div class="modal-chapter">${eh(art.chapter)}</div>`;
-  html+=`<ol class="modal-para-list">`;
-  if(art.paras.length){art.paras.forEach(p=>{let lvClass='para-level-hang';if(p.level==='ho'||p.num.includes('호'))lvClass='para-level-ho';else if(p.level==='mok'||p.num==='목')lvClass='para-level-mok';html+=`<li class="modal-para-item ${lvClass}"><span class="modal-para-num">${eh(p.num)}</span><span>${hlModal(p.text.trim())}</span></li>`;});}
-  else html+=`<li class="modal-para-item"><span>${hlModal(art.content||'내용 없음')}</span></li>`;
-  html+=`</ol>`;
+
+  // 1. 장(chapter) — 상단 회색 배너
+  if(art.chapter){
+    html+=`<div style="background:var(--surface2);border-left:3px solid var(--accent2);border-radius:6px;padding:8px 14px;margin-bottom:14px;font-size:12px;font-weight:700;color:var(--text-muted);">${eh(art.chapter)}</div>`;
+  }
+
+  // 2. 시행일 — 작은 서브텍스트
+  if(art.effDate){
+    html+=`<div style="font-size:11px;color:var(--text-dim);margin-bottom:10px;">시행일: <span style="font-weight:600;color:var(--text-muted);">${eh(art.effDate)}</span></div>`;
+  }
+
+  // 3. 조문번호 + 제목 — 합쳐서 한 줄 (중복 없이)
+  const artTitle=art.title||'';
+  // 제목에 이미 "제N조"가 포함된 경우 num 뱃지만, 아니면 "제N조 제목" 형태로
+  html+=`<div style="margin-bottom:18px;">
+    <div style="font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.3px;line-height:1.4;">${eh(art.num)}${artTitle?'<span style="font-weight:500;font-size:16px;"> '+eh(artTitle)+'</span>':''}</div>
+  </div>`;
+
+  // 4. 조문 내용 (항 단위)
+  html+=`<div style="display:flex;flex-direction:column;gap:10px;">`;
+  if(art.paras&&art.paras.length){
+    art.paras.forEach(p=>{
+      let pl='',bc='var(--border)',fc='var(--text-muted)',fs='13px';
+      if(p.level==='ho'||p.num.includes('호')){pl='margin-left:18px;';bc='var(--border2)';fs='12px';}
+      else if(p.level==='mok'||p.num==='목'){pl='margin-left:36px;';bc='var(--text-dim)';fs='11.5px';}
+      const rendered=hlModal(p.text.trim());
+      html+=`<div style="${pl}padding:10px 14px;background:var(--surface2);border-radius:8px;border-left:2px solid ${bc};font-size:${fs};line-height:1.9;color:${fc};">${rendered}</div>`;
+    });
+  }else if(art.content){
+    html+=`<div style="padding:10px 14px;background:var(--surface2);border-radius:8px;border-left:2px solid var(--border);font-size:13px;line-height:1.9;color:var(--text-muted);">${hlModal(art.content)}</div>`;
+  }else{
+    html+=`<div style="font-size:13px;color:var(--text-dim);">내용 없음</div>`;
+  }
+  html+=`</div>`;
+
   document.getElementById('modalContent').innerHTML=html;
+
+  // 관련 조문
   const relatedMatch=art.content.match(/제\d+조/g);
-  document.getElementById('modalRelated').innerHTML=relatedMatch?`<div class="modal-related"><div class="modal-related-title">🔗 관련 조문</div><div>${[...new Set(relatedMatch)].map(n=>`<span class="modal-related-link" onclick="openRelatedArticlePopup('${n}')">${n}</span>`).join('')}</div></div>`:'';
+  document.getElementById('modalRelated').innerHTML=relatedMatch
+    ?`<div class="modal-related" style="margin-top:16px;"><div class="modal-related-title">🔗 관련 조문</div><div>${[...new Set(relatedMatch)].map(n=>`<span class="modal-related-link" onclick="openRelatedArticlePopup('${n}')">${n}</span>`).join('')}</div></div>`:'';
+
+  // 네비게이션
   const artIdx=filteredArticles.findIndex(a=>a.id===art.id);
   document.getElementById('modalNavInfo').textContent=`${artIdx+1} / ${filteredArticles.length}`;
   document.getElementById('btnPrevArt').disabled=artIdx<=0;
   document.getElementById('btnNextArt').disabled=artIdx>=filteredArticles.length-1;
+
+  // 메모/태그
   document.getElementById('modalMemoInput').value=memos[art.id]||'';
   const tags=(articleTags[art.id]||'').split(',').filter(t=>t.trim());
   document.getElementById('modalTagInput').value=tags.join(', ');
   updateModalTags(tags);
+
+  // 즐겨찾기 버튼
   const isFav=favorites.has(art.id);
   const btn=document.getElementById('modalFavBtn');
   btn.classList.toggle('on',isFav);btn.textContent=(isFav?'★':'☆')+' 즐겨찾기';
-  // ── 법제처 원문 버튼 URL 세팅 ──
+
+  // 법제처 원문 버튼 URL
   const lawName=art.lawName||(currentLaw?currentLaw.name:'');
   const lawGoUrl='https://www.law.go.kr/법령/'+encodeURIComponent(lawName)+'/'+encodeURIComponent(art.num);
   const lawGoBtn=document.getElementById('modalLawGoBtn');
   if(lawGoBtn){lawGoBtn.href=lawGoUrl;lawGoBtn.style.display='inline-flex';}
+
   document.getElementById('articleModal').classList.add('open');
 }
 
@@ -1290,43 +1335,86 @@ function generateShareLink(){if(!currentModalArticle)return;const art=currentMod
 function copyText(text,msg){const fallback=()=>{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand('copy');toast(msg||'복사됨');}catch(e){toast('수동 복사 필요');}document.body.removeChild(ta);};if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(text).then(()=>toast(msg||'복사됨')).catch(fallback);else fallback();}
 function openCompareModal(){if(selectedArticles.size<2){toast('2개 이상 선택');return;}const articles=[...selectedArticles].map(id=>filteredArticles.find(a=>a.id===id)).filter(Boolean);const[art1,art2]=articles;document.getElementById('compareBody').innerHTML=`<div class="compare-grid"><div class="compare-col"><div class="compare-col-title">${eh(art1.num)} ${eh(art1.title)}</div><div style="font-size:12px;line-height:1.8;color:var(--text-muted);">${eh(art1.content)}</div></div><div class="compare-col"><div class="compare-col-title">${eh(art2.num)} ${eh(art2.title)}</div><div style="font-size:12px;line-height:1.8;color:var(--text-muted);">${eh(art2.content)}</div></div></div>`;document.getElementById('compareModal').classList.add('open');}
 function closeCompareModal(){document.getElementById('compareModal').classList.remove('open');}
-// ── CSV 내보내기 (BOM 포함 → 엑셀 한글 정상) ─────────────────
+// ── CSV 내보내기 (BOM + 항 단위 행 분리 → 엑셀 가독성 최적화) ──
 function buildCsvBlob(articles){
   const BOM='\uFEFF';
-  let csv=BOM+'조문번호,제목,법령,시행일,내용\n';
+  const rows=[['법령','장','조문번호','제목','시행일','항번호','내용']];
   articles.forEach(art=>{
-    const clean=v=>'"'+(String(v||'').replace(/"/g,'""').replace(/\r?\n/g,' '))+'"';
-    csv+=clean(art.num)+','+clean(art.title)+','+clean(art.lawName)+','+clean(art.effDate||'')+','+clean(art.content)+'\n';
+    const clean=v=>String(v||'').replace(/"/g,'""').replace(/\r?\n/g,' ').trim();
+    if(art.paras&&art.paras.length){
+      art.paras.forEach((p,pi)=>{
+        rows.push([
+          clean(art.lawName),
+          clean(art.chapter),
+          clean(art.num),
+          pi===0?clean(art.title):'',  // 제목은 첫 항에만
+          pi===0?clean(art.effDate||''):'',
+          clean(p.num),
+          clean(p.text)
+        ]);
+      });
+    }else{
+      rows.push([
+        clean(art.lawName),
+        clean(art.chapter),
+        clean(art.num),
+        clean(art.title),
+        clean(art.effDate||''),
+        '',
+        clean(art.content)
+      ]);
+    }
   });
+  const csv=BOM+rows.map(r=>r.map(v=>'"'+v+'"').join(',')).join('\n');
   return new Blob([csv],{type:'text/csv;charset=utf-8;'});
 }
 
-// ── PDF 내보내기 (html2pdf) ────────────────────────────────────
+// ── PDF 내보내기 (레이아웃: 법령명 → 생성일 → 장→시행일→조문번호+제목→내용) ──
 function buildPdfHtml(articles, lawName){
   const dateStr=new Date().toLocaleString('ko-KR');
-  let body=`<div style="font-family:'Malgun Gothic',sans-serif;padding:32px;">
-    <h1 style="font-size:18px;border-bottom:2px solid #c45e2a;padding-bottom:8px;margin-bottom:4px;">${lawName||'법령'}</h1>
-    <p style="font-size:11px;color:#888;margin-bottom:24px;">생성일: ${dateStr} | 조문 ${articles.length}개</p>`;
+  let body=`<div style="font-family:'Malgun Gothic','나눔고딕',sans-serif;padding:28px 36px;color:#1a1a1a;">
+    <!-- 헤더 -->
+    <div style="border-bottom:3px solid #c45e2a;padding-bottom:10px;margin-bottom:6px;">
+      <div style="font-size:22px;font-weight:800;color:#1a1a1a;">${eh(lawName||'법령')}</div>
+    </div>
+    <div style="font-size:11px;color:#999;margin-bottom:28px;">생성일: ${dateStr} &nbsp;|&nbsp; 조문 ${articles.length}개</div>`;
+
   articles.forEach(art=>{
+    // 항 HTML
     let parasHtml='';
     if(art.paras&&art.paras.length){
       art.paras.forEach(p=>{
-        let pl='';
-        if(p.level==='ho')pl='padding-left:16px;';
-        else if(p.level==='mok')pl='padding-left:32px;';
-        parasHtml+=`<div style="font-size:12px;line-height:1.85;color:#333;${pl}margin-bottom:4px;">${p.text.trim()}</div>`;
+        let pl='',fs='13px',lh='1.9',fc='#333',bl='2px solid #ddd';
+        if(p.level==='ho'||p.num.includes('호')){pl='margin-left:18px;';fs='12px';bl='2px solid #e0c9b8';}
+        else if(p.level==='mok'||p.num==='목'){pl='margin-left:36px;';fs='11.5px';fc='#555';bl='2px solid #eee';}
+        parasHtml+=`<div style="${pl}padding:9px 13px;background:#faf8f6;border-radius:6px;border-left:${bl};font-size:${fs};line-height:${lh};color:${fc};margin-bottom:6px;">${eh(p.text.trim())}</div>`;
       });
-    }else{
-      parasHtml=`<div style="font-size:12px;line-height:1.85;color:#333;">${art.content||''}</div>`;
+    }else if(art.content){
+      parasHtml=`<div style="padding:9px 13px;background:#faf8f6;border-radius:6px;border-left:2px solid #ddd;font-size:13px;line-height:1.9;color:#333;">${eh(art.content)}</div>`;
     }
-    body+=`<div style="page-break-inside:avoid;margin-bottom:20px;padding:14px 18px;border:1px solid #ddd;border-radius:8px;background:#fafafa;">
-      <div style="font-size:14px;font-weight:700;color:#c45e2a;margin-bottom:6px;">${art.num} ${art.title||''}</div>
-      ${art.effDate?`<div style="font-size:10px;color:#aaa;margin-bottom:8px;">시행: ${art.effDate}</div>`:''}
-      ${art.chapter?`<div style="font-size:11px;font-weight:600;color:#666;background:#f0f0f0;padding:5px 10px;border-radius:4px;margin-bottom:8px;">${art.chapter}</div>`:''}
-      ${parasHtml}
-    </div>`;
+
+    body+=`<div style="page-break-inside:avoid;margin-bottom:28px;">`;
+
+    // 1. 장(chapter)
+    if(art.chapter){
+      body+=`<div style="background:#f0ece8;border-left:3px solid #d4733a;border-radius:5px;padding:7px 12px;margin-bottom:12px;font-size:12px;font-weight:700;color:#6b4e3d;">${eh(art.chapter)}</div>`;
+    }
+
+    // 2. 시행일
+    if(art.effDate){
+      body+=`<div style="font-size:11px;color:#aaa;margin-bottom:8px;">시행: ${eh(art.effDate)}</div>`;
+    }
+
+    // 3. 조문번호 + 제목 (한 줄, 중복 없이)
+    const title=art.title||'';
+    body+=`<div style="font-size:17px;font-weight:800;color:#c45e2a;margin-bottom:12px;line-height:1.4;">${eh(art.num)}${title?`<span style="font-weight:500;font-size:15px;color:#1a1a1a;"> ${eh(title)}</span>`:''}</div>`;
+
+    // 4. 내용
+    body+=parasHtml;
+    body+=`</div>`;
   });
-  body+='</div>';
+
+  body+=`</div>`;
   return body;
 }
 
