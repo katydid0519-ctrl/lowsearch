@@ -544,9 +544,15 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
         </div>
       </div>
     </div>
-    <div class="modal-nav">
+    <div class="modal-nav" style="display:flex;align-items:center;justify-content:space-between;padding:8px 20px;border-top:1px solid var(--border);background:var(--surface);gap:8px;">
       <button class="modal-nav-btn" onclick="navigateArticle(-1)" id="btnPrevArt">◀ 이전 조문</button>
-      <span id="modalNavInfo" style="font-size:11px;color:var(--text-dim);"></span>
+      <span id="modalNavInfo" style="font-size:11px;color:var(--text-dim);white-space:nowrap;"></span>
+      <!-- 법제처 바로가기 버튼 -->
+      <a id="modalLawGoBtn" href="#" target="_blank"
+        style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:700;text-decoration:none;cursor:pointer;transition:opacity .15s;white-space:nowrap;"
+        onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+        🌐 법제처 원문
+      </a>
       <button class="modal-nav-btn" onclick="navigateArticle(1)" id="btnNextArt">다음 조문 ▶</button>
     </div>
   </div>
@@ -775,7 +781,11 @@ async function searchLaws(query){
       if(!mst)mst=l['법령일련번호']||l['법령ID']||'';
       const dept=l['소관부처명']||l['소관부처명칭']||'';
       const type=l['법령구분명']||l['법령구분']||'법령';
-      if(name)lawList.push({id:mst,mst,name,dept,type,hasAppendix:false});
+      // 시행일, 공포일, 개정구분
+      const effDate=l['시행일자']||l['법령시행일자']||'';
+      const promDate=l['공포일자']||'';
+      const amendType=l['제개정구분명']||l['제개정구분']||'';
+      if(name)lawList.push({id:mst,mst,name,dept,type,effDate,promDate,amendType,hasAppendix:false});
     });
     lawList.forEach(law=>fetchArticleCount(law));
     currentView='list';renderLawList();
@@ -1008,6 +1018,22 @@ async function setFilter(type,el){
   }
 }
 
+function fmtDate(d){
+  // "20250101" → "2025.01.01"
+  if(!d)return'';
+  const s=String(d).replace(/\D/g,'');
+  if(s.length===8)return s.slice(0,4)+'.'+s.slice(4,6)+'.'+s.slice(6,8);
+  return d;
+}
+function isFutureLaw(effDate){
+  if(!effDate)return false;
+  const s=String(effDate).replace(/\D/g,'');
+  if(s.length!==8)return false;
+  const today=new Date();
+  const todayStr=today.getFullYear()+String(today.getMonth()+1).padStart(2,'0')+String(today.getDate()).padStart(2,'0');
+  return s>todayStr;
+}
+
 function renderLawList(){
   const area=document.getElementById('resultArea');
   document.getElementById('initState').style.display='none';
@@ -1020,12 +1046,29 @@ function renderLawList(){
   lawList.forEach(law=>{
     const isLawFav=lawFavorites.some(f=>f.mst===law.mst);
     const tColor=typeColor(law.type);
-    html+=`<div class="law-card" onclick="loadArticles('${eh(law.mst||law.id)}','${eh(law.name)}')" style="border-left:4px solid ${tColor}20;">
+    const isFuture=isFutureLaw(law.effDate);
+    const effStr=fmtDate(law.effDate);
+    const promStr=fmtDate(law.promDate);
+    // 개정예정 뱃지
+    const futureBadge=isFuture
+      ?`<span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;color:#fff;background:#e74040;padding:2px 7px;border-radius:4px;letter-spacing:.3px;flex-shrink:0;">🔔 개정예정</span>`:'';
+    // 시행일 / 공포일 / 개정구분 정보 행
+    const metaParts=[];
+    if(law.amendType)metaParts.push(`<span style="font-size:10px;color:var(--text-dim);">${eh(law.amendType)}</span>`);
+    if(promStr)metaParts.push(`<span style="font-size:10px;color:var(--text-dim);">공포 ${promStr}</span>`);
+    if(effStr)metaParts.push(`<span style="font-size:10px;font-weight:600;color:${isFuture?'#e74040':'var(--text-dim)'};">시행 ${effStr}</span>`);
+    const metaHtml=metaParts.length?`<div style="display:flex;gap:8px;margin-top:3px;flex-wrap:wrap;align-items:center;">${metaParts.join('<span style="color:var(--border2);font-size:9px;">·</span>')}</div>`:'';
+
+    html+=`<div class="law-card" onclick="loadArticles('${eh(law.mst||law.id)}','${eh(law.name)}')" style="border-left:4px solid ${isFuture?'#e74040':tColor+'20'};">
       <button class="btn-fav ${isLawFav?'on':''}" onclick="event.stopPropagation();toggleLawFav('${eh(law.mst)}','${eh(law.name)}','${eh(law.type)}','${eh(law.dept)}')" style="font-size:17px;flex-shrink:0;">${isLawFav?'★':'☆'}</button>
       <span class="law-card-type" style="background:${tColor};">${eh(law.type)}</span>
       <div style="flex:1;min-width:0;">
-        <div class="law-card-name">${hl(law.name)}</div>
-        <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
+          <div class="law-card-name">${hl(law.name)}</div>
+          ${futureBadge}
+        </div>
+        ${metaHtml}
+        <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;">
           ${law.articleCount?`<span class="law-card-count">📄 조문 ${law.articleCount}개</span>`:''}
           ${law.appendixCount?`<span class="law-card-count">📋 별표 ${law.appendixCount}개</span>`:''}
         </div>
@@ -1159,6 +1202,11 @@ function openArticleModal(sid){
   const isFav=favorites.has(art.id);
   const btn=document.getElementById('modalFavBtn');
   btn.classList.toggle('on',isFav);btn.textContent=(isFav?'★':'☆')+' 즐겨찾기';
+  // ── 법제처 원문 버튼 URL 세팅 ──
+  const lawName=art.lawName||(currentLaw?currentLaw.name:'');
+  const lawGoUrl='https://www.law.go.kr/법령/'+encodeURIComponent(lawName)+'/'+encodeURIComponent(art.num);
+  const lawGoBtn=document.getElementById('modalLawGoBtn');
+  if(lawGoBtn){lawGoBtn.href=lawGoUrl;lawGoBtn.style.display='inline-flex';}
   document.getElementById('articleModal').classList.add('open');
 }
 
@@ -1175,6 +1223,9 @@ function showAppendixDetail(id){
   document.getElementById('modalContent').innerHTML=html;
   document.getElementById('modalRelated').innerHTML='';
   document.getElementById('modalMemoContainer').innerHTML=`<div class="modal-memo"><div class="modal-btn-group"><button class="modal-btn primary" onclick="window.open('${app.lawUrl||'#'}','_blank')">🌐 법제처 페이지</button></div></div>`;
+  // 별표는 하단 버튼을 별표 전용 URL로 교체
+  const lawGoBtn=document.getElementById('modalLawGoBtn');
+  if(lawGoBtn){lawGoBtn.href=app.lawUrl||'https://www.law.go.kr';lawGoBtn.style.display='inline-flex';}
   document.getElementById('articleModal').classList.add('open');
 }
 
@@ -1756,6 +1807,11 @@ async function fetchArticleCount(law){
   const oc=getOC();
   try{
     const data=await lawApiFetch('service',{OC:oc,target:'law',MST:law.mst,type:'JSON'});
+    // 기본정보에서 시행일·공포일·개정구분 추출
+    const bi=data?.법령?.기본정보||{};
+    if(!law.effDate) law.effDate=bi['시행일자']||bi['법령시행일자']||'';
+    if(!law.promDate) law.promDate=bi['공포일자']||'';
+    if(!law.amendType) law.amendType=bi['제개정구분명']||bi['제개정구분']||'';
     const testArts=parseArticlesJSON(data,law.name,law.mst);
     const testAppendix=parseAppendixJSON(data,law.name,law.mst);
     law.articleCount=testArts.length;law.hasAppendix=testAppendix.length>0;law.appendixCount=testAppendix.length;
