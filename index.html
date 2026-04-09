@@ -521,6 +521,19 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
         <div class="modal-article-num" id="modalNum"></div>
         <div class="modal-article-title" id="modalTitle"></div>
       </div>
+      <!-- 상단 PDF/CSV 버튼 -->
+      <div style="display:flex;gap:5px;align-items:center;margin-right:8px;">
+        <button onclick="exportModalArticle('pdf')" title="PDF 저장"
+          style="display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:7px;border:1.5px solid #e74040;background:#fff0f0;color:#e74040;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;"
+          onmouseover="this.style.background='#e74040';this.style.color='#fff'" onmouseout="this.style.background='#fff0f0';this.style.color='#e74040'">
+          📕 PDF
+        </button>
+        <button onclick="exportModalArticle('csv')" title="CSV 저장"
+          style="display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:7px;border:1.5px solid #1d6f42;background:#f0fff6;color:#1d6f42;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;"
+          onmouseover="this.style.background='#1d6f42';this.style.color='#fff'" onmouseout="this.style.background='#f0fff6';this.style.color='#1d6f42'">
+          📊 CSV
+        </button>
+      </div>
       <button class="btn-xs" onclick="openArticlePopup()" style="margin-right:8px;font-size:13px;padding:4px 8px;">↗</button>
       <button class="modal-close" onclick="closeArticleModal()">&times;</button>
     </div>
@@ -1277,7 +1290,102 @@ function generateShareLink(){if(!currentModalArticle)return;const art=currentMod
 function copyText(text,msg){const fallback=()=>{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand('copy');toast(msg||'복사됨');}catch(e){toast('수동 복사 필요');}document.body.removeChild(ta);};if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(text).then(()=>toast(msg||'복사됨')).catch(fallback);else fallback();}
 function openCompareModal(){if(selectedArticles.size<2){toast('2개 이상 선택');return;}const articles=[...selectedArticles].map(id=>filteredArticles.find(a=>a.id===id)).filter(Boolean);const[art1,art2]=articles;document.getElementById('compareBody').innerHTML=`<div class="compare-grid"><div class="compare-col"><div class="compare-col-title">${eh(art1.num)} ${eh(art1.title)}</div><div style="font-size:12px;line-height:1.8;color:var(--text-muted);">${eh(art1.content)}</div></div><div class="compare-col"><div class="compare-col-title">${eh(art2.num)} ${eh(art2.title)}</div><div style="font-size:12px;line-height:1.8;color:var(--text-muted);">${eh(art2.content)}</div></div></div>`;document.getElementById('compareModal').classList.add('open');}
 function closeCompareModal(){document.getElementById('compareModal').classList.remove('open');}
-function exportSelectedArticles(format){if(!selectedArticles.size){toast('선택된 조문 없음');return;}const articles=[...selectedArticles].map(id=>filteredArticles.find(a=>a.id===id)).filter(Boolean);if(format==='csv'){let csv='조문번호,제목,법령,내용\n';articles.forEach(art=>{csv+=`"${art.num}","${art.title}","${art.lawName}","${art.content.replace(/"/g,'""')}"\n`;});const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${currentLaw?.name||'법령'}_${Date.now()}.csv`;a.click();toast('CSV 내보내기 완료');}else{toast('PDF 내보내기 기능 준비 중');}}
+// ── CSV 내보내기 (BOM 포함 → 엑셀 한글 정상) ─────────────────
+function buildCsvBlob(articles){
+  const BOM='\uFEFF';
+  let csv=BOM+'조문번호,제목,법령,시행일,내용\n';
+  articles.forEach(art=>{
+    const clean=v=>'"'+(String(v||'').replace(/"/g,'""').replace(/\r?\n/g,' '))+'"';
+    csv+=clean(art.num)+','+clean(art.title)+','+clean(art.lawName)+','+clean(art.effDate||'')+','+clean(art.content)+'\n';
+  });
+  return new Blob([csv],{type:'text/csv;charset=utf-8;'});
+}
+
+// ── PDF 내보내기 (html2pdf) ────────────────────────────────────
+function buildPdfHtml(articles, lawName){
+  const dateStr=new Date().toLocaleString('ko-KR');
+  let body=`<div style="font-family:'Malgun Gothic',sans-serif;padding:32px;">
+    <h1 style="font-size:18px;border-bottom:2px solid #c45e2a;padding-bottom:8px;margin-bottom:4px;">${lawName||'법령'}</h1>
+    <p style="font-size:11px;color:#888;margin-bottom:24px;">생성일: ${dateStr} | 조문 ${articles.length}개</p>`;
+  articles.forEach(art=>{
+    let parasHtml='';
+    if(art.paras&&art.paras.length){
+      art.paras.forEach(p=>{
+        let pl='';
+        if(p.level==='ho')pl='padding-left:16px;';
+        else if(p.level==='mok')pl='padding-left:32px;';
+        parasHtml+=`<div style="font-size:12px;line-height:1.85;color:#333;${pl}margin-bottom:4px;">${p.text.trim()}</div>`;
+      });
+    }else{
+      parasHtml=`<div style="font-size:12px;line-height:1.85;color:#333;">${art.content||''}</div>`;
+    }
+    body+=`<div style="page-break-inside:avoid;margin-bottom:20px;padding:14px 18px;border:1px solid #ddd;border-radius:8px;background:#fafafa;">
+      <div style="font-size:14px;font-weight:700;color:#c45e2a;margin-bottom:6px;">${art.num} ${art.title||''}</div>
+      ${art.effDate?`<div style="font-size:10px;color:#aaa;margin-bottom:8px;">시행: ${art.effDate}</div>`:''}
+      ${art.chapter?`<div style="font-size:11px;font-weight:600;color:#666;background:#f0f0f0;padding:5px 10px;border-radius:4px;margin-bottom:8px;">${art.chapter}</div>`:''}
+      ${parasHtml}
+    </div>`;
+  });
+  body+='</div>';
+  return body;
+}
+
+function exportSelectedArticles(format){
+  if(!selectedArticles.size){toast('선택된 조문이 없습니다');return;}
+  const articles=[...selectedArticles].map(id=>filteredArticles.find(a=>a.id===id)).filter(Boolean);
+  const lawName=currentLaw?.name||'법령';
+  const fileName=lawName+'_'+Date.now();
+  if(format==='csv'){
+    const blob=buildCsvBlob(articles);
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=fileName+'.csv';
+    a.click();URL.revokeObjectURL(a.href);
+    toast('CSV 저장 완료 ('+articles.length+'개 조문)');
+  }else if(format==='pdf'){
+    const html=buildPdfHtml(articles,lawName);
+    const el=document.createElement('div');
+    el.innerHTML=html;
+    const opt={
+      margin:10,
+      filename:fileName+'.pdf',
+      image:{type:'jpeg',quality:.98},
+      html2canvas:{scale:2,useCORS:true,logging:false},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+    };
+    toast('PDF 생성 중...');
+    html2pdf().set(opt).from(el).save().then(()=>toast('PDF 저장 완료'));
+  }
+}
+
+// ── 조문 팝업에서 단일 조문 내보내기 ─────────────────────────
+function exportModalArticle(format){
+  if(!currentModalArticle){toast('조문 정보 없음');return;}
+  const art=currentModalArticle;
+  const lawName=art.lawName||(currentLaw?currentLaw.name:'법령');
+  const fileName=lawName+'_'+art.num+'_'+Date.now();
+  if(format==='csv'){
+    const blob=buildCsvBlob([art]);
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=fileName+'.csv';
+    a.click();URL.revokeObjectURL(a.href);
+    toast('CSV 저장 완료');
+  }else if(format==='pdf'){
+    const html=buildPdfHtml([art],lawName);
+    const el=document.createElement('div');
+    el.innerHTML=html;
+    const opt={
+      margin:10,
+      filename:fileName+'.pdf',
+      image:{type:'jpeg',quality:.98},
+      html2canvas:{scale:2,useCORS:true,logging:false},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+    };
+    toast('PDF 생성 중...');
+    html2pdf().set(opt).from(el).save().then(()=>toast('PDF 저장 완료'));
+  }
+}
 
 function updateFavList(){
   const el=document.getElementById('favList');if(!el)return;
