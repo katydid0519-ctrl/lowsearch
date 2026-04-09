@@ -1266,19 +1266,32 @@ function parseNewsRSS(text){
   const items=text.match(/<item[\s>][\s\S]*?<\/item>/gi)||[];
   const result=[];
   const hasKorean=s=>/[가-힣]/.test(s);
+  // 외국 매체 필터: source 또는 title에 포함된 경우 모두 제거
+  const isForeign=s=>/TTXVN|Thông tấn xã Việt Nam|Vietnam News|Xinhua|xinhua/i.test(s);
+  function decodeHtml(s){return s.replace(/<!\[CDATA\[|\]\]>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&nbsp;/g,' ').trim();}
   items.forEach(block=>{
     if(result.length>=10)return;
     const tm=block.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-    let title=tm?tm[1].replace(/<!\[CDATA\[|\]\]>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").trim():'';
+    let title=tm?decodeHtml(tm[1]):'';
     const lm=block.match(/<link[^>]*>\s*(https?:[^\s<]+)/i)||block.match(/<link[^>]*>([\s\S]*?)<\/link>/i);
     const link=lm?lm[1].trim():'';
     const pm=block.match(/<pubDate[^>]*>([\s\S]*?)<\/pubDate>/i);
     const pubDate=pm?pm[1].trim():'';
-    const dm=block.match(/<description[^>]*>([\s\S]*?)<\/description>/i);
-    const desc=dm?dm[1].replace(/<!\[CDATA\[|\]\]>/g,'').replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim().substring(0,100):'';
     const sm=block.match(/<source[^>]*>([\s\S]*?)<\/source>/i);
     const source=sm?sm[1].trim():'';
-    if(title.length>3&&hasKorean(title))result.push({rank:result.length+1,title,link,pubDate,desc,source,type:'news'});
+    // desc: HTML 태그·엔티티·URL 완전 제거
+    const dm=block.match(/<description[^>]*>([\s\S]*?)<\/description>/i);
+    let desc='';
+    if(dm){
+      desc=decodeHtml(dm[1])
+        .replace(/<[^>]*>/g,'')          // HTML 태그 제거
+        .replace(/https?:\/\/\S+/g,'')   // URL 제거
+        .replace(/&[a-z#0-9]+;/gi,'')    // 남은 엔티티 제거
+        .replace(/\s+/g,' ').trim().substring(0,80);
+    }
+    if(title.length>3 && hasKorean(title) && !isForeign(source) && !isForeign(title)){
+      result.push({rank:result.length+1,title,link,pubDate,desc,source,type:'news'});
+    }
   });
   return result.length?result:null;
 }
@@ -1336,8 +1349,11 @@ function renderTrendContent(el,items,tab){
     html+='<div style="display:flex;flex-direction:column;gap:2px;">';
     items.forEach(item=>{
       const dateStr=item.pubDate?formatRSSDate(item.pubDate):'';
-      const cleanDesc=(item.desc||'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/\s+/g,' ').trim();
-      html+='<a href="'+eh(item.link||'#')+'" target="_blank" class="signal-rank-item" style="align-items:flex-start;flex-direction:column;gap:3px;padding:8px 6px;border-bottom:1px solid var(--border);"><div style="display:flex;align-items:center;gap:6px;width:100%;">'+(item.source?'<span style="font-size:9px;color:var(--accent);font-weight:700;background:var(--accent-soft);padding:1px 6px;border-radius:3px;flex-shrink:0;">'+eh(item.source)+'</span>':'')+'<span style="flex:1;font-size:12px;color:var(--text);line-height:1.4;font-weight:600;">'+eh(item.title)+'</span>'+(dateStr?'<span style="font-size:10px;color:var(--text-dim);flex-shrink:0;font-family:monospace;">'+dateStr+'</span>':'')+'</div>'+(cleanDesc?'<div style="font-size:10px;color:var(--text-dim);line-height:1.5;padding-left:2px;">'+eh(cleanDesc)+'</div>':'')+'</a>';
+      html+='<a href="'+eh(item.link||'#')+'" target="_blank" class="signal-rank-item" style="align-items:center;flex-direction:row;gap:6px;padding:8px 6px;border-bottom:1px solid var(--border);">'
+        +(item.source?'<span style="font-size:9px;color:var(--accent);font-weight:700;background:var(--accent-soft);padding:1px 6px;border-radius:3px;flex-shrink:0;white-space:nowrap;">'+eh(item.source)+'</span>':'')
+        +'<span style="flex:1;font-size:12px;color:var(--text);line-height:1.4;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+eh(item.title)+'</span>'
+        +(dateStr?'<span style="font-size:10px;color:var(--text-dim);flex-shrink:0;font-family:monospace;">'+dateStr+'</span>':'')
+        +'</a>';
     });
     html+='</div>';
   }
@@ -1469,29 +1485,78 @@ function calSelectDay(key){calSelected=calSelected===key?null:key;renderCalendar
 function calAddEvent(){const inp=document.getElementById('calEventTxt');const txt=(inp?.value||'').trim();if(!txt||!calSelected)return;if(!calEvents[calSelected])calEvents[calSelected]=[];calEvents[calSelected].push(txt);localStorage.setItem(CAL_LS,JSON.stringify(calEvents));inp.value='';renderCalendar();}
 function calDeleteEvent(key,idx){if(!calEvents[key])return;calEvents[key].splice(idx,1);if(!calEvents[key].length)delete calEvents[key];localStorage.setItem(CAL_LS,JSON.stringify(calEvents));renderCalendar();}
 
-// ── 날씨 ──────────────────────────────────────────────────────
+// ── 날씨 (open-meteo.com — 무료·무키·CORS허용) ────────────────
 async function loadWeatherWidget(){
   const el=document.getElementById('hwWeatherBody');if(!el)return;
+  // 화성시 좌표 (위도 37.2, 경도 126.8)
+  const LAT=37.2,LON=126.8;
+  const url='https://api.open-meteo.com/v1/forecast'
+    +'?latitude='+LAT+'&longitude='+LON
+    +'&current=temperature_2m,apparent_temperature,relative_humidity_2m'
+    +',wind_speed_10m,weather_code,uv_index'
+    +'&wind_speed_unit=ms&timezone=Asia%2FSeoul';
   try{
-    const wttrUrls=['https://wttr.in/Hwaseong?format=j1&lang=ko','https://wttr.in/Suwon?format=j1&lang=ko','https://wttr.in/Seoul?format=j1&lang=ko'];
-    let data=null;
-    for(const wttrUrl of wttrUrls){try{const res=await fetchWithTimeout(wttrUrl,10000);if(!res.ok)continue;const json=await res.json();if(json?.current_condition?.[0]){data=json;break;}}catch(e){continue;}}
-    if(!data||!data.current_condition?.[0])throw new Error('날씨 데이터 없음');
-    const cur=data.current_condition[0];
-    const tempC=parseInt(cur.temp_C),feelsC=parseInt(cur.FeelsLikeC),humid=parseInt(cur.humidity);
-    const windKph=parseInt(cur.windspeedKmph),windMs=Math.round(windKph/3.6);
-    const uvIdx=parseInt(cur.uvIndex||0),desc=cur.lang_ko?.[0]?.value||cur.weatherDesc?.[0]?.value||'';
-    const weatherCode=parseInt(cur.weatherCode||0);
-    const skyIcon=weatherCode<=116?'☀️':weatherCode<=122?'⛅':'☁️';
+    const res=await fetchWithTimeout(url,10000);
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const json=await res.json();
+    const cur=json.current;
+    if(!cur)throw new Error('데이터 없음');
+    const tempC=Math.round(cur.temperature_2m);
+    const feelsC=Math.round(cur.apparent_temperature);
+    const humid=Math.round(cur.relative_humidity_2m);
+    const windMs=Math.round(cur.wind_speed_10m);
+    const wCode=cur.weather_code||0;
+    // WMO 날씨 코드 → 아이콘 + 설명
+    function wmoDesc(c){
+      if(c===0)return['☀️','맑음'];
+      if(c<=2)return['⛅','구름 조금'];
+      if(c===3)return['☁️','흐림'];
+      if(c<=49)return['🌫️','안개'];
+      if(c<=59)return['🌦️','이슬비'];
+      if(c<=69)return['🌧️','비'];
+      if(c<=79)return['❄️','눈'];
+      if(c<=84)return['🌧️','소나기'];
+      if(c<=99)return['⛈️','뇌우'];
+      return['🌥️','흐림'];
+    }
+    const[skyIcon,skyDesc]=wmoDesc(wCode);
+    // 안전 지수 계산
     let risk=0;const risks=[];
     if(tempC>=35){risk+=45;risks.push('🔴 폭염');}else if(tempC>=33){risk+=35;risks.push('🟠 온열 위험');}else if(tempC>=28){risk+=20;risks.push('🟡 더위 주의');}else if(tempC<=0){risk+=35;risks.push('🔵 동결 위험');}else if(tempC<=5){risk+=20;risks.push('🔵 한랭 주의');}
     if(humid>=85&&tempC>=25){risk+=20;risks.push('💧 고온다습');}
     if(windMs>=14){risk+=25;risks.push('💨 강풍 위험');}else if(windMs>=7){risk+=10;risks.push('💨 바람 주의');}
+    if(wCode>=61&&wCode<=69){risk+=10;risks.push('🌧️ 우천');}
+    if(wCode>=71&&wCode<=79){risk+=15;risks.push('❄️ 적설');}
+    if(wCode>=80){risk+=15;risks.push('⛈️ 악천후');}
     risk=Math.min(risk,100);
     const riskClr=risk>=60?'#ef4444':risk>=30?'#f59e0b':'#4ade80';
     const riskLbl=risk>=60?'위험':risk>=30?'주의':'양호';
-    el.innerHTML='<div style="position:relative;z-index:1;"><div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.45);text-transform:uppercase;margin-bottom:4px;">현장 실시간 기상 · 화성시</div><div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;"><div><div style="font-family:Manrope,sans-serif;font-size:52px;font-weight:800;line-height:1;color:#fff;">'+tempC+'°</div><div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:4px;">'+eh(desc)+'</div><div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">체감 '+feelsC+'° · 습도 '+humid+'% · 풍속 '+windMs+'m/s</div></div><span style="font-size:44px;margin-top:2px;">'+skyIcon+'</span></div><div style="background:rgba(255,255,255,.1);border-radius:14px;padding:12px 14px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-size:12px;color:rgba(255,255,255,.7);">종합 안전 지수</span><span style="font-size:10px;padding:3px 10px;background:'+riskClr+';border-radius:20px;font-weight:700;letter-spacing:.5px;color:#fff;">'+riskLbl.toUpperCase()+'</span></div><div style="height:5px;background:rgba(255,255,255,.15);border-radius:3px;overflow:hidden;"><div style="width:'+risk+'%;height:100%;background:'+riskClr+';border-radius:3px;"></div></div>'+(risks.length?'<div style="font-size:10px;color:rgba(255,255,255,.45);margin-top:6px;">'+risks.join(' · ')+'</div>':'')+'</div></div>';
-  }catch(e){el.innerHTML='<div class="hw-err" style="color:rgba(255,255,255,.5);">날씨 정보를 불러올 수 없습니다.</div>';}
+    el.innerHTML=
+      '<div style="position:relative;z-index:1;">'
+      +'<div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.45);text-transform:uppercase;margin-bottom:4px;">현장 실시간 기상 · 화성시</div>'
+      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">'
+        +'<div>'
+          +'<div style="font-family:Manrope,sans-serif;font-size:52px;font-weight:800;line-height:1;color:#fff;">'+tempC+'°</div>'
+          +'<div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:4px;">'+skyDesc+'</div>'
+          +'<div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">체감 '+feelsC+'° · 습도 '+humid+'% · 풍속 '+windMs+'m/s</div>'
+        +'</div>'
+        +'<span style="font-size:44px;margin-top:2px;">'+skyIcon+'</span>'
+      +'</div>'
+      +'<div style="background:rgba(255,255,255,.1);border-radius:14px;padding:12px 14px;">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+          +'<span style="font-size:12px;color:rgba(255,255,255,.7);">종합 안전 지수</span>'
+          +'<span style="font-size:10px;padding:3px 10px;background:'+riskClr+';border-radius:20px;font-weight:700;letter-spacing:.5px;color:#fff;">'+riskLbl.toUpperCase()+'</span>'
+        +'</div>'
+        +'<div style="height:5px;background:rgba(255,255,255,.15);border-radius:3px;overflow:hidden;">'
+          +'<div style="width:'+risk+'%;height:100%;background:'+riskClr+';border-radius:3px;"></div>'
+        +'</div>'
+        +(risks.length?'<div style="font-size:10px;color:rgba(255,255,255,.45);margin-top:6px;">'+risks.join(' · ')+'</div>':'')
+      +'</div>'
+      +'</div>';
+  }catch(e){
+    console.warn('[날씨]',e.message);
+    el.innerHTML='<div style="position:relative;z-index:1;color:rgba(255,255,255,.5);font-size:11px;line-height:1.8;">날씨 정보를 불러올 수 없습니다.<br><a href="https://www.weather.go.kr" target="_blank" style="color:rgba(255,255,255,.6);font-size:10px;">기상청 →</a></div>';
+  }
 }
 
 // ── MSDS ──────────────────────────────────────────────────────
