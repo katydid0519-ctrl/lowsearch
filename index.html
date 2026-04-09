@@ -1211,22 +1211,24 @@ function openArticleModal(sid){
     html+=`<div style="font-size:11px;color:var(--text-dim);margin-bottom:10px;">시행일: <span style="font-weight:600;color:var(--text-muted);">${eh(art.effDate)}</span></div>`;
   }
 
-  // 3. 조문번호 + 제목 — 합쳐서 한 줄 (중복 없이)
+  // 3. 조문번호 + 제목 — 제목에 조문번호 이미 포함된 경우 중복 제거
   const artTitle=art.title||'';
-  // 제목에 이미 "제N조"가 포함된 경우 num 뱃지만, 아니면 "제N조 제목" 형태로
+  // "제N조(...)" 패턴이 제목에 포함된 경우 → 제목만 표시 (번호 중복 방지)
+  const titleHasNum=/^제\d+조/.test(artTitle);
+  const displayTitle=titleHasNum ? artTitle : (artTitle ? art.num+' '+artTitle : art.num);
   html+=`<div style="margin-bottom:18px;">
-    <div style="font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.3px;line-height:1.4;">${eh(art.num)}${artTitle?'<span style="font-weight:500;font-size:16px;"> '+eh(artTitle)+'</span>':''}</div>
+    <div style="font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.3px;line-height:1.4;">${eh(displayTitle)}</div>
   </div>`;
 
-  // 4. 조문 내용 (항 단위)
+  // 4. 조문 내용 (항 단위) — 글씨 크기 13px 통일
   html+=`<div style="display:flex;flex-direction:column;gap:10px;">`;
   if(art.paras&&art.paras.length){
     art.paras.forEach(p=>{
-      let pl='',bc='var(--border)',fc='var(--text-muted)',fs='13px';
-      if(p.level==='ho'||p.num.includes('호')){pl='margin-left:18px;';bc='var(--border2)';fs='12px';}
-      else if(p.level==='mok'||p.num==='목'){pl='margin-left:36px;';bc='var(--text-dim)';fs='11.5px';}
+      let pl='',bc='var(--border)',fc='var(--text-muted)';
+      if(p.level==='ho'||p.num.includes('호')){pl='margin-left:18px;';bc='var(--border2)';}
+      else if(p.level==='mok'||p.num==='목'){pl='margin-left:36px;';bc='var(--text-dim)';}
       const rendered=hlModal(p.text.trim());
-      html+=`<div style="${pl}padding:10px 14px;background:var(--surface2);border-radius:8px;border-left:2px solid ${bc};font-size:${fs};line-height:1.9;color:${fc};">${rendered}</div>`;
+      html+=`<div style="${pl}padding:10px 14px;background:var(--surface2);border-radius:8px;border-left:2px solid ${bc};font-size:13px;line-height:1.9;color:${fc};">${rendered}</div>`;
     });
   }else if(art.content){
     html+=`<div style="padding:10px 14px;background:var(--surface2);border-radius:8px;border-left:2px solid var(--border);font-size:13px;line-height:1.9;color:var(--text-muted);">${hlModal(art.content)}</div>`;
@@ -1380,14 +1382,14 @@ function buildPdfHtml(articles, lawName){
     <div style="font-size:11px;color:#999;margin-bottom:28px;">생성일: ${dateStr} &nbsp;|&nbsp; 조문 ${articles.length}개</div>`;
 
   articles.forEach(art=>{
-    // 항 HTML
+    // 항 HTML — 글씨 크기 13px 통일
     let parasHtml='';
     if(art.paras&&art.paras.length){
       art.paras.forEach(p=>{
-        let pl='',fs='13px',lh='1.9',fc='#333',bl='2px solid #ddd';
-        if(p.level==='ho'||p.num.includes('호')){pl='margin-left:18px;';fs='12px';bl='2px solid #e0c9b8';}
-        else if(p.level==='mok'||p.num==='목'){pl='margin-left:36px;';fs='11.5px';fc='#555';bl='2px solid #eee';}
-        parasHtml+=`<div style="${pl}padding:9px 13px;background:#faf8f6;border-radius:6px;border-left:${bl};font-size:${fs};line-height:${lh};color:${fc};margin-bottom:6px;">${eh(p.text.trim())}</div>`;
+        let pl='',fc='#333',bl='2px solid #ddd';
+        if(p.level==='ho'||p.num.includes('호')){pl='margin-left:18px;';bl='2px solid #e0c9b8';}
+        else if(p.level==='mok'||p.num==='목'){pl='margin-left:36px;';fc='#555';bl='2px solid #eee';}
+        parasHtml+=`<div style="${pl}padding:9px 13px;background:#faf8f6;border-radius:6px;border-left:${bl};font-size:13px;line-height:1.9;color:${fc};margin-bottom:6px;">${eh(p.text.trim())}</div>`;
       });
     }else if(art.content){
       parasHtml=`<div style="padding:9px 13px;background:#faf8f6;border-radius:6px;border-left:2px solid #ddd;font-size:13px;line-height:1.9;color:#333;">${eh(art.content)}</div>`;
@@ -1405,9 +1407,11 @@ function buildPdfHtml(articles, lawName){
       body+=`<div style="font-size:11px;color:#aaa;margin-bottom:8px;">시행: ${eh(art.effDate)}</div>`;
     }
 
-    // 3. 조문번호 + 제목 (한 줄, 중복 없이)
+    // 3. 조문번호 + 제목 — 제목에 조문번호 포함 시 중복 제거
     const title=art.title||'';
-    body+=`<div style="font-size:17px;font-weight:800;color:#c45e2a;margin-bottom:12px;line-height:1.4;">${eh(art.num)}${title?`<span style="font-weight:500;font-size:15px;color:#1a1a1a;"> ${eh(title)}</span>`:''}</div>`;
+    const titleHasNum=/^제\d+조/.test(title);
+    const displayTitle=titleHasNum ? title : (title ? art.num+' '+title : art.num);
+    body+=`<div style="font-size:17px;font-weight:800;color:#c45e2a;margin-bottom:12px;line-height:1.4;">${eh(displayTitle)}</div>`;
 
     // 4. 내용
     body+=parasHtml;
