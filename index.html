@@ -2330,67 +2330,115 @@ async function loadTrendWidget(tab){
 }
 
 function parseGoogleTrendsRSS(text){
-  let doc;
-  try{
-    doc = new DOMParser().parseFromString(text, 'text/xml');
-    if(doc.querySelector('parsererror')) doc = new DOMParser().parseFromString(text, 'text/html');
-  }catch(e){
-    try{ doc = new DOMParser().parseFromString(text, 'text/html'); }catch(e2){ return null; }
+  let rawText = text;
+  // allorigins 경유 시 HTML 엔티티로 이중 인코딩되는 경우 복원
+  if(rawText.includes('&lt;') || rawText.includes('&amp;lt;')){
+    const d = document.createElement('div');
+    d.innerHTML = rawText;
+    rawText = d.textContent || d.innerText || rawText;
   }
-  const items = doc.querySelectorAll('item');
-  if(!items.length) return null;
   const result = [];
-  let rank = 1;
-  items.forEach(item => {
-    let title = item.querySelector('title')?.textContent?.trim() || '';
-    title = title.replace(/<![CDATA[|]]>/g,'').trim();
+  // item 블록 regex 추출 (DOMParser 네임스페이스 문제 완전 우회)
+  const itemBlocks = rawText.match(/<item[\s>][\s\S]*?<\/item>/g) || [];
+  itemBlocks.forEach((block, idx) => {
+    if(idx >= 20) return;
+    let title = '';
+    const tm = block.match(/<title[^>]*>([\s\S]*?)<\/title>/);
+    if(tm) title = tm[1].replace(/<!\[CDATA\[|\]\]>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').trim();
     let link = '';
-    const linkEl = item.querySelector('link');
-    if(linkEl) link = linkEl.textContent?.trim() || linkEl.nextSibling?.textContent?.trim() || '';
+    const lm = block.match(/<link[^>]*>([\s\S]*?)<\/link>/);
+    if(lm) link = lm[1].trim();
+    if(!link){ const lm2 = block.match(/<link\/>([\s\S]*?)<(?:pubDate|description|ht:)/); if(lm2) link = lm2[1].trim(); }
+    // approx_traffic: 네임스페이스 문자 포함 태그명 regex로 직접 추출
     let traffic = '';
-    item.querySelectorAll('*').forEach(el=>{
-      if(el.tagName && el.tagName.toLowerCase().includes('approx_traffic')) traffic = el.textContent?.trim()||'';
-    });
-    if(!title && link){ const m=link.match(/query=([^&]+)/); if(m) title=decodeURIComponent(m[1]); }
-    if(title && rank <= 20){
-      result.push({ rank, title, link: link||'https://search.naver.com/search.naver?query='+encodeURIComponent(title), traffic, type:'trend' });
-      rank++;
+    const trm = block.match(/approx_traffic[^>]*>([\s\S]*?)<\/[^>]*approx_traffic>/);
+    if(trm) traffic = trm[1].trim();
+    if(!title && link){ const qm=link.match(/query=([^&]+)/); if(qm) title=decodeURIComponent(qm[1]); }
+    if(title && title.length > 0){
+      result.push({ rank: result.length + 1, title, link: link || 'https://search.naver.com/search.naver?query=' + encodeURIComponent(title), traffic, type:'trend' });
     }
   });
+  // regex 실패 시 DOMParser fallback
+  if(!result.length){
+    try{
+      let doc = new DOMParser().parseFromString(rawText, 'text/xml');
+      if(doc.querySelector('parseerror')) doc = new DOMParser().parseFromString(rawText, 'text/html');
+      const items = doc.querySelectorAll('item');
+      let rank = 1;
+      items.forEach(item => {
+        if(rank > 20) return;
+        const titleEl = item.querySelector('title');
+        let title = titleEl ? (titleEl.textContent||titleEl.innerHTML||'').replace(/<!\[CDATA\[|\]\]>/g,'').trim() : '';
+        const linkEl = item.querySelector('link');
+        let link = linkEl ? (linkEl.textContent||'').trim() : '';
+        let traffic = '';
+        const innerHtml = item.innerHTML || '';
+        const trm2 = innerHtml.match(/approx_traffic[^>]*>([\s\S]*?)<\//);
+        if(trm2) traffic = trm2[1].trim();
+        if(!title && link){ const m=link.match(/query=([^&]+)/); if(m) title=decodeURIComponent(m[1]); }
+        if(title){ result.push({rank, title, link:link||'https://search.naver.com/search.naver?query='+encodeURIComponent(title), traffic, type:'trend'}); rank++; }
+      });
+    }catch(e){}
+  }
   return result.length ? result : null;
 }
 
 
 // ── 뉴스 RSS 파싱 ─────────────────────────────────
 function parseNewsRSS(text){
-  let doc;
-  try{ doc = new DOMParser().parseFromString(text, 'text/xml'); }catch(e){ return null; }
-  const items = doc.querySelectorAll('item');
-  if(!items.length) return null;
-
-  // 한국어 뉴스 필터링 정규식
-  const koreanRe = /[가-힣]/;
-  // 영문/베트남어 등 외국 매체 제외 키워드
-  const foreignRe = /TTXVN|Vietnam|Reuters|AFP|AP News|Bloomberg|CNN|BBC|xinhua|Xinhua/i;
-
+  let rawText = text;
+  if(rawText.includes('&lt;') || rawText.includes('&amp;lt;')){
+    const d = document.createElement('div');
+    d.innerHTML = rawText;
+    rawText = d.textContent || d.innerText || rawText;
+  }
+  const itemBlocks = rawText.match(/<item[\s>][\s\S]*?<\/item>/g) || [];
   const result = [];
-  items.forEach((item, idx) => {
-    if(result.length >= 10) return;
-    const title = item.querySelector('title')?.textContent?.replace(/<!\[CDATA\[|\]\]>/g,'').trim() || '';
-    const link  = item.querySelector('link')?.textContent?.trim()
-               || item.querySelector('link')?.nextSibling?.textContent?.trim() || '';
-    const pubDate = item.querySelector('pubDate')?.textContent?.trim() || '';
-    const desc  = (item.querySelector('description')?.textContent || '').replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim().substring(0,100);
-    const source = item.querySelector('source')?.textContent?.trim() || '';
-
-    // 한국어 제목만, 외국 매체 제외
-    if(title.length > 3 && koreanRe.test(title) && !foreignRe.test(title) && !foreignRe.test(source)){
+  // 완전 영문만 제목 제외 (한글·숫자·기호 혼재면 허용)
+  const pureEnglishRe = /^[a-zA-Z0-9\s\-'",.!?:;()\[\]&%@#$*+=/\\|<>{}~`^_]+$/;
+  // 명백한 외국 통신사만 제외
+  const foreignRe = /^(TTXVN|Vietnam News Agency|Xinhua|Reuters|AP News|AFP -)/i;
+  itemBlocks.forEach(block => {
+    if(result.length >= 12) return;
+    let title = '';
+    const tm = block.match(/<title[^>]*>([\s\S]*?)<\/title>/);
+    if(tm) title = tm[1].replace(/<!\[CDATA\[|\]\]>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").trim();
+    let link = '';
+    const lm = block.match(/<link[^>]*>([\s\S]*?)<\/link>/);
+    if(lm) link = lm[1].trim();
+    let pubDate = '';
+    const pm = block.match(/<pubDate[^>]*>([\s\S]*?)<\/pubDate>/);
+    if(pm) pubDate = pm[1].trim();
+    let desc = '';
+    const dm = block.match(/<description[^>]*>([\s\S]*?)<\/description>/);
+    if(dm) desc = dm[1].replace(/<!\[CDATA\[|\]\]>/g,'').replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim().substring(0,100);
+    let source = '';
+    const sm = block.match(/<source[^>]*>([\s\S]*?)<\/source>/);
+    if(sm) source = sm[1].trim();
+    if(title.length > 3 && !pureEnglishRe.test(title) && !foreignRe.test(source)){
       result.push({ rank:result.length+1, title, link, pubDate, desc, source, type:'news' });
     }
   });
+  if(!result.length){
+    try{
+      let doc;
+      try{ doc = new DOMParser().parseFromString(rawText, 'text/xml'); }catch(e){ return null; }
+      const items = doc.querySelectorAll('item');
+      items.forEach((item) => {
+        if(result.length >= 12) return;
+        let title = (item.querySelector('title')?.textContent||'').replace(/<!\[CDATA\[|\]\]>/g,'').trim();
+        let link = item.querySelector('link')?.textContent?.trim() || '';
+        const pubDate = item.querySelector('pubDate')?.textContent?.trim() || '';
+        const source = item.querySelector('source')?.textContent?.trim() || '';
+        let desc = (item.querySelector('description')?.textContent||'').replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim().substring(0,100);
+        if(title.length > 3 && !pureEnglishRe.test(title) && !foreignRe.test(source)){
+          result.push({ rank:result.length+1, title, link, pubDate, desc, source, type:'news' });
+        }
+      });
+    }catch(e){}
+  }
   return result.length ? result : null;
 }
-
 // ── 렌더링 ────────────────────────────────────────
 function renderTrendContent(el, items, tab){
   const src = TREND_SOURCES[tab];
