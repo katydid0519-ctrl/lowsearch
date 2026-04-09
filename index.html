@@ -2207,44 +2207,42 @@ let _trendTimer = null;
 let _currentTrendTab = 'trend';
 
 // RSS 소스 정의
+// ================================================================
+// index.html 의 <script> 블록 안에서
+// "const TREND_SOURCES = {" 부터 "function loadSignalRank(){...}" 까지를
+// 아래 전체로 교체하세요.
+// ================================================================
+
 const TREND_SOURCES = {
   trend: {
     label: '구글 트렌드',
-    urls: [
-      'https://trends.google.com/trends/trendingsearches/daily/rss?geo=KR',
-      'https://trends.google.com/trending/rss?geo=KR',
-    ],
-    parse: parseGoogleTrendsRSS,
     src: 'Google Trends KR',
     interval: 10 * 60 * 1000,
   },
   safety: {
     label: '안전보건 뉴스',
-    urls: [
-      // Google News RSS - CORS 허용, 가장 안정적
-      'https://news.google.com/rss/search?q=%EC%82%B0%EC%97%85%EC%95%88%EC%A0%84+%EC%82%AC%EA%B3%A0+%EC%82%AC%EB%A7%9D&hl=ko&gl=KR&ceid=KR:ko',
-      'https://news.google.com/rss/search?q=%EC%A4%91%EB%8C%80%EC%9E%AC%ED%95%B4+%EC%95%88%EC%A0%84%EC%82%AC%EA%B3%A0&hl=ko&gl=KR&ceid=KR:ko',
-      'https://www.kosha.or.kr/rss/kosha.do',
-    ],
-    parse: parseNewsRSS,
-    src: 'Google News · KOSHA',
+    src: 'Google News',
     interval: 15 * 60 * 1000,
+    // Netlify 프록시를 통해 가져올 URL 목록
+    urls: [
+      'https://news.google.com/rss/search?q=%EC%82%B0%EC%97%85%EC%95%88%EC%A0%84+%EC%82%AC%EA%B3%A0&hl=ko&gl=KR&ceid=KR:ko',
+      'https://news.google.com/rss/search?q=%EC%A4%91%EB%8C%80%EC%9E%AC%ED%95%B4+%EC%82%B0%EC%97%85%EC%95%88%EC%A0%84&hl=ko&gl=KR&ceid=KR:ko',
+    ],
   },
   labor: {
     label: '노동·법령 뉴스',
-    urls: [
-      'https://news.google.com/rss/search?q=%EC%82%B0%EC%97%85%EC%95%88%EC%A0%84%EB%B3%B4%EA%B1%B4%EB%B2%95+%EB%85%B8%EB%8F%99%EB%B6%80+%EB%B2%95%EB%A0%B9&hl=ko&gl=KR&ceid=KR:ko',
-      'https://news.google.com/rss/search?q=%EC%A4%91%EB%8C%80%EC%9E%AC%ED%95%B4%EC%B2%98%EB%B2%8C%EB%B2%95+%EA%B3%A0%EC%9A%A9%EB%85%B8%EB%8F%99%EB%B6%80&hl=ko&gl=KR&ceid=KR:ko',
-      'https://www.moel.go.kr/rss/rssInfo.do?infoType=news',
-    ],
-    parse: parseNewsRSS,
-    src: 'Google News · 고용노동부',
+    src: 'Google News',
     interval: 30 * 60 * 1000,
+    urls: [
+      'https://news.google.com/rss/search?q=%EA%B3%A0%EC%9A%A9%EB%85%B8%EB%8F%99%EB%B6%80+%EC%82%B0%EC%97%85%EC%95%88%EC%A0%84&hl=ko&gl=KR&ceid=KR:ko',
+      'https://news.google.com/rss/search?q=%EC%A4%91%EB%8C%80%EC%9E%AC%ED%95%B4%EC%B2%98%EB%B2%8C%EB%B2%95+%EB%85%B8%EB%8F%99&hl=ko&gl=KR&ceid=KR:ko',
+    ],
   },
 };
 
-// 캐시
 const _trendCache = {};
+let _trendTimer = null;
+let _currentTrendTab = 'trend';
 
 function switchTrendTab(tab, btn){
   _currentTrendTab = tab;
@@ -2258,12 +2256,64 @@ function refreshTrendWidget(){
   loadTrendWidget(_currentTrendTab);
 }
 
+// ── 핵심: Netlify 프록시만 사용 ──────────────────────────────
+async function fetchViaProxy(url, timeout=14000){
+  const proxyUrl = '/.netlify/functions/proxy?url=' + encodeURIComponent(url);
+  const res = await fetchWithTimeout(proxyUrl, timeout);
+  if(!res.ok) throw new Error('proxy ' + res.status);
+  return await res.text();
+}
+
+// ── 구글 트렌드: regex 기반 파싱 (네임스페이스 우회) ──────────
+function parseTrendsRSS(text){
+  if(!text || text.length < 100) return null;
+  const items = text.match(/<item[\s>][\s\S]*?<\/item>/gi) || [];
+  const result = [];
+  items.forEach(block => {
+    if(result.length >= 20) return;
+    const tm = block.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    let title = tm ? tm[1].replace(/<!\[CDATA\[|\]\]>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').trim() : '';
+    const lm = block.match(/<link[^>]*>\s*(https?:[^\s<]+)/i) || block.match(/<link[^>]*>([\s\S]*?)<\/link>/i);
+    let link = lm ? lm[1].trim() : '';
+    const trm = block.match(/approx_traffic[^>]*>([\s\S]*?)<\//i);
+    const traffic = trm ? trm[1].trim() : '';
+    if(!title && link){ const qm=link.match(/[?&]q=([^&]+)/); if(qm) title=decodeURIComponent(qm[1]); }
+    if(title) result.push({ rank:result.length+1, title, link:link||'https://search.naver.com/search.naver?query='+encodeURIComponent(title), traffic, type:'trend' });
+  });
+  return result.length ? result : null;
+}
+
+// ── 뉴스 RSS: 한글 포함 여부만 체크 ─────────────────────────
+function parseNewsRSS(text){
+  if(!text || text.length < 100) return null;
+  const items = text.match(/<item[\s>][\s\S]*?<\/item>/gi) || [];
+  const result = [];
+  const hasKorean = s => /[가-힣]/.test(s);
+  items.forEach(block => {
+    if(result.length >= 10) return;
+    const tm = block.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    let title = tm ? tm[1].replace(/<!\[CDATA\[|\]\]>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").trim() : '';
+    const lm = block.match(/<link[^>]*>\s*(https?:[^\s<]+)/i) || block.match(/<link[^>]*>([\s\S]*?)<\/link>/i);
+    let link = lm ? lm[1].trim() : '';
+    const pm = block.match(/<pubDate[^>]*>([\s\S]*?)<\/pubDate>/i);
+    const pubDate = pm ? pm[1].trim() : '';
+    const dm = block.match(/<description[^>]*>([\s\S]*?)<\/description>/i);
+    let desc = dm ? dm[1].replace(/<!\[CDATA\[|\]\]>/g,'').replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim().substring(0,100) : '';
+    const sm = block.match(/<source[^>]*>([\s\S]*?)<\/source>/i);
+    const source = sm ? sm[1].trim() : '';
+    // 한글 포함된 제목만 허용
+    if(title.length > 3 && hasKorean(title)){
+      result.push({ rank:result.length+1, title, link, pubDate, desc, source, type:'news' });
+    }
+  });
+  return result.length ? result : null;
+}
+
 async function loadTrendWidget(tab){
   tab = tab || _currentTrendTab;
   const el = document.getElementById('hwSignalBody');
   if(!el) return;
 
-  // 캐시 확인 (5분 이내)
   const cached = _trendCache[tab];
   if(cached && Date.now() - cached.ts < 5 * 60 * 1000){
     renderTrendContent(el, cached.items, tab);
@@ -2271,50 +2321,40 @@ async function loadTrendWidget(tab){
   }
 
   el.innerHTML = '<div class="hw-loading">불러오는 중...</div>';
-  const src = TREND_SOURCES[tab];
+
   let items = null;
+  const src = TREND_SOURCES[tab];
 
-  for(const url of src.urls){
-    if(items && items.length) break;
-    try{
-      // 1순위: allorigins (항상 JSON 반환, CORS OK)
+  if(tab === 'trend'){
+    // 구글 트렌드 RSS — Netlify 프록시만 사용
+    const trendUrls = [
+      'https://trends.google.com/trending/rss?geo=KR',
+      'https://trends.google.com/trends/trendingsearches/daily/rss?geo=KR',
+    ];
+    for(const url of trendUrls){
+      if(items && items.length) break;
       try{
-        const res = await fetchWithTimeout('https://api.allorigins.win/get?url='+encodeURIComponent(url), 14000);
-        if(res.ok){
-          const j = await res.json();
-          let t = j.contents||'';
-          if(t.includes('&lt;')){ const d=document.createElement('div'); d.innerHTML=t; t=d.innerHTML; }
-          if(t.length>300){ items=src.parse(t,url); if(items&&items.length) break; }
-        }
-      }catch(e){}
-
-      // 2순위: 직접 fetch (Google News는 CORS 허용)
+        const text = await fetchViaProxy(url, 14000);
+        items = parseTrendsRSS(text);
+      }catch(e){ console.warn('[트렌드] proxy 실패:', url, e.message); }
+    }
+  } else {
+    // 뉴스 — Netlify 프록시만 사용
+    for(const url of src.urls){
+      if(items && items.length >= 5) break;
       try{
-        const res = await fetchWithTimeout(url, 12000);
-        if(res.ok){
-          const t = await res.text();
-          if(t.length>300){ items=src.parse(t,url); if(items&&items.length) break; }
+        const text = await fetchViaProxy(url, 14000);
+        const parsed = parseNewsRSS(text);
+        if(parsed && parsed.length){
+          if(!items) items = [];
+          parsed.forEach(it => {
+            if(items.length < 10 && !items.find(x=>x.title===it.title)){
+              items.push({...it, rank:items.length+1});
+            }
+          });
         }
-      }catch(e){}
-
-      // 3순위: rss2json.com (무료 RSS→JSON 변환 API)
-      try{
-        const rss2 = 'https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(url)+'&api_key=public';
-        const res = await fetchWithTimeout(rss2, 12000);
-        if(res.ok){
-          const j = await res.json();
-          if(j.status==='ok' && j.items && j.items.length){
-            items = j.items.slice(0,15).map((item,i)=>({
-              rank:i+1, title:item.title||'', link:item.link||'',
-              pubDate:item.pubDate||'', desc:(item.description||'').replace(/<[^>]*>/g,'').substring(0,80),
-              source:item.author||j.feed&&j.feed.title||'', type:'news'
-            })).filter(it=>it.title.length>2);
-            if(items && items.length) break;
-          }
-        }
-      }catch(e){}
-
-    }catch(e){ console.warn('[trend]', url, e.message); }
+      }catch(e){ console.warn('[뉴스] proxy 실패:', url, e.message); }
+    }
   }
 
   if(items && items.length){
@@ -2329,129 +2369,31 @@ async function loadTrendWidget(tab){
   }, src.interval);
 }
 
-function parseGoogleTrendsRSS(text){
-  let rawText = text;
-  // allorigins 경유 시 HTML 엔티티로 이중 인코딩되는 경우 복원
-  if(rawText.includes('&lt;') || rawText.includes('&amp;lt;')){
-    const d = document.createElement('div');
-    d.innerHTML = rawText;
-    rawText = d.textContent || d.innerText || rawText;
-  }
-  const result = [];
-  // item 블록 regex 추출 (DOMParser 네임스페이스 문제 완전 우회)
-  const itemBlocks = rawText.match(/<item[\s>][\s\S]*?<\/item>/g) || [];
-  itemBlocks.forEach((block, idx) => {
-    if(idx >= 20) return;
-    let title = '';
-    const tm = block.match(/<title[^>]*>([\s\S]*?)<\/title>/);
-    if(tm) title = tm[1].replace(/<!\[CDATA\[|\]\]>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').trim();
-    let link = '';
-    const lm = block.match(/<link[^>]*>([\s\S]*?)<\/link>/);
-    if(lm) link = lm[1].trim();
-    if(!link){ const lm2 = block.match(/<link\/>([\s\S]*?)<(?:pubDate|description|ht:)/); if(lm2) link = lm2[1].trim(); }
-    // approx_traffic: 네임스페이스 문자 포함 태그명 regex로 직접 추출
-    let traffic = '';
-    const trm = block.match(/approx_traffic[^>]*>([\s\S]*?)<\/[^>]*approx_traffic>/);
-    if(trm) traffic = trm[1].trim();
-    if(!title && link){ const qm=link.match(/query=([^&]+)/); if(qm) title=decodeURIComponent(qm[1]); }
-    if(title && title.length > 0){
-      result.push({ rank: result.length + 1, title, link: link || 'https://search.naver.com/search.naver?query=' + encodeURIComponent(title), traffic, type:'trend' });
-    }
-  });
-  // regex 실패 시 DOMParser fallback
-  if(!result.length){
-    try{
-      let doc = new DOMParser().parseFromString(rawText, 'text/xml');
-      if(doc.querySelector('parseerror')) doc = new DOMParser().parseFromString(rawText, 'text/html');
-      const items = doc.querySelectorAll('item');
-      let rank = 1;
-      items.forEach(item => {
-        if(rank > 20) return;
-        const titleEl = item.querySelector('title');
-        let title = titleEl ? (titleEl.textContent||titleEl.innerHTML||'').replace(/<!\[CDATA\[|\]\]>/g,'').trim() : '';
-        const linkEl = item.querySelector('link');
-        let link = linkEl ? (linkEl.textContent||'').trim() : '';
-        let traffic = '';
-        const innerHtml = item.innerHTML || '';
-        const trm2 = innerHtml.match(/approx_traffic[^>]*>([\s\S]*?)<\//);
-        if(trm2) traffic = trm2[1].trim();
-        if(!title && link){ const m=link.match(/query=([^&]+)/); if(m) title=decodeURIComponent(m[1]); }
-        if(title){ result.push({rank, title, link:link||'https://search.naver.com/search.naver?query='+encodeURIComponent(title), traffic, type:'trend'}); rank++; }
-      });
-    }catch(e){}
-  }
-  return result.length ? result : null;
+function formatRSSDate(dateStr){
+  try{
+    const d = new Date(dateStr);
+    if(isNaN(d)) return '';
+    const now = new Date();
+    const diff = Math.floor((now - d) / 60000);
+    if(diff < 1)   return '방금';
+    if(diff < 60)  return diff+'분 전';
+    if(diff < 1440) return Math.floor(diff/60)+'시간 전';
+    return (d.getMonth()+1)+'/'+d.getDate();
+  }catch(e){ return ''; }
 }
 
-
-// ── 뉴스 RSS 파싱 ─────────────────────────────────
-function parseNewsRSS(text){
-  let rawText = text;
-  if(rawText.includes('&lt;') || rawText.includes('&amp;lt;')){
-    const d = document.createElement('div');
-    d.innerHTML = rawText;
-    rawText = d.textContent || d.innerText || rawText;
-  }
-  const itemBlocks = rawText.match(/<item[\s>][\s\S]*?<\/item>/g) || [];
-  const result = [];
-  // 완전 영문만 제목 제외 (한글·숫자·기호 혼재면 허용)
-  const pureEnglishRe = /^[a-zA-Z0-9\s\-'",.!?:;()\[\]&%@#$*+=/\\|<>{}~`^_]+$/;
-  // 명백한 외국 통신사만 제외
-  const foreignRe = /^(TTXVN|Vietnam News Agency|Xinhua|Reuters|AP News|AFP -)/i;
-  itemBlocks.forEach(block => {
-    if(result.length >= 12) return;
-    let title = '';
-    const tm = block.match(/<title[^>]*>([\s\S]*?)<\/title>/);
-    if(tm) title = tm[1].replace(/<!\[CDATA\[|\]\]>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").trim();
-    let link = '';
-    const lm = block.match(/<link[^>]*>([\s\S]*?)<\/link>/);
-    if(lm) link = lm[1].trim();
-    let pubDate = '';
-    const pm = block.match(/<pubDate[^>]*>([\s\S]*?)<\/pubDate>/);
-    if(pm) pubDate = pm[1].trim();
-    let desc = '';
-    const dm = block.match(/<description[^>]*>([\s\S]*?)<\/description>/);
-    if(dm) desc = dm[1].replace(/<!\[CDATA\[|\]\]>/g,'').replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim().substring(0,100);
-    let source = '';
-    const sm = block.match(/<source[^>]*>([\s\S]*?)<\/source>/);
-    if(sm) source = sm[1].trim();
-    if(title.length > 3 && !pureEnglishRe.test(title) && !foreignRe.test(source)){
-      result.push({ rank:result.length+1, title, link, pubDate, desc, source, type:'news' });
-    }
-  });
-  if(!result.length){
-    try{
-      let doc;
-      try{ doc = new DOMParser().parseFromString(rawText, 'text/xml'); }catch(e){ return null; }
-      const items = doc.querySelectorAll('item');
-      items.forEach((item) => {
-        if(result.length >= 12) return;
-        let title = (item.querySelector('title')?.textContent||'').replace(/<!\[CDATA\[|\]\]>/g,'').trim();
-        let link = item.querySelector('link')?.textContent?.trim() || '';
-        const pubDate = item.querySelector('pubDate')?.textContent?.trim() || '';
-        const source = item.querySelector('source')?.textContent?.trim() || '';
-        let desc = (item.querySelector('description')?.textContent||'').replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim().substring(0,100);
-        if(title.length > 3 && !pureEnglishRe.test(title) && !foreignRe.test(source)){
-          result.push({ rank:result.length+1, title, link, pubDate, desc, source, type:'news' });
-        }
-      });
-    }catch(e){}
-  }
-  return result.length ? result : null;
-}
-// ── 렌더링 ────────────────────────────────────────
 function renderTrendContent(el, items, tab){
   const src = TREND_SOURCES[tab];
   const now = new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
 
   if(!items || !items.length){
+    const fallbackLinks = {
+      trend: '<a href="https://trends.google.com/trending?geo=KR" target="_blank" class="hw-more-link">Google Trends →</a>',
+      safety: '<a href="https://news.google.com/search?q=%EC%82%B0%EC%97%85%EC%95%88%EC%A0%84&hl=ko" target="_blank" class="hw-more-link">안전뉴스 검색 →</a>',
+      labor: '<a href="https://news.google.com/search?q=%EA%B3%A0%EC%9A%A9%EB%85%B8%EB%8F%99%EB%B6%80&hl=ko" target="_blank" class="hw-more-link">노동뉴스 검색 →</a>',
+    };
     el.innerHTML = '<div class="db-empty" style="padding:20px 8px;">'
-      + (tab==='trend'
-        ? '🔥 구글 트렌드를 불러올 수 없습니다.<br><a href="https://trends.google.com/trending?geo=KR" target="_blank" class="hw-more-link">Google Trends →</a>'
-        : tab==='safety'
-        ? '🦺 안전보건 뉴스를 불러올 수 없습니다.<br><a href="https://www.kosha.or.kr" target="_blank" class="hw-more-link">KOSHA 바로가기 →</a>'
-        : '⚖️ 노동·법령 뉴스를 불러올 수 없습니다.<br><a href="https://www.moel.go.kr" target="_blank" class="hw-more-link">고용노동부 →</a>'
-      )
+      + src.label + '를 불러올 수 없습니다.<br>' + fallbackLinks[tab]
       + '</div>';
     return;
   }
@@ -2459,8 +2401,7 @@ function renderTrendContent(el, items, tab){
   let html = '';
 
   if(tab === 'trend'){
-    // 구글 트렌드: 2열 순위 목록
-    const half = Math.ceil(Math.min(items.length,20) / 2);
+    const half = Math.ceil(Math.min(items.length, 20) / 2);
     const left  = items.slice(0, half);
     const right = items.slice(half, half*2);
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 6px;">';
@@ -2479,11 +2420,9 @@ function renderTrendContent(el, items, tab){
     });
     html += '</div>';
   } else {
-    // 뉴스: 세로 카드 리스트
     html += '<div style="display:flex;flex-direction:column;gap:2px;">';
     items.forEach(item => {
       const dateStr = item.pubDate ? formatRSSDate(item.pubDate) : '';
-      // desc에서 &nbsp; 등 잔여 엔티티 제거
       const cleanDesc = (item.desc||'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/\s+/g,' ').trim();
       html += '<a href="'+eh(item.link||'#')+'" target="_blank" class="signal-rank-item" style="align-items:flex-start;flex-direction:column;gap:3px;padding:8px 6px;border-bottom:1px solid var(--border);">'
         + '<div style="display:flex;align-items:center;gap:6px;width:100%;">'
@@ -2501,20 +2440,6 @@ function renderTrendContent(el, items, tab){
   el.innerHTML = html;
 }
 
-function formatRSSDate(dateStr){
-  try{
-    const d = new Date(dateStr);
-    if(isNaN(d)) return '';
-    const now = new Date();
-    const diff = Math.floor((now - d) / 60000);
-    if(diff < 1)   return '방금';
-    if(diff < 60)  return diff+'분 전';
-    if(diff < 1440) return Math.floor(diff/60)+'시간 전';
-    return (d.getMonth()+1)+'/'+d.getDate();
-  }catch(e){ return ''; }
-}
-
-// initHomeWidgets에서 호출
 function loadSignalRank(){ loadTrendWidget('trend'); }
 
 
