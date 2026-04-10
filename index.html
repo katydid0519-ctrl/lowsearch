@@ -124,12 +124,12 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .law-card-dept{font-size:11px;color:var(--text-dim);white-space:nowrap;background:var(--surface2);padding:3px 9px;border-radius:5px;}
 .back-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:14px;transition:all .12s;}
 .back-btn:hover{border-color:var(--accent);color:var(--accent);}
-.law-title-bar{font-size:16px;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;justify-content:space-between;}
+.law-title-bar{font-size:16px;font-weight:700;padding:12px 22px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;justify-content:space-between;position:sticky;top:0;z-index:31;background:var(--bg);}
 .law-badge{font-size:10px;padding:3px 8px;border-radius:4px;background:var(--accent-soft);color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:600;}
 .article-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:6px;overflow:hidden;transition:all .15s;box-shadow:var(--shadow);}
 .article-card.expanded{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-glow);}
 .article-card.selected{background:rgba(196,94,42,.04);border-color:var(--accent);}
-.article-header{display:flex;align-items:center;padding:12px 14px;cursor:pointer;gap:10px;user-select:none;}
+.article-header{display:flex;align-items:center;padding:10px 14px;cursor:pointer;gap:8px;user-select:none;overflow:hidden;}
 .article-checkbox{width:18px;height:18px;cursor:pointer;}
 .article-num{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:3px 8px;border-radius:4px;white-space:nowrap;min-width:64px;text-align:center;}
 .article-title-text{flex:1;font-size:13px;font-weight:500;line-height:1.4;}
@@ -171,7 +171,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 .toast{position:fixed;bottom:20px;right:20px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-size:12px;color:var(--text);z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;}
 .toast.show{transform:translateY(0);opacity:1;}
-.art-filter-bar{display:flex;gap:7px;align-items:center;padding:10px 0;margin-bottom:4px;flex-wrap:wrap;}
+.art-filter-bar{display:flex;gap:7px;align-items:center;padding:10px 14px;margin-bottom:4px;flex-wrap:wrap;position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--border);}
 .art-kw-input{flex:1;min-width:150px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:6px 10px;font-family:'Noto Sans KR',sans-serif;outline:none;transition:border-color .15s;}
 .art-kw-input:focus{border-color:var(--accent);}
 .art-kw-input::placeholder{color:var(--text-dim);}
@@ -474,7 +474,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
           </div>
         </div>
       </div>
-      <div id="resultArea" style="display:none;padding:20px 22px;"></div>
+      <div id="resultArea" style="display:none;padding:0 0 20px;"></div>
     </div>
   </main>
 
@@ -1163,7 +1163,7 @@ function renderArticles(){
   const pageItems=filteredArticles.slice((currentPage-1)*PAGE_SIZE,currentPage*PAGE_SIZE);
   let html='';
   if(currentLaw){
-    html+=`<button class="back-btn" onclick="goBack()">◀ 법령 목록</button>
+    html+=`<button class="back-btn" onclick="goBack()" style="margin:16px 22px 0;">◀ 법령 목록</button>
     <div class="law-title-bar"><div style="flex:1;"><span class="law-badge">법령</span>${eh(currentLaw.name)}</div>
     <div class="tool-buttons">
       ${selectedArticles.size>1?`<button class="btn-xs" onclick="openCompareModal()">🔀 비교 (${selectedArticles.size})</button>`:''}
@@ -1177,6 +1177,7 @@ function renderArticles(){
     <button class="btn-xs" onclick="currentKeyword=document.getElementById('artKw').value;currentPage=1;applyFilter();renderArticles();">필터</button>
     <button class="btn-xs" onclick="document.getElementById('artKw').value='';currentKeyword='';currentPage=1;applyFilter();renderArticles();">초기화</button>
   </div>
+  <div style="padding:0 22px;">
   <div class="status-bar"><span class="status-text">조문 <span class="status-count">${total}</span>개</span><span class="status-text">${currentPage} / ${totalPages} 페이지</span></div>`;
   if(!total){html+=`<div class="state-box"><div class="state-icon">📄</div><div class="state-title">조문 없음</div></div>`;area.innerHTML=html;return;}
   let lastChapter='';
@@ -1188,13 +1189,13 @@ function renderArticles(){
     const sid=art.id.replace(/[^a-zA-Z0-9_]/g,'_');
     if(art.chapter&&(idx===0||art.chapter!==lastChapter)){html+=`<div class="chapter-section">${eh(art.chapter)}</div>`;lastChapter=art.chapter;}
     html+=`<div class="article-card ${isSelected?'selected':''}" id="card_${sid}" style="cursor:pointer;">
-      <div class="article-header" onclick="openArticleModal('${sid}')">
+      <div class="article-header" onclick="openArticleModal('${sid}')" style="padding:10px 14px;">
         <input type="checkbox" class="article-checkbox" ${isSelected?'checked':''} onchange="toggleArticleSelection('${art.id}',this.checked)" onclick="event.stopPropagation()">
         <span class="article-num">${eh(art.num)}</span>
-        <span class="article-title-text">${art.chapter?`<span style="font-size:10px;color:var(--text-dim);margin-right:5px;">${eh(art.chapter)}</span>`:''} ${hl(art.title||'(제목 없음)')}</span>
-        <div class="article-actions">${hasMemo?'<span style="font-size:12px;color:var(--text-dim)">📝</span>':''}</div>
+        <span class="article-title-text" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${hl(art.title||'(제목 없음)')}</span>
+        ${art.effDate?`<span style="font-size:10px;color:var(--text-dim);white-space:nowrap;margin-left:8px;flex-shrink:0;">시행: ${art.effDate}</span>`:''}
+        <div class="article-actions" style="flex-shrink:0;">${hasMemo?'<span style="font-size:12px;color:var(--text-dim)">📝</span>':''}</div>
       </div>
-      ${art.effDate?`<div class="article-meta" style="padding:0 14px 8px;border-top:1px solid var(--border);">시행: ${art.effDate}</div>`:''}
     </div>`;
   });
   if(totalPages>1){
@@ -1219,6 +1220,7 @@ function renderArticles(){
     });
     html+='</div>';
   }
+  html+='</div>'; // close padding wrapper
   area.innerHTML=html;
 }
 
@@ -1521,6 +1523,111 @@ function buildPdfHtml(articles, lawName){
   return body;
 }
 
+// ── PDF 내보내기 — jsPDF 텍스트 직접 렌더링 ─────────────────
+function exportToPdf(articles, lawName, fileName){
+  // html2pdf 번들에서 jsPDF 추출
+  const { jsPDF } = window.jspdf || {};
+  if(!jsPDF){ toast('PDF 라이브러리 로드 실패'); return; }
+
+  const doc = new jsPDF({ unit:'mm', format:'a4', orientation:'portrait' });
+  const PW = 210, PH = 297;
+  const ML = 18, MR = 18, MT = 18, MB = 20;
+  const CW = PW - ML - MR;
+  let y = MT;
+
+  function addPage(){
+    doc.addPage();
+    y = MT;
+  }
+
+  function checkY(needed){
+    if(y + needed > PH - MB) addPage();
+  }
+
+  // 한글 폰트 없이 기본 폰트 사용 (Arial/Helvetica)
+  // 제목 라인
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(18);
+  doc.setTextColor(28, 28, 28);
+  const lawLabel = lawName || '법령';
+  const titleLines = doc.splitTextToSize(lawLabel, CW);
+  titleLines.forEach(line => { checkY(9); doc.text(line, ML, y); y += 9; });
+
+  // 구분선
+  doc.setDrawColor(196, 94, 42);
+  doc.setLineWidth(0.8);
+  doc.line(ML, y+1, PW-MR, y+1);
+  y += 5;
+
+  // 생성일
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  doc.setTextColor(150,150,150);
+  doc.text(new Date().toLocaleString('ko-KR') + '  |  조문 ' + articles.length + '개', ML, y);
+  y += 10;
+
+  articles.forEach(art => {
+    // 장
+    if(art.chapter){
+      checkY(10);
+      doc.setFillColor(240, 236, 232);
+      doc.roundedRect(ML, y-4, CW, 8, 1.5, 1.5, 'F');
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(10);
+      doc.setTextColor(107, 78, 61);
+      doc.text(art.chapter, ML+4, y+1);
+      y += 10;
+    }
+
+    // 시행일
+    if(art.effDate){
+      checkY(6);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8);
+      doc.setTextColor(170,170,170);
+      doc.text('시행: ' + art.effDate, ML, y);
+      y += 5;
+    }
+
+    // 조문 제목
+    const titleRaw = art.title||'';
+    const titleHasNum = /^제\d+조(?:의\d+)?/.test(titleRaw);
+    const dispTitle = titleHasNum ? titleRaw : (titleRaw ? art.num+' '+titleRaw : art.num);
+    checkY(10);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(14);
+    doc.setTextColor(196, 94, 42);
+    const dtLines = doc.splitTextToSize(dispTitle, CW);
+    dtLines.forEach(line => { checkY(8); doc.text(line, ML, y); y += 8; });
+    y += 2;
+
+    // 내용 파라
+    const paras = (art.paras && art.paras.length) ? art.paras : [{text: art.content||'내용 없음', level:'hang', num:''}];
+    paras.forEach(p => {
+      const indent = (p.level==='ho') ? 8 : (p.level==='mok') ? 16 : 0;
+      const textW = CW - indent - 4;
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(10);
+      doc.setTextColor(80, 60, 50);
+      const lines = doc.splitTextToSize(p.text||'', textW);
+      const blockH = lines.length * 5.5 + 6;
+      checkY(blockH);
+      doc.setFillColor(250, 248, 246);
+      doc.setDrawColor(220, 210, 200);
+      doc.roundedRect(ML + indent, y-4, CW-indent, blockH-1, 1, 1, 'FD');
+      lines.forEach((line, li) => {
+        doc.text(line, ML + indent + 3, y + li * 5.5);
+      });
+      y += blockH + 1;
+    });
+
+    y += 8; // 조문 간격
+  });
+
+  doc.save(fileName + '.pdf');
+  toast('PDF 저장 완료');
+}
+
 function exportSelectedArticles(format){
   if(!selectedArticles.size){toast('선택된 조문이 없습니다');return;}
   const articles=[...selectedArticles].map(id=>filteredArticles.find(a=>a.id===id)).filter(Boolean);
@@ -1534,27 +1641,11 @@ function exportSelectedArticles(format){
     a.click();URL.revokeObjectURL(a.href);
     toast('CSV 저장 완료 ('+articles.length+'개 조문)');
   }else if(format==='pdf'){
-    const html=buildPdfHtml(articles,lawName);
-    const el=document.createElement('div');
-    el.style.cssText='position:absolute;top:0;left:-9999px;width:794px;background:#fff;';
-    el.innerHTML=html;
-    document.body.appendChild(el);
-    const opt={
-      margin:[10,10,10,10],
-      filename:fileName+'.pdf',
-      image:{type:'jpeg',quality:.98},
-      html2canvas:{scale:2,useCORS:true,allowTaint:true,logging:false,windowWidth:794,scrollY:0},
-      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
-    };
     toast('PDF 생성 중...');
-    html2pdf().set(opt).from(el).save().then(()=>{
-      document.body.removeChild(el);
-      toast('PDF 저장 완료');
-    }).catch(()=>{document.body.removeChild(el);toast('PDF 생성 실패');});
+    setTimeout(()=>exportToPdf(articles, lawName, fileName), 50);
   }
 }
 
-// ── 조문 팝업에서 단일 조문 내보내기 ─────────────────────────
 function exportModalArticle(format){
   if(!currentModalArticle){toast('조문 정보 없음');return;}
   const art=currentModalArticle;
@@ -1568,23 +1659,8 @@ function exportModalArticle(format){
     a.click();URL.revokeObjectURL(a.href);
     toast('CSV 저장 완료');
   }else if(format==='pdf'){
-    const html=buildPdfHtml([art],lawName);
-    const el=document.createElement('div');
-    el.style.cssText='position:absolute;top:0;left:-9999px;width:794px;background:#fff;';
-    el.innerHTML=html;
-    document.body.appendChild(el);
-    const opt={
-      margin:[10,10,10,10],
-      filename:fileName+'.pdf',
-      image:{type:'jpeg',quality:.98},
-      html2canvas:{scale:2,useCORS:true,allowTaint:true,logging:false,windowWidth:794,scrollY:0},
-      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
-    };
     toast('PDF 생성 중...');
-    html2pdf().set(opt).from(el).save().then(()=>{
-      document.body.removeChild(el);
-      toast('PDF 저장 완료');
-    }).catch(()=>{document.body.removeChild(el);toast('PDF 생성 실패');});
+    setTimeout(()=>exportToPdf([art], lawName, fileName), 50);
   }
 }
 
@@ -2253,16 +2329,20 @@ function openLawRefModal(event, lawName, artNum, lawGoUrl){
   popup.document.close();
   popup.focus();
 
-  // 외부 법령이면 부모 창에서 API 로드 후 새 창에 결과 주입
+  // 외부 법령이면 부모 창에서 lawApiFetch로 로드 후 새 창에 결과 주입
   if(!localArt){
     (async function(){
-      var el, c = colors, an = artNum, ln = lawName;
+      var c = colors, an = artNum, ln = lawName;
       function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+      function setContent(html){
+        if(!popup.closed){
+          var el = popup.document.getElementById('content');
+          if(el) el.innerHTML = html;
+        }
+      }
       try{
-        // 부모 창 fetch 사용 (상대경로 정상 동작)
-        var r = await fetch('/.netlify/functions/proxy?url='+encodeURIComponent(
-          'https://www.law.go.kr/DRF/lawSearch.do?OC=bowlers&target=law&type=JSON&query='+encodeURIComponent(ln)+'&display=10'));
-        var sd = await r.json();
+        // lawApiFetch 재사용 (프록시 경유)
+        var sd = await lawApiFetch('search',{OC:'bowlers',target:'law',type:'JSON',query:ln,display:10});
         var items = sd?.LawSearch?.law||sd?.law||[];
         var arr = Array.isArray(items)?items:(items?[items]:[]);
         var found = arr.find(function(l){return (l['법령명한글']||l['법령명칭']||'')=== ln;})
@@ -2270,8 +2350,7 @@ function openLawRefModal(event, lawName, artNum, lawGoUrl){
         if(!found) throw new Error('법령 없음');
         var mst = found['법령MST']||'';
         if(!mst){var lk=found['법령상세링크']||'';var mm2=lk.match(/MST=(\d+)/);if(mm2)mst=mm2[1];}
-        var r2 = await fetch('/.netlify/functions/proxy?url='+encodeURIComponent('https://www.law.go.kr/DRF/lawService.do?OC=bowlers&target=law&MST='+mst+'&type=JSON'));
-        var data = await r2.json();
+        var data = await lawApiFetch('service',{OC:'bowlers',target:'law',MST:mst,type:'JSON'});
         var law = data?.법령||data;
         var joW = law?.조문||law?.조문목록||{};
         var list = [];
@@ -2285,7 +2364,7 @@ function openLawRefModal(event, lawName, artNum, lawGoUrl){
         if(Array.isArray(joW))joW.forEach(col); else col(joW);
         function bNum(raw){var s=String(raw||'').trim();if(/^제\d+조/.test(s))return s;var mm3=s.match(/^(\d+)(의\d+)?$/);if(mm3)return'제'+mm3[1]+'조'+(mm3[2]||'');return'제'+s+'조';}
         var jo = list.find(function(j){return bNum(j?.조문번호||'')===an;});
-        if(!jo) throw new Error('조문 없음');
+        if(!jo) throw new Error('조문 없음: '+an);
         var raw = (jo.조문내용||'').trim();
         var paras = [];
         var ha = Array.isArray(jo.항)?jo.항:(jo.항?[jo.항]:[]);
@@ -2305,6 +2384,7 @@ function openLawRefModal(event, lawName, artNum, lawGoUrl){
           if(!pts.length)pts=[stripped2];
           pts.forEach(function(pt){if(pt.trim())paras.push({text:pt.trim(),level:'hang'});});
         }
+        if(!paras.length && raw) paras.push({text:raw,level:'hang'});
         var tr=jo.조문제목||'';
         var fl=raw.split('\n')[0].trim();
         var tm=fl.match(/^제\d+조(?:의\d+)?\([^)]{1,60}\)/);
@@ -2316,16 +2396,9 @@ function openLawRefModal(event, lawName, artNum, lawGoUrl){
           h+='<div style="'+pl+'padding:8px 12px;background:'+c.surf+';border-radius:6px;border-left:2px solid #ddd;font-size:13px;line-height:1.85;color:'+c.muted+';margin-bottom:6px;">'+esc(p.text)+'</div>';
         });
         if(!paras.length)h+='<div style="color:#aaa;font-size:13px;">내용 없음</div>';
-        // 새 창이 아직 열려있으면 주입
-        if(!popup.closed){
-          el = popup.document.getElementById('content');
-          if(el) el.innerHTML = h;
-        }
+        setContent(h);
       }catch(e){
-        if(!popup.closed){
-          el = popup.document.getElementById('content');
-          if(el) el.innerHTML='<div style="text-align:center;padding:32px;color:#aaa;font-size:13px;">조문을 불러올 수 없습니다.<br><a href="'+lawGoUrl+'" target="_blank" style="color:'+colors.accent+';font-weight:700;">법제처에서 열기 →</a></div>';
-        }
+        setContent('<div style="text-align:center;padding:32px;color:#aaa;font-size:13px;">조문을 불러올 수 없습니다.<br><a href="'+lawGoUrl+'" target="_blank" style="color:'+colors.accent+';font-weight:700;">법제처에서 열기 →</a></div>');
       }
     })();
   }
