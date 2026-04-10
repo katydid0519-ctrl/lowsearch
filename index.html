@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>국가법령 검색기 v7.0</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&display=swap');
@@ -474,7 +475,8 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
           </div>
         </div>
       </div>
-      <div id="resultArea" style="display:none;padding:0 0 20px;"></div>
+      <div id="articleStickyHeader" style="display:none;position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--border);"></div>
+      <div id="resultArea" style="display:none;padding:0 22px 20px;"></div>
     </div>
   </main>
 
@@ -1153,20 +1155,22 @@ function renderLawList(){
 
 function renderArticles(){
   const area=document.getElementById('resultArea');
+  const stickyHdr=document.getElementById('articleStickyHeader');
   document.getElementById('initState').style.display='none';
   area.style.display='block';
+  stickyHdr.style.display='block';
   if(!_navStack.length||_navStack[_navStack.length-1]!=='홈'){_navStack.length=0;pushNav('홈');}
   const kw=currentKeyword;
   const hl=str=>kw?eh(str).replace(new RegExp(er(kw),'gi'),m=>`<mark>${m}</mark>`):eh(str);
   const total=filteredArticles.length;
   const totalPages=Math.max(1,Math.ceil(total/PAGE_SIZE));
   const pageItems=filteredArticles.slice((currentPage-1)*PAGE_SIZE,currentPage*PAGE_SIZE);
-  let html='';
-  // ── 스티키 헤더 래퍼 (법령명 + 필터바 묶음) ──
-  html+=`<div style="position:sticky;top:0;z-index:30;background:var(--bg);">`;
+
+  // ── 스티키 헤더 (법령명 + 필터바) — resultArea 위 별도 div ──
+  let stickyHtml='';
   if(currentLaw){
-    html+=`<div style="display:flex;align-items:center;padding:10px 22px 0;gap:8px;">
-      <button class="back-btn" onclick="goBack()" style="margin:0 0 0 0;">◀ 법령 목록</button>
+    stickyHtml+=`<div style="display:flex;align-items:center;padding:10px 22px 6px;gap:8px;">
+      <button class="back-btn" onclick="goBack()" style="margin:0;flex-shrink:0;">◀ 법령 목록</button>
       <div style="flex:1;font-size:15px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><span class="law-badge">법령</span> ${eh(currentLaw.name)}</div>
       <div style="display:flex;gap:5px;flex-shrink:0;">
         ${selectedArticles.size>1?`<button class="btn-xs" onclick="openCompareModal()">🔀 비교 (${selectedArticles.size})</button>`:''}
@@ -1175,15 +1179,16 @@ function renderArticles(){
       </div>
     </div>`;
   }
-  html+=`<div class="art-filter-bar" style="margin-top:8px;">
+  stickyHtml+=`<div class="art-filter-bar">
     <input type="text" class="art-kw-input" id="artKw" placeholder="조문 내 키워드 필터..." value="${eh(kw)}"
       onkeydown="if(event.key==='Enter'){currentKeyword=this.value;currentPage=1;applyFilter();renderArticles();}">
     <button class="btn-xs" onclick="currentKeyword=document.getElementById('artKw').value;currentPage=1;applyFilter();renderArticles();">필터</button>
     <button class="btn-xs" onclick="document.getElementById('artKw').value='';currentKeyword='';currentPage=1;applyFilter();renderArticles();">초기화</button>
-  </div>
-  </div>
-  <div style="padding:0 22px;">
-  <div class="status-bar"><span class="status-text">조문 <span class="status-count">${total}</span>개</span><span class="status-text">${currentPage} / ${totalPages} 페이지</span></div>`;
+  </div>`;
+  stickyHdr.innerHTML=stickyHtml;
+
+  // ── 조문 목록 ──
+  let html=`<div class="status-bar"><span class="status-text">조문 <span class="status-count">${total}</span>개</span><span class="status-text">${currentPage} / ${totalPages} 페이지</span></div>`;
   if(!total){html+=`<div class="state-box"><div class="state-icon">📄</div><div class="state-title">조문 없음</div></div>`;area.innerHTML=html;return;}
   let lastChapter='';
   pageItems.forEach((art,idx)=>{
@@ -1197,7 +1202,12 @@ function renderArticles(){
       <div class="article-header" onclick="openArticleModal('${sid}')" style="padding:10px 14px;">
         <input type="checkbox" class="article-checkbox" ${isSelected?'checked':''} onchange="toggleArticleSelection('${art.id}',this.checked)" onclick="event.stopPropagation()">
         <span class="article-num">${eh(art.num)}</span>
-        <span class="article-title-text" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${hl(art.title||'(제목 없음)')}</span>
+        <span class="article-title-text" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(()=>{
+          // 제목이 "제N조의N(...)" 형태면 제목에서 조문번호 제거해서 표시
+          const t = art.title||'(제목 없음)';
+          const stripped = t.replace(/^제\d+조(?:의\d+)?\s*/,'').trim();
+          return hl(stripped||t);
+        })()}</span>
         ${art.effDate?`<span style="font-size:10px;color:var(--text-dim);white-space:nowrap;margin-left:8px;flex-shrink:0;">시행: ${art.effDate}</span>`:''}
         <div class="article-actions" style="flex-shrink:0;">${hasMemo?'<span style="font-size:12px;color:var(--text-dim)">📝</span>':''}</div>
       </div>
@@ -1225,7 +1235,6 @@ function renderArticles(){
     });
     html+='</div>';
   }
-  html+='</div>'; // close padding wrapper
   area.innerHTML=html;
 }
 
@@ -1248,7 +1257,11 @@ function renderAppendixList(){
 }
 
 function toggleArticleSelection(id,checked){if(checked)selectedArticles.add(id);else selectedArticles.delete(id);if(currentView==='appendixOnly')renderAppendixList();else renderArticles();}
-function goBack(){currentView='list';currentLaw=null;articleList=[];appendixList=[];filteredArticles=[];selectedArticles.clear();renderLawList();}
+function goBack(){
+  const sh=document.getElementById('articleStickyHeader');
+  if(sh)sh.style.display='none';
+  currentView='list';currentLaw=null;articleList=[];appendixList=[];filteredArticles=[];selectedArticles.clear();renderLawList();
+}
 function goPage(p){currentPage=p;renderArticles();document.querySelector('.content-area').scrollTo(0,0);}
 
 function openArticleModal(sid){
@@ -1530,9 +1543,9 @@ function buildPdfHtml(articles, lawName){
 
 // ── PDF 내보내기 — jsPDF 텍스트 직접 렌더링 ─────────────────
 function exportToPdf(articles, lawName, fileName){
-  // html2pdf 번들 내 jsPDF 추출 (여러 가능한 네임스페이스 시도)
+  // jsPDF 추출 — standalone UMD 또는 html2pdf 번들에서
   const jsPDF = (window.jspdf && window.jspdf.jsPDF)
-    || window.jsPDF
+    || (window.jsPDF)
     || (typeof jspdf !== 'undefined' && jspdf.jsPDF);
   if(!jsPDF){ toast('PDF 라이브러리 로드 실패'); return; }
 
@@ -2392,7 +2405,15 @@ function openLawRefModal(event, lawName, artNum, lawGoUrl){
           if(!pts.length)pts=[stripped2];
           pts.forEach(function(pt){if(pt.trim())paras.push({text:pt.trim(),level:'hang'});});
         }
-        if(!paras.length && raw) paras.push({text:raw,level:'hang'});
+        if(!paras.length && raw){
+          // 내용이 단순 절/장 제목만인 경우 → 법제처로 안내
+          var isChapterOnly = /^제\d+절|^제\d+장|^부칙/.test(raw.trim());
+          if(isChapterOnly){
+            setContent('<div style="text-align:center;padding:28px;color:#aaa;font-size:13px;">이 조문은 법제처에서 직접 확인하세요.<br><a href="'+lawGoUrl+'" target="_blank" style="color:'+colors.accent+';font-weight:700;font-size:14px;display:inline-block;margin-top:12px;">🌐 법제처에서 열기 →</a></div>');
+            return;
+          }
+          paras.push({text:raw,level:'hang'});
+        }
         var tr=jo.조문제목||'';
         var fl=raw.split('\n')[0].trim();
         var tm=fl.match(/^제\d+조(?:의\d+)?\([^)]{1,60}\)/);
