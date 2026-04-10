@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>국가법령 검색기 v7.0</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&display=swap');
@@ -856,9 +855,15 @@ function parseArticlesJSON(data,lawName,lawMst){
 
     let currentChapter='';
     list.forEach((jo,i)=>{
-      const num=String(jo?.조문번호||i+1);
       const rawContent=(jo?.조문내용||'').trim();
       const firstLine=rawContent.split('\n')[0].trim();
+      // 조문번호: API 필드 우선, 없으면 firstLine에서 추출, 없으면 인덱스
+      let num = String(jo?.조문번호||'').trim();
+      if(!num){
+        const m0 = firstLine.match(/^제(\d+조(?:의\d+)?)/);
+        if(m0) num = m0[1]; // "8조의2" 형태
+        else num = String(i+1);
+      }
       const chapterMatch=firstLine.match(/^(제\d+장|총칙|부칙)/);
       let chapter='',title='',paraContent='';
       if(chapterMatch){currentChapter=firstLine;chapter=currentChapter;title='';paraContent='';}
@@ -935,12 +940,10 @@ function parseArticlesJSON(data,lawName,lawMst){
       // 조문번호 정규화: "8의2" → "제8조의2", "8" → "제8조"
       function buildArtNum(raw){
         const s = String(raw).trim();
-        // 이미 "제N조" 형태면 그대로
-        if(/^제\d+조/.test(s)) return s;
-        // "8의2" → "제8조의2"
+        if(/^제\d+조/.test(s)) return s;          // 이미 "제N조..." 형태
+        if(/^\d+조(?:의\d+)?$/.test(s)) return '제'+s;  // "8조의2" → "제8조의2"
         const m = s.match(/^(\d+)(의\d+)?$/);
-        if(m) return '제' + m[1] + '조' + (m[2]||'');
-        // 그 외 fallback
+        if(m) return '제' + m[1] + '조' + (m[2]||'');  // "8의2" → "제8조의2"
         return '제' + s + '조';
       }
       arts.push({id:`v63_${lawMst}_${num.replace(/\D/g,'')}_${i}`,num:buildArtNum(num),title,chapter,content:paras.map(p=>p.text).join(' '),paras,lawName,lawMst,effDate});
@@ -1493,8 +1496,7 @@ function buildCsvBlob(articles){
 // ── PDF 내보내기 (레이아웃: 법령명 → 생성일 → 장→시행일→조문번호+제목→내용) ──
 function buildPdfHtml(articles, lawName){
   const dateStr=new Date().toLocaleString('ko-KR');
-  let body=`<div style="font-family:'Malgun Gothic','나눔고딕',sans-serif;padding:28px 36px;color:#1a1a1a;">
-    <!-- 헤더 -->
+  let body=`<div style="font-family:'Noto Sans KR','Malgun Gothic',sans-serif;padding:28px 36px;color:#1a1a1a;">
     <div style="border-bottom:3px solid #c45e2a;padding-bottom:10px;margin-bottom:6px;">
       <div style="font-size:22px;font-weight:800;color:#1a1a1a;">${eh(lawName||'법령')}</div>
     </div>
@@ -1541,111 +1543,43 @@ function buildPdfHtml(articles, lawName){
   return body;
 }
 
-// ── PDF 내보내기 — jsPDF 텍스트 직접 렌더링 ─────────────────
+// ── PDF 내보내기 — html2pdf (한글 폰트 지원) ─────────────────
 function exportToPdf(articles, lawName, fileName){
-  // jsPDF 추출 — standalone UMD 또는 html2pdf 번들에서
-  const jsPDF = (window.jspdf && window.jspdf.jsPDF)
-    || (window.jsPDF)
-    || (typeof jspdf !== 'undefined' && jspdf.jsPDF);
-  if(!jsPDF){ toast('PDF 라이브러리 로드 실패'); return; }
+  if(typeof html2pdf === 'undefined'){ toast('PDF 라이브러리 로드 실패'); return; }
+  toast('PDF 생성 중...');
 
-  const doc = new jsPDF({ unit:'mm', format:'a4', orientation:'portrait' });
-  const PW = 210, PH = 297;
-  const ML = 18, MR = 18, MT = 18, MB = 20;
-  const CW = PW - ML - MR;
-  let y = MT;
+  const html = buildPdfHtml(articles, lawName);
 
-  function addPage(){
-    doc.addPage();
-    y = MT;
-  }
+  // iframe에 마운트해서 정확한 렌더링
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:0;left:0;width:794px;height:1px;border:none;visibility:hidden;';
+  document.body.appendChild(iframe);
 
-  function checkY(needed){
-    if(y + needed > PH - MB) addPage();
-  }
+  // iframe에 한글 폰트 포함 HTML 작성
+  const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <style>*{box-sizing:border-box;}body{margin:0;padding:0;font-family:'Noto Sans KR',sans-serif;}</style>
+    </head><body>${html}</body></html>`;
 
-  // 한글 폰트 없이 기본 폰트 사용 (Arial/Helvetica)
-  // 제목 라인
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(18);
-  doc.setTextColor(28, 28, 28);
-  const lawLabel = lawName || '법령';
-  const titleLines = doc.splitTextToSize(lawLabel, CW);
-  titleLines.forEach(line => { checkY(9); doc.text(line, ML, y); y += 9; });
-
-  // 구분선
-  doc.setDrawColor(196, 94, 42);
-  doc.setLineWidth(0.8);
-  doc.line(ML, y+1, PW-MR, y+1);
-  y += 5;
-
-  // 생성일
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(9);
-  doc.setTextColor(150,150,150);
-  doc.text(new Date().toLocaleString('ko-KR') + '  |  조문 ' + articles.length + '개', ML, y);
-  y += 10;
-
-  articles.forEach(art => {
-    // 장
-    if(art.chapter){
-      checkY(10);
-      doc.setFillColor(240, 236, 232);
-      doc.roundedRect(ML, y-4, CW, 8, 1.5, 1.5, 'F');
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(10);
-      doc.setTextColor(107, 78, 61);
-      doc.text(art.chapter, ML+4, y+1);
-      y += 10;
-    }
-
-    // 시행일
-    if(art.effDate){
-      checkY(6);
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(8);
-      doc.setTextColor(170,170,170);
-      doc.text('시행: ' + art.effDate, ML, y);
-      y += 5;
-    }
-
-    // 조문 제목
-    const titleRaw = art.title||'';
-    const titleHasNum = /^제\d+조(?:의\d+)?/.test(titleRaw);
-    const dispTitle = titleHasNum ? titleRaw : (titleRaw ? art.num+' '+titleRaw : art.num);
-    checkY(10);
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(14);
-    doc.setTextColor(196, 94, 42);
-    const dtLines = doc.splitTextToSize(dispTitle, CW);
-    dtLines.forEach(line => { checkY(8); doc.text(line, ML, y); y += 8; });
-    y += 2;
-
-    // 내용 파라
-    const paras = (art.paras && art.paras.length) ? art.paras : [{text: art.content||'내용 없음', level:'hang', num:''}];
-    paras.forEach(p => {
-      const indent = (p.level==='ho') ? 8 : (p.level==='mok') ? 16 : 0;
-      const textW = CW - indent - 4;
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(10);
-      doc.setTextColor(80, 60, 50);
-      const lines = doc.splitTextToSize(p.text||'', textW);
-      const blockH = lines.length * 5.5 + 6;
-      checkY(blockH);
-      doc.setFillColor(250, 248, 246);
-      doc.setDrawColor(220, 210, 200);
-      doc.roundedRect(ML + indent, y-4, CW-indent, blockH-1, 1, 1, 'FD');
-      lines.forEach((line, li) => {
-        doc.text(line, ML + indent + 3, y + li * 5.5);
-      });
-      y += blockH + 1;
+  iframe.onload = function(){
+    const el = iframe.contentDocument.body;
+    html2pdf().set({
+      margin: [10,10,10,10],
+      filename: fileName + '.pdf',
+      image: { type:'jpeg', quality:0.98 },
+      html2canvas: { scale:2, useCORS:true, allowTaint:true, logging:false,
+        windowWidth:794, scrollY:0 },
+      jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
+    }).from(el).save().then(()=>{
+      document.body.removeChild(iframe);
+      toast('PDF 저장 완료');
+    }).catch(()=>{
+      document.body.removeChild(iframe);
+      toast('PDF 생성 실패');
     });
+  };
 
-    y += 8; // 조문 간격
-  });
-
-  doc.save(fileName + '.pdf');
-  toast('PDF 저장 완료');
+  iframe.srcdoc = fullHtml;
 }
 
 function exportSelectedArticles(format){
