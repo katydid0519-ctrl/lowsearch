@@ -860,7 +860,23 @@ function parseArticlesJSON(data,lawName,lawMst){
       const chapterMatch=firstLine.match(/^(제\d+장|총칙|부칙)/);
       let chapter='',title='',paraContent='';
       if(chapterMatch){currentChapter=firstLine;chapter=currentChapter;title='';paraContent='';}
-      else{chapter=currentChapter;const titleMatch=firstLine.match(/^제\d+조\([^)]*\)/);title=titleMatch?titleMatch[0]:firstLine.substring(0,50);paraContent=rawContent;}
+      else{
+        chapter=currentChapter;
+        // 1순위: 제N조(제목) 패턴
+        const titleMatch=firstLine.match(/^제\d+조(?:의\d+)?\([^)]{1,60}\)/);
+        // 2순위: 제N조의N 까지만 (괄호 없이)
+        const numOnlyMatch=firstLine.match(/^제\d+조(?:의\d+)?/);
+        if(titleMatch){
+          title=titleMatch[0];
+        } else if(numOnlyMatch){
+          // 괄호 없는 순수 조문번호 → 제목 없음으로 처리 (번호만)
+          title=numOnlyMatch[0];
+        } else {
+          // 제N조가 아닌 일반 텍스트 → 앞 30자 절단
+          title=firstLine.substring(0,30);
+        }
+        paraContent=rawContent;
+      }
       const paras=[];
       const hangRaw=jo?.항||[];
       const hangArr=Array.isArray(hangRaw)?hangRaw:(hangRaw?[hangRaw]:[]);
@@ -884,7 +900,18 @@ function parseArticlesJSON(data,lawName,lawMst){
         parts.forEach((part,idx)=>{if(!part.trim())return;const m=part.match(new RegExp(`^([${circled}])(.*)`,'s'));if(m)paras.push({num:`제${circled.indexOf(m[1])+1}항`,text:m[2].trim()});else paras.push({num:idx===0?'본문':String(idx+1),text:part.trim()});});
       }
       const effDate=jo?.조문시행일자||'';
-      arts.push({id:`v63_${lawMst}_${num.replace(/\D/g,'')}_${i}`,num:`제${num}조`,title,chapter,content:paras.map(p=>p.text).join(' '),paras,lawName,lawMst,effDate});
+      // 조문번호 정규화: "8의2" → "제8조의2", "8" → "제8조"
+      function buildArtNum(raw){
+        const s = String(raw).trim();
+        // 이미 "제N조" 형태면 그대로
+        if(/^제\d+조/.test(s)) return s;
+        // "8의2" → "제8조의2"
+        const m = s.match(/^(\d+)(의\d+)?$/);
+        if(m) return '제' + m[1] + '조' + (m[2]||'');
+        // 그 외 fallback
+        return '제' + s + '조';
+      }
+      arts.push({id:`v63_${lawMst}_${num.replace(/\D/g,'')}_${i}`,num:buildArtNum(num),title,chapter,content:paras.map(p=>p.text).join(' '),paras,lawName,lawMst,effDate});
     });
   }catch(e){console.error('파싱오류',e);}
   return arts;
@@ -1220,19 +1247,23 @@ function openArticleModal(sid){
     <div style="font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.3px;line-height:1.4;">${eh(displayTitle)}</div>
   </div>`;
 
-  // 4. 조문 내용 (항 단위) — 글씨 크기 13px 통일
+  // 4. 조문 내용 (항 단위) — linkifyText로 링크 변환 + 매치 정보 수집
   const lawNameForLink = art.lawName||(currentLaw?currentLaw.name:'');
+  const allMatches = []; // 전체 조문에서 수집된 법령 참조 목록
   html+=`<div style="display:flex;flex-direction:column;gap:10px;">`;
   if(art.paras&&art.paras.length){
     art.paras.forEach(p=>{
       let pl='',bc='var(--border)',fc='var(--text-muted)';
       if(p.level==='ho'||p.num.includes('호')){pl='margin-left:18px;';bc='var(--border2)';}
       else if(p.level==='mok'||p.num==='목'){pl='margin-left:36px;';bc='var(--text-dim)';}
-      const rendered=linkifyText(p.text.trim(), lawNameForLink);
-      html+=`<div style="${pl}padding:10px 14px;background:var(--surface2);border-radius:8px;border-left:2px solid ${bc};font-size:13px;line-height:1.9;color:${fc};">${rendered}</div>`;
+      const result=linkifyText(p.text.trim(), lawNameForLink);
+      allMatches.push(...result.matches);
+      html+=`<div style="${pl}padding:10px 14px;background:var(--surface2);border-radius:8px;border-left:2px solid ${bc};font-size:13px;line-height:1.9;color:${fc};">${result.html}</div>`;
     });
   }else if(art.content){
-    html+=`<div style="padding:10px 14px;background:var(--surface2);border-radius:8px;border-left:2px solid var(--border);font-size:13px;line-height:1.9;color:var(--text-muted);">${linkifyText(art.content, lawNameForLink)}</div>`;
+    const result=linkifyText(art.content, lawNameForLink);
+    allMatches.push(...result.matches);
+    html+=`<div style="padding:10px 14px;background:var(--surface2);border-radius:8px;border-left:2px solid var(--border);font-size:13px;line-height:1.9;color:var(--text-muted);">${result.html}</div>`;
   }else{
     html+=`<div style="font-size:13px;color:var(--text-dim);">내용 없음</div>`;
   }
@@ -1240,22 +1271,36 @@ function openArticleModal(sid){
 
   document.getElementById('modalContent').innerHTML=html;
 
-  // 관련 조문 — 클릭 시 openLawRefModal로 팝업
-  const relatedMatch=art.content.match(/제\d+조(?:의\d+)?/g);
-  if(relatedMatch){
-    const lawName=art.lawName||(currentLaw?currentLaw.name:'');
-    const uniq=[...new Set(relatedMatch)];
-    const badges=uniq.map(n=>{
-      const url='https://www.law.go.kr/법령/'+encodeURIComponent(lawName)+'/'+encodeURIComponent(n);
-      const safelaw=lawName.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  // 관련 조문 — linkifyText에서 수집한 매치 기반으로 법령명 포함 표시
+  if(allMatches.length){
+    // 중복 제거: 같은 법령명+조문번호 조합은 한 번만
+    const seen = new Set();
+    const uniq = allMatches.filter(m => {
+      const key = (m.lawName||'') + '|' + m.artNum;
+      if(seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    const badges = uniq.map(m => {
+      const lawName = m.lawName || lawNameForLink;
+      const artNum  = m.artNum;
+      const url = 'https://www.law.go.kr/법령/' + encodeURIComponent(lawName) + '/' + encodeURIComponent(artNum);
+      const safelaw = lawName.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      // 현재 법령과 다르면 법령명도 표시
+      const isSameLaw = !lawName || lawName === lawNameForLink;
+      const label = isSameLaw
+        ? artNum
+        : `<span style="font-size:9px;color:var(--text-dim);margin-right:3px;">${eh(lawName)}</span>${eh(artNum)}`;
       return `<span class="modal-related-link"
-        onclick="openLawRefModal(event,'${safelaw}','${n}','${url}')"
-        style="cursor:pointer;">${n}</span>`;
+        onclick="openLawRefModal(event,'${safelaw}','${artNum}','${url}')"
+        style="cursor:pointer;display:inline-flex;align-items:center;gap:2px;">${label}</span>`;
     }).join('');
+
     document.getElementById('modalRelated').innerHTML=
       `<div class="modal-related" style="margin-top:16px;">
         <div class="modal-related-title">🔗 관련 조문</div>
-        <div>${badges}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">${badges}</div>
       </div>`;
   } else {
     document.getElementById('modalRelated').innerHTML='';
@@ -1994,62 +2039,78 @@ async function fetchMarketData(){
   el.innerHTML=html||'<div class="fav-empty">데이터 없음</div>';
 }
 
-// ── 기타 UI ───────────────────────────────────────────────────
-// ── 법령 참조 링크 변환 ────────────────────────────────────────
-// 패턴 1: 「법령명」 제N조 / 제N조의N  → 파란 링크
-// 패턴 2: 법 제N조, 이 법 제N조, 같은 법 제N조 → 현재 법령 내 조문 링크
-// 패턴 3: 제N항, 각 호 (조문 내 참조) → 회색 참조 표시
+// ── 상위 법령명 추론 ─────────────────────────────────────────
+// "산업안전보건법 시행령" → "산업안전보건법"
+// "화학물질관리법 시행규칙" → "화학물질관리법"
+function getParentLawName(lawName){
+  if(!lawName) return '';
+  // 시행령/시행규칙/규칙/령 제거
+  return lawName
+    .replace(/\s*(시행령|시행규칙|규칙|시행세칙|세칙)$/, '')
+    .trim();
+}
+
 // ── 법령 참조 링크 변환 (raw text → safe HTML) ────────────────
-// 전략: rawText를 토큰 단위로 분리 후 각 토큰을 eh() 또는 <a> 태그로 조립
+// 규칙:
+//   「법령명」 제N조  → 해당 법령
+//   같은 법/이 법/이 령/이 규칙 + 제N조  → 현재 법령
+//   법 제N조 / 법률 제N조  → 상위 법령 (시행령→법률, 시행규칙→법률)
+//   단독 제N조 (앞에 수식어 없음)  → 현재 법령
 function linkifyText(rawText, currentLawName){
   const kw = currentKeyword;
+  const parentLawName = getParentLawName(currentLawName);
+  const matches = [];
 
-  // ── 전체 텍스트에서 법령 참조 위치 수집 ──────────────────────
-  // 규칙: 한 번 매치된 범위는 다른 패턴이 겹쳐서 매치 불가
-  const matches = []; // {start, end, display, lawName, artNum}
-
-  // 헬퍼: 겹치지 않을 때만 추가
   function tryAdd(start, end, display, lawName, artNum){
     if(matches.some(ex => start < ex.end && end > ex.start)) return false;
     matches.push({start, end, display, lawName: lawName||'', artNum: artNum||''});
     return true;
   }
 
-  // 조문 기본 패턴: 제N조(의N)?(제N항 또는 제N호 등 후속 참조 포함)
+  // 조문 기본 패턴: 제N조(의N)?(제N항|제N호 등 후속 포함)
   const ART_CORE = '제\\d+조(?:의\\d+)?(?:제\\d+(?:항|호))*';
-
-  // 패턴1: 「법령명」 제N조... — 외부 법령 (최우선)
-  const re1 = new RegExp('「([^」]+)」\\s*(' + ART_CORE + ')', 'g');
   let m;
+
+  // ── 패턴1: 「법령명」 제N조 — 명시된 외부 법령 (최우선) ─────
+  const re1 = new RegExp('「([^」]+)」\\s*(' + ART_CORE + ')', 'g');
   re1.lastIndex = 0;
   while((m = re1.exec(rawText)) !== null){
-    // artNum: URL에 사용할 조문번호 = 제N조(의N)? 까지만 (항/호 제외)
     const artNum = m[2].match(/^제\d+조(?:의\d+)?/)[0];
     tryAdd(m.index, m.index+m[0].length, m[0], m[1], artNum);
   }
 
-  // 패턴2: 같은 법/이 법/이 규칙 + 제N조...
-  const re2 = new RegExp('(같은\\s*(?:법률|법|령|규칙|규정)|이\\s*(?:법률|법|령|규칙|규정))\\s+(' + ART_CORE + ')', 'g');
+  // ── 패턴2: 같은 법/이 법/이 령/이 규칙 + 제N조 — 현재 법령 ─
+  const re2 = new RegExp(
+    '(같은\\s*(?:법률|법|령|규칙|규정)|이\\s*(?:법률|법|령|규칙|규정))\\s+(' + ART_CORE + ')', 'g');
   re2.lastIndex = 0;
   while((m = re2.exec(rawText)) !== null){
     const artNum = m[2].match(/^제\d+조(?:의\d+)?/)[0];
     tryAdd(m.index, m.index+m[0].length, m[0], currentLawName, artNum);
   }
 
-  // 패턴3: 단독 제N조 — 단, 이미 매치된 범위 내부는 스킵
-  // "법 제N조" 형태도 포함 (앞에 '법', '령', '칙' 붙은 경우)
-  const re3 = new RegExp('([법령칙]\\s+)?(' + ART_CORE + ')', 'g');
+  // ── 패턴3: "법 제N조" / "법률 제N조" — 상위 법령 ────────────
+  // 시행령·시행규칙에서 단독 "법 제N조"는 상위 법률을 가리킴
+  const re3 = new RegExp('(?<![같이은는을]\\s{0,3})(법률|법)\\s+(' + ART_CORE + ')', 'g');
   re3.lastIndex = 0;
   while((m = re3.exec(rawText)) !== null){
-    // 앞이 「...」 내부이거나 이미 매치된 범위면 스킵
     const start = m.index, end = m.index + m[0].length;
-    // 이미 패턴1/2로 커버된 범위 내부면 스킵
-    if(matches.some(ex => start >= ex.start && end <= ex.end)) continue;
+    if(matches.some(ex => start < ex.end && end > ex.start)) continue;
     const artNum = m[2].match(/^제\d+조(?:의\d+)?/)[0];
+    // 상위 법령이 있으면 상위 법령, 없으면 현재 법령
+    const targetLaw = parentLawName || currentLawName;
+    tryAdd(start, end, m[0], targetLaw, artNum);
+  }
+
+  // ── 패턴4: 단독 제N조 — 현재 법령 ──────────────────────────
+  const re4 = new RegExp('(?<![가-힣a-zA-Z])(' + ART_CORE + ')', 'g');
+  re4.lastIndex = 0;
+  while((m = re4.exec(rawText)) !== null){
+    const start = m.index, end = m.index + m[0].length;
+    if(matches.some(ex => start < ex.end && end > ex.start)) continue;
+    const artNum = m[1].match(/^제\d+조(?:의\d+)?/)[0];
     tryAdd(start, end, m[0], currentLawName, artNum);
   }
 
-  // 위치 순 정렬
   matches.sort((a,b)=>a.start-b.start);
 
   // ── 토큰 분리 → HTML 조립 ─────────────────────────────────────
@@ -2057,12 +2118,10 @@ function linkifyText(rawText, currentLawName){
   let pos = 0;
   matches.forEach(match=>{
     if(match.start > pos){
-      // 일반 텍스트
       let t = eh(rawText.slice(pos, match.start));
       if(kw) t = t.replace(new RegExp(er(kw),'gi'), hit=>`<mark>${hit}</mark>`);
       parts.push(t);
     }
-    // 링크
     const lawName = match.lawName || currentLawName || '';
     const artNum  = match.artNum;
     const lawGoUrl = 'https://www.law.go.kr/법령/'
@@ -2079,7 +2138,12 @@ function linkifyText(rawText, currentLawName){
     parts.push(t);
   }
 
-  return parts.join('');
+  return { html: parts.join(''), matches };
+}
+
+// linkifyText의 html만 필요할 때 쓰는 wrapper
+function linkify(rawText, currentLawName){
+  return linkifyText(rawText, currentLawName).html;
 }
 
 // ── 법령 참조 팝업 ────────────────────────────────────────────
@@ -2090,10 +2154,13 @@ function openLawRefModal(event, lawName, artNum, lawGoUrl){
 
   // 현재 법령과 같은지 판단
   const curLawName = currentLaw ? currentLaw.name : (currentModalArticle ? currentModalArticle.lawName : '');
-  // 정확히 같은 법령명일 때만 현재 법령으로 간주 (부분 매칭 제거)
+  const parentLaw  = getParentLawName(curLawName);
+  // 현재 법령 또는 현재 법령의 상위 법령과 정확히 일치할 때만 현재 조문 목록 참조
   const isCurrentLaw = !lawName || lawName === curLawName;
+  const isParentLaw  = parentLaw && lawName === parentLaw;
 
   // 현재 법령 내에서 조문 찾기 (같은 법령일 때만)
+  // 상위 법령(isParentLaw)은 filteredArticles에 없으므로 외부로 처리
   const art = isCurrentLaw
     ? filteredArticles.find(a => a.num === artNum)
     : null;
@@ -2147,12 +2214,13 @@ function openLawRefModal(event, lawName, artNum, lawGoUrl){
     }
     content += '</div>';
     body.innerHTML = content;
-  } else if(!isCurrentLaw){
-    // 외부 법령 → 법제처 새 탭으로 바로 열기 안내
+  } else if(isParentLaw || !isCurrentLaw){
+    // 상위 법령 또는 외부 법령 → 법제처 새 탭 열기 안내
+    const labelType = isParentLaw ? '상위 법령' : '외부 법령';
     body.innerHTML = `<div style="text-align:center;padding:28px 20px;">
       <div style="font-size:28px;margin-bottom:12px;">🔗</div>
       <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;">${eh(lawName)} ${eh(artNum)}</div>
-      <div style="font-size:12px;color:var(--text-dim);margin-bottom:20px;line-height:1.7;">외부 법령은 법제처에서 확인합니다.<br>아래 버튼을 누르면 새 탭이 열립니다.</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:20px;line-height:1.7;">${labelType}은 법제처에서 확인합니다.<br>아래 버튼을 누르면 새 탭이 열립니다.</div>
       <a href="${lawGoUrl}" target="_blank" onclick="event.stopPropagation()"
         style="display:inline-flex;align-items:center;gap:6px;padding:10px 22px;background:var(--accent);color:#fff;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;">
         🌐 법제처에서 열기
@@ -2171,10 +2239,8 @@ function openLawRefModal(event, lawName, artNum, lawGoUrl){
   popup.appendChild(body);
   document.body.appendChild(popup);
 
-  // 외부 법령이면 바로 새 탭 열기
-  if(!isCurrentLaw && !art){
-    window.open(lawGoUrl, '_blank');
-  }
+  // 외부/상위 법령은 팝업만 표시 (자동 새 탭 제거 - 사용자가 버튼 클릭)
+  // if((isParentLaw || !isCurrentLaw) && !art){ window.open(lawGoUrl, '_blank'); }
 
   // 팝업 외부 클릭 시 닫기
   setTimeout(()=>{
