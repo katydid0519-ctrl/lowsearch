@@ -383,7 +383,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 
   <main>
     <div class="content-area" id="contentArea">
-      <div class="state-box" id="initState" style="align-items:flex-start;padding:0;overflow-y:auto;height:100%;display:flex;flex-direction:column;width:100%;">
+      <div class="state-box" id="initState" style="align-items:flex-start;padding:0;height:100%;display:flex;flex-direction:column;width:100%;">
         <div class="db-grid">
           <div class="db-col-center">
             <div class="db-col-center-left">
@@ -1549,37 +1549,57 @@ function exportToPdf(articles, lawName, fileName){
   toast('PDF 생성 중...');
 
   const html = buildPdfHtml(articles, lawName);
-
-  // iframe에 마운트해서 정확한 렌더링
-  const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;top:0;left:0;width:794px;height:1px;border:none;visibility:hidden;';
-  document.body.appendChild(iframe);
-
-  // iframe에 한글 폰트 포함 HTML 작성
   const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
-    <style>*{box-sizing:border-box;}body{margin:0;padding:0;font-family:'Noto Sans KR',sans-serif;}</style>
+    <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Noto Sans KR',sans-serif;width:794px;}</style>
     </head><body>${html}</body></html>`;
 
+  // Blob URL로 만들어 숨겨진 iframe에 로드
+  const blob = new Blob([fullHtml], {type:'text/html;charset=utf-8'});
+  const blobUrl = URL.createObjectURL(blob);
+
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:0;left:0;width:794px;height:2000px;border:none;opacity:0;pointer-events:none;z-index:-1;';
+  document.body.appendChild(iframe);
+  iframe.src = blobUrl;
+
   iframe.onload = function(){
-    const el = iframe.contentDocument.body;
-    html2pdf().set({
-      margin: [10,10,10,10],
-      filename: fileName + '.pdf',
-      image: { type:'jpeg', quality:0.98 },
-      html2canvas: { scale:2, useCORS:true, allowTaint:true, logging:false,
-        windowWidth:794, scrollY:0 },
-      jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
-    }).from(el).save().then(()=>{
+    // 폰트 로드 대기 후 캡처
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+    Promise.all([
+      iframe.contentDocument.fonts ? iframe.contentDocument.fonts.ready : Promise.resolve(),
+      new Promise(r => setTimeout(r, 1500)) // 폰트 로딩 여유
+    ]).then(()=>{
+      // iframe 높이를 실제 컨텐츠에 맞게 조정
+      const scrollH = iframeDoc.body.scrollHeight;
+      iframe.style.height = scrollH + 'px';
+
+      return html2pdf().set({
+        margin: [12,12,12,12],
+        filename: fileName + '.pdf',
+        image: { type:'jpeg', quality:0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+          windowWidth: 794,
+          height: scrollH,
+          scrollY: 0,
+          scrollX: 0
+        },
+        jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
+      }).from(iframeDoc.body).save();
+    }).then(()=>{
       document.body.removeChild(iframe);
+      URL.revokeObjectURL(blobUrl);
       toast('PDF 저장 완료');
-    }).catch(()=>{
+    }).catch(e=>{
       document.body.removeChild(iframe);
-      toast('PDF 생성 실패');
+      URL.revokeObjectURL(blobUrl);
+      toast('PDF 생성 실패: ' + e.message);
     });
   };
-
-  iframe.srcdoc = fullHtml;
 }
 
 function exportSelectedArticles(format){
