@@ -1705,12 +1705,14 @@ function parseTrendsRSS(text){
     if(result.length>=20)return;
     const tm=block.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
     let title=tm?tm[1].replace(/<!\[CDATA\[|\]\]>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').trim():'';
-    const lm=block.match(/<link[^>]*>\s*(https?:[^\s<]+)/i)||block.match(/<link[^>]*>([\s\S]*?)<\/link>/i);
-    let link=lm?lm[1].trim():'';
     const trm=block.match(/approx_traffic[^>]*>([\s\S]*?)<\//i);
     const traffic=trm?trm[1].trim():'';
-    if(!title&&link){const qm=link.match(/[?&]q=([^&]+)/);if(qm)title=decodeURIComponent(qm[1]);}
-    if(title)result.push({rank:result.length+1,title,link:link||'https://search.naver.com/search.naver?query='+encodeURIComponent(title),traffic,type:'trend'});
+    // 구글 트렌드 RSS의 <link>는 피드 URL 자체라 사용 불가
+    // → 트렌드 제목으로 구글 검색 URL 생성
+    const link = title
+      ? 'https://www.google.com/search?q=' + encodeURIComponent(title) + '&hl=ko&gl=KR'
+      : '';
+    if(title)result.push({rank:result.length+1,title,link,traffic,type:'trend'});
   });
   return result.length?result:null;
 }
