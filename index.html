@@ -1544,49 +1544,45 @@ function buildPdfHtml(articles, lawName){
   return body;
 }
 
-// ── PDF 내보내기 — 현재 페이지 DOM에 직접 렌더 (폰트 재사용) ─
+// ── PDF 내보내기 — 새 창 + 브라우저 인쇄 (가장 안정적) ──────
 function exportToPdf(articles, lawName, fileName){
-  if(typeof html2pdf === 'undefined'){ toast('PDF 라이브러리 로드 실패'); return; }
-  toast('PDF 생성 중...');
+  const bodyHtml = buildPdfHtml(articles, lawName);
+  const printHtml = `<!DOCTYPE html><html lang="ko"><head>
+<meta charset="UTF-8">
+<title>${eh(fileName)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Noto Sans KR','Malgun Gothic',sans-serif;background:#fff;color:#1a1a1a;padding:20px;}
+  @media print{
+    body{padding:0;}
+    .no-print{display:none;}
+    @page{margin:12mm;}
+  }
+  .print-btn{
+    position:fixed;top:16px;right:16px;padding:10px 22px;
+    background:#c45e2a;color:#fff;border:none;border-radius:8px;
+    font-size:14px;font-weight:700;cursor:pointer;z-index:999;
+    font-family:'Noto Sans KR',sans-serif;
+  }
+  .print-btn:hover{opacity:.85;}
+</style>
+</head><body>
+<button class="no-print print-btn" onclick="window.print()">🖨️ 인쇄 / PDF 저장</button>
+${bodyHtml}
+<script>
+  // 폰트 로드 후 자동 인쇄 (선택 사항)
+  // document.fonts.ready.then(()=>window.print());
+<\/script>
+</body></html>`;
 
-  const el = document.createElement('div');
-  el.style.cssText = [
-    'position:absolute',
-    'left:-9999px',
-    'top:0',
-    'width:794px',
-    'background:#ffffff',
-    'font-family:"Noto Sans KR","Malgun Gothic",sans-serif',
-    'color:#1a1a1a'
-  ].join(';');
-  el.innerHTML = buildPdfHtml(articles, lawName);
-  document.body.appendChild(el);
-
-  // 렌더 완료 후 캡처
-  requestAnimationFrame(()=>{
-    requestAnimationFrame(()=>{
-      html2pdf().set({
-        margin: [12, 12, 12, 12],
-        filename: fileName + '.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          logging: false,
-          windowWidth: 794,
-          scrollY: 0
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      }).from(el).save().then(()=>{
-        if(document.body.contains(el)) document.body.removeChild(el);
-        toast('PDF 저장 완료');
-      }).catch(e=>{
-        if(document.body.contains(el)) document.body.removeChild(el);
-        toast('PDF 오류: ' + e.message);
-      });
-    });
-  });
+  const popup = window.open('', '_blank', 'width=900,height=800,scrollbars=yes,resizable=yes');
+  if(!popup){ toast('팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요.'); return; }
+  popup.document.open();
+  popup.document.write(printHtml);
+  popup.document.close();
+  popup.focus();
+  toast('새 창에서 인쇄 버튼을 눌러 PDF로 저장하세요');
 }
 
 function exportSelectedArticles(format){
