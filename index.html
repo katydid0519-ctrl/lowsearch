@@ -106,6 +106,7 @@ aside.collapsed *{display:none;}
 .site-cat{font-size:9px;font-weight:700;color:var(--text-dim);letter-spacing:.5px;padding:6px 8px 2px;text-transform:uppercase;}
 .site-cat:hover{background:var(--surface2);border-radius:4px;color:var(--accent);}
 main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.content-area{flex:1;overflow-y:auto;background:var(--bg);}
 .search-wrap{padding:10px 18px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
 .mode-btn{padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;font-family:inherit;transition:all .12s;}
 .mode-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(240,165,0,.08);}
@@ -382,6 +383,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
   </aside>
 
   <main>
+    <div id="articleStickyHeader" style="display:none;position:relative;z-index:30;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;"></div>
     <div class="content-area" id="contentArea">
       <div class="state-box" id="initState" style="align-items:flex-start;padding:0;height:100%;display:flex;flex-direction:column;width:100%;">
         <div class="db-grid">
@@ -474,7 +476,6 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
           </div>
         </div>
       </div>
-      <div id="articleStickyHeader" style="display:none;position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--border);"></div>
       <div id="resultArea" style="display:none;padding:0 22px 20px;"></div>
     </div>
   </main>
@@ -1543,63 +1544,49 @@ function buildPdfHtml(articles, lawName){
   return body;
 }
 
-// ── PDF 내보내기 — html2pdf (한글 폰트 지원) ─────────────────
+// ── PDF 내보내기 — 현재 페이지 DOM에 직접 렌더 (폰트 재사용) ─
 function exportToPdf(articles, lawName, fileName){
   if(typeof html2pdf === 'undefined'){ toast('PDF 라이브러리 로드 실패'); return; }
   toast('PDF 생성 중...');
 
-  const html = buildPdfHtml(articles, lawName);
-  const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
-    <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Noto Sans KR',sans-serif;width:794px;}</style>
-    </head><body>${html}</body></html>`;
+  const el = document.createElement('div');
+  el.style.cssText = [
+    'position:absolute',
+    'left:-9999px',
+    'top:0',
+    'width:794px',
+    'background:#ffffff',
+    'font-family:"Noto Sans KR","Malgun Gothic",sans-serif',
+    'color:#1a1a1a'
+  ].join(';');
+  el.innerHTML = buildPdfHtml(articles, lawName);
+  document.body.appendChild(el);
 
-  // Blob URL로 만들어 숨겨진 iframe에 로드
-  const blob = new Blob([fullHtml], {type:'text/html;charset=utf-8'});
-  const blobUrl = URL.createObjectURL(blob);
-
-  const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;top:0;left:0;width:794px;height:2000px;border:none;opacity:0;pointer-events:none;z-index:-1;';
-  document.body.appendChild(iframe);
-  iframe.src = blobUrl;
-
-  iframe.onload = function(){
-    // 폰트 로드 대기 후 캡처
-    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-    Promise.all([
-      iframe.contentDocument.fonts ? iframe.contentDocument.fonts.ready : Promise.resolve(),
-      new Promise(r => setTimeout(r, 1500)) // 폰트 로딩 여유
-    ]).then(()=>{
-      // iframe 높이를 실제 컨텐츠에 맞게 조정
-      const scrollH = iframeDoc.body.scrollHeight;
-      iframe.style.height = scrollH + 'px';
-
-      return html2pdf().set({
-        margin: [12,12,12,12],
+  // 렌더 완료 후 캡처
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      html2pdf().set({
+        margin: [12, 12, 12, 12],
         filename: fileName + '.pdf',
-        image: { type:'jpeg', quality:0.98 },
+        image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
           scale: 2,
           useCORS: true,
           allowTaint: true,
           logging: false,
           windowWidth: 794,
-          height: scrollH,
-          scrollY: 0,
-          scrollX: 0
+          scrollY: 0
         },
-        jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
-      }).from(iframeDoc.body).save();
-    }).then(()=>{
-      document.body.removeChild(iframe);
-      URL.revokeObjectURL(blobUrl);
-      toast('PDF 저장 완료');
-    }).catch(e=>{
-      document.body.removeChild(iframe);
-      URL.revokeObjectURL(blobUrl);
-      toast('PDF 생성 실패: ' + e.message);
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      }).from(el).save().then(()=>{
+        if(document.body.contains(el)) document.body.removeChild(el);
+        toast('PDF 저장 완료');
+      }).catch(e=>{
+        if(document.body.contains(el)) document.body.removeChild(el);
+        toast('PDF 오류: ' + e.message);
+      });
     });
-  };
+  });
 }
 
 function exportSelectedArticles(format){
