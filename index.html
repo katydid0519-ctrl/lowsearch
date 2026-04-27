@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>국가법령 검색기 v7.0</title>
+<title>국가법령 검색기</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&display=swap');
@@ -40,7 +40,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 header{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:30px;z-index:101;box-shadow:0 1px 0 var(--border);}
 [data-theme="dark"] header{background:#1a1d1f;}
 .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;}
-.logo-badge{background:#0b4a8b;border-radius:4px;padding:4px 9px;font-size:11px;font-weight:800;color:#fff;font-family:'Manrope',sans-serif;letter-spacing:.5px;}
+.logo-badge{width:22px;height:22px;border-radius:50%;padding:0;font-size:0;background:linear-gradient(135deg,#d71920 0 48%,#fff 48% 52%,#0047a0 52%);border:1px solid rgba(0,0,0,.18);display:inline-block;position:relative;flex-shrink:0;}
+.logo-badge::after{content:'';position:absolute;inset:5px;border-radius:50%;background:rgba(255,255,255,.18);}
 .logo-sub{color:var(--text-dim);font-weight:400;font-size:11px;letter-spacing:.3px;}
 .logo-title{font-family:'Manrope',sans-serif;font-weight:700;font-size:15px;letter-spacing:-.3px;}
 .header-tabs{display:flex;gap:2px;}
@@ -341,6 +342,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 
 /* 국가법령정보센터 톤앤매너 */
 #globalSearchBar{top:88px!important;background:#fff!important;border-top:1px solid #eef2f6;border-bottom:1px solid #cfd9e6!important;box-shadow:0 2px 8px rgba(31,47,67,.04);}
+#articleStickyHeader{position:sticky!important;top:147px;z-index:89!important;background:#f5f7fb!important;box-shadow:0 2px 8px rgba(31,47,67,.06);}
 .search-wrap{background:#fff;border-bottom:1px solid #d7e0eb;padding:9px 20px;}
 .mode-btn,.db-mode-btn{border-radius:4px;background:#fff;border-color:#cbd6e3;color:#445b75;font-weight:700;}
 .mode-btn.active,.db-mode-active{background:#0b4a8b!important;border-color:#0b4a8b!important;color:#fff!important;}
@@ -393,7 +395,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 @media(max-width:1100px){.db-col-center{grid-template-columns:1fr;grid-template-areas:"safety" "signal" "msds" "amendments";}.db-grid{grid-template-columns:1fr;}}
 @media(max-width:900px){.db-col-right{display:grid;grid-template-columns:1fr 1fr;gap:14px;}}
 @media(max-width:600px){.db-col-right{grid-template-columns:1fr;}.db-quick-tags{display:none;}}
-@media(max-width:768px){.gov-banner{padding:0 12px;font-size:11px;}header{top:30px;padding:0 12px;}#globalSearchBar{top:88px!important;}aside{position:fixed;left:0;top:88px;bottom:0;z-index:50;box-shadow:2px 0 10px rgba(0,0,0,.1);}aside.collapsed{width:0;min-width:0;}.right-sidebar{position:fixed;right:0;top:88px;bottom:0;z-index:50;}.modal-content{max-width:95%!important;}}
+@media(max-width:768px){.gov-banner{padding:0 12px;font-size:11px;}header{top:30px;padding:0 12px;}#globalSearchBar{top:88px!important;}#articleStickyHeader{top:147px;}aside{position:fixed;left:0;top:88px;bottom:0;z-index:50;box-shadow:2px 0 10px rgba(0,0,0,.1);}aside.collapsed{width:0;min-width:0;}.right-sidebar{position:fixed;right:0;top:88px;bottom:0;z-index:50;}.modal-content{max-width:95%!important;}}
 </style>
 </head>
 <body>
@@ -404,7 +406,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 <header>
   <div class="logo">
     <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="왼쪽 패널 열기 또는 닫기">☰</button>
-    <span class="logo-badge">법령</span>
+    <span class="logo-badge" aria-hidden="true"></span>
     <span class="logo-title" onclick="goHome()" style="cursor:pointer;">국가법령 검색기</span>
     <button id="globalBackBtn" onclick="globalBack()" aria-label="이전 화면으로 이동"
       style="display:none;align-items:center;gap:4px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-size:12px;cursor:pointer;padding:4px 10px;transition:all .15s;font-family:inherit;"
@@ -451,7 +453,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
       <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--text-muted);margin-bottom:10px;">캘린더</div>
       <div id="hwCalendarBody"><div class="hw-loading">로딩 중...</div></div>
     </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:12px 14px;flex:1;overflow-y:auto;box-shadow:var(--shadow);">
+    <div id="siteLinksWidget" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:12px 14px;flex:1;overflow-y:auto;box-shadow:var(--shadow);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
         <span style="font-size:11px;font-weight:700;color:var(--text-muted);">안전보건환경 사이트</span>
         <button class="site-toggle-btn" type="button" onclick="toggleSiteLinks()" aria-label="안전보건환경 사이트 접기 또는 펼치기">접기/펼치기</button>
@@ -499,7 +501,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
                   <span class="hw-src">KOSHA</span>
                 </div>
                 <div style="display:flex;gap:6px;margin-bottom:8px;">
-                  <input type="text" id="msdsInput" class="art-kw-input" placeholder="물질명 입력 (예: 황산, 벤젠, 톨루엔)" style="flex:1;font-size:12px;padding:7px 10px;" onkeydown="if(event.key==='Enter')doMsdsSearch()">
+                  <input type="text" id="msdsInput" class="art-kw-input" placeholder="물질명 또는 CAS No. (예: 황산, 7664-93-9)" style="flex:1;font-size:12px;padding:7px 10px;" onkeydown="if(event.key==='Enter')doMsdsSearch()">
                   <button onclick="doMsdsSearch()" class="btn-search" style="padding:7px 16px;font-size:12px;">검색</button>
                 </div>
                 <div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap;">
@@ -834,6 +836,15 @@ const LS_CUSTOM_LINKS='lv7_custom_links';
 let customLinks=JSON.parse(localStorage.getItem(LS_CUSTOM_LINKS)||'[]');
 let siteLinksVisible=localStorage.getItem('lv7_sites_visible')!=='0';
 
+function syncSiteLinksWidget(){
+  const area=document.getElementById('siteLinksArea');
+  const widget=document.getElementById('siteLinksWidget');
+  if(area)area.style.display=siteLinksVisible?'':'none';
+  if(widget){
+    widget.style.flex=siteLinksVisible?'1':'0 0 auto';
+    widget.style.overflowY=siteLinksVisible?'auto':'visible';
+  }
+}
 function renderSiteLinks(){
   const openCats=JSON.parse(localStorage.getItem('lv7_site_cats')||'{}');
   let html='';
@@ -850,10 +861,10 @@ function renderSiteLinks(){
     if(isOpen){customLinks.forEach((s,idx)=>{customHtml+=`<a class="site-link" href="${eh(s.url)}" target="_blank"><span class="site-link-name">${eh(s.name)}</span><span class="site-link-del" onclick="event.preventDefault();event.stopPropagation();removeCustomLink(${idx});">삭제</span></a>`;});}
   }
   document.getElementById('customSiteLinks').innerHTML=customHtml;
-  document.getElementById('siteLinksArea').style.display=siteLinksVisible?'':'none';
+  syncSiteLinksWidget();
 }
 function toggleSiteCat(catName){const openCats=JSON.parse(localStorage.getItem('lv7_site_cats')||'{}');openCats[catName]=!openCats[catName];localStorage.setItem('lv7_site_cats',JSON.stringify(openCats));renderSiteLinks();}
-function toggleSiteLinks(){siteLinksVisible=!siteLinksVisible;localStorage.setItem('lv7_sites_visible',siteLinksVisible?'1':'0');document.getElementById('siteLinksArea').style.display=siteLinksVisible?'':'none';}
+function toggleSiteLinks(){siteLinksVisible=!siteLinksVisible;localStorage.setItem('lv7_sites_visible',siteLinksVisible?'1':'0');syncSiteLinksWidget();}
 function openAddLinkModal(){document.getElementById('customLinkName').value='';document.getElementById('customLinkUrl').value='';document.getElementById('addLinkModal').classList.add('open');setTimeout(()=>document.getElementById('customLinkName').focus(),100);}
 function closeAddLinkModal(){document.getElementById('addLinkModal').classList.remove('open');}
 function addCustomLink(){const n=document.getElementById('customLinkName').value.trim();let u=document.getElementById('customLinkUrl').value.trim();if(!n||!u){toast('사이트명과 URL을 모두 입력하세요');return;}if(!u.startsWith('http'))u='https://'+u;customLinks.push({name:n,url:u});localStorage.setItem(LS_CUSTOM_LINKS,JSON.stringify(customLinks));renderSiteLinks();closeAddLinkModal();toast(n+' 추가됨');}
@@ -1632,8 +1643,17 @@ function openArticleModal(sid){
   // 관련 조문 — linkifyText에서 수집한 매치 기반으로 법령명 포함 표시
   if(allMatches.length){
     // 중복 제거: 같은 법령명+조문번호 조합은 한 번만
+    const preferredByArticle = new Map();
+    allMatches.forEach(m => {
+      const cur = preferredByArticle.get(m.artNum);
+      const score = (m.lawName && m.lawName !== lawNameForLink) ? 2 : 1;
+      const curScore = cur && cur.lawName && cur.lawName !== lawNameForLink ? 2 : 1;
+      if(!cur || score > curScore) preferredByArticle.set(m.artNum,m);
+    });
     const seen = new Set();
     const uniq = allMatches.filter(m => {
+      const preferred = preferredByArticle.get(m.artNum);
+      if(preferred && preferred.lawName !== m.lawName && m.lawName === lawNameForLink) return false;
       const key = (m.lawName||'') + '|' + m.artNum;
       if(seen.has(key)) return false;
       seen.add(key);
@@ -2444,10 +2464,16 @@ async function doMsdsSearch(){
   const area=document.getElementById('msdsResultArea');
   area.innerHTML='<div class="hw-loading">검색 중...</div>';
   try{
-    const xml=await publicApiFetch('https://apis.data.go.kr/B552468/msdschem/getChemList',{serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',searchWrd:kw,searchCnd:0,numOfRows:10,pageNo:1});
+    const isCas=/^\d{2,7}-\d{2}-\d$/.test(kw);
+    let xml=await publicApiFetch('https://apis.data.go.kr/B552468/msdschem/getChemList',{serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',searchWrd:kw,searchCnd:isCas?1:0,numOfRows:10,pageNo:1});
     if(!xml)throw new Error('응답없음');
     let items=Array.from(xml.querySelectorAll('item'));
     if(!items.length)items=Array.from(xml.querySelectorAll('items > *'));
+    if(isCas&&!items.length){
+      xml=await publicApiFetch('https://apis.data.go.kr/B552468/msdschem/getChemList',{serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',searchWrd:kw.replace(/-/g,''),searchCnd:1,numOfRows:10,pageNo:1});
+      items=xml?Array.from(xml.querySelectorAll('item')):[];
+      if(!items.length&&xml)items=Array.from(xml.querySelectorAll('items > *'));
+    }
     if(!items.length){area.innerHTML='<div class="hw-err">"'+eh(kw)+'" 검색결과 없음</div>';return;}
     area.innerHTML='<div style="font-size:10px;color:var(--text-dim);margin-bottom:8px;">"'+eh(kw)+'" '+items.length+'건</div>';
     items.forEach(item=>{
@@ -2931,24 +2957,4 @@ async function loadArticleHistory(){
   }catch(e){el.innerHTML='<div class="ai-summary-box"><div class="ai-label">📜 변경이력</div><div>조회 실패: '+eh(e.message)+'</div></div>';}
 }
 
-async function compareWithVersion(idx){
-  if(!currentModalArticle)return;
-  const v=window._historyVersions&&window._historyVersions[idx];
-  if(!v){toast('버전 정보 없음');return;}
-  const el=document.getElementById('modalAiSummary');
-  el.innerHTML='<div class="ai-summary-box"><div class="ai-label">📜 비교 중...</div><div class="ai-loading">과거 버전 조문 로드 중...</div></div>';
-  try{
-    const oc=getOC();
-    const data=await lawApiFetch('service',{OC:oc,target:'law',MST:v.mst,type:'JSON'});
-    const oldArticles=parseArticlesJSON(data,v.nm,v.mst);
-    const curArt=currentModalArticle;
-    const oldArt=oldArticles.find(function(a){return a.num===curArt.num;});
-    let html='<div class="ai-summary-box"><div class="ai-label">📜 '+eh(curArt.num)+' — 현행 vs '+eh(v.efDate)+'</div><div class="history-diff">';
-    if(!oldArt)html+='<div class="diff-added">이 조문은 '+eh(v.efDate)+' 시점에 존재하지 않았습니다 (신설된 조문)</div>';
-    else{const oldText=oldArt.content.trim();const newText=curArt.content.trim();if(oldText===newText)html+='<div style="color:var(--text-muted);font-size:12px;padding:8px;">변경 없음</div>';else{html+='<div style="margin-bottom:8px;font-size:11px;font-weight:600;color:var(--text-dim);">과거 ('+eh(v.efDate)+')</div><div class="diff-removed">'+eh(oldText.substring(0,600))+'</div><div style="margin:10px 0 8px;font-size:11px;font-weight:600;color:var(--text-dim);">현행</div><div class="diff-added">'+eh(newText.substring(0,600))+'</div>';}}
-    html+='</div></div>';el.innerHTML=html;
-  }catch(e){el.innerHTML='<div class="ai-summary-box"><div class="ai-label">📜 비교 실패</div><div>'+eh(e.message)+'</div></div>';}
-}
-</script>
-</body>
-</html>
+async function compareW
