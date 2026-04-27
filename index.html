@@ -342,7 +342,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 
 /* 국가법령정보센터 톤앤매너 */
 #globalSearchBar{top:88px!important;background:#fff!important;border-top:1px solid #eef2f6;border-bottom:1px solid #cfd9e6!important;box-shadow:0 2px 8px rgba(31,47,67,.04);}
-#articleStickyHeader{position:sticky!important;top:147px;z-index:89!important;background:#f5f7fb!important;box-shadow:0 2px 8px rgba(31,47,67,.06);}
+#articleStickyHeader{position:sticky!important;top:0;z-index:89!important;background:#f5f7fb!important;box-shadow:0 2px 8px rgba(31,47,67,.06);}
 .search-wrap{background:#fff;border-bottom:1px solid #d7e0eb;padding:9px 20px;}
 .mode-btn,.db-mode-btn{border-radius:4px;background:#fff;border-color:#cbd6e3;color:#445b75;font-weight:700;}
 .mode-btn.active,.db-mode-active{background:#0b4a8b!important;border-color:#0b4a8b!important;color:#fff!important;}
@@ -395,7 +395,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 @media(max-width:1100px){.db-col-center{grid-template-columns:1fr;grid-template-areas:"safety" "signal" "msds" "amendments";}.db-grid{grid-template-columns:1fr;}}
 @media(max-width:900px){.db-col-right{display:grid;grid-template-columns:1fr 1fr;gap:14px;}}
 @media(max-width:600px){.db-col-right{grid-template-columns:1fr;}.db-quick-tags{display:none;}}
-@media(max-width:768px){.gov-banner{padding:0 12px;font-size:11px;}header{top:30px;padding:0 12px;}#globalSearchBar{top:88px!important;}#articleStickyHeader{top:147px;}aside{position:fixed;left:0;top:88px;bottom:0;z-index:50;box-shadow:2px 0 10px rgba(0,0,0,.1);}aside.collapsed{width:0;min-width:0;}.right-sidebar{position:fixed;right:0;top:88px;bottom:0;z-index:50;}.modal-content{max-width:95%!important;}}
+@media(max-width:768px){.gov-banner{padding:0 12px;font-size:11px;}header{top:30px;padding:0 12px;}#globalSearchBar{top:88px!important;}aside{position:fixed;left:0;top:88px;bottom:0;z-index:50;box-shadow:2px 0 10px rgba(0,0,0,.1);}aside.collapsed{width:0;min-width:0;}.right-sidebar{position:fixed;right:0;top:88px;bottom:0;z-index:50;}.modal-content{max-width:95%!important;}}
 </style>
 </head>
 <body>
@@ -474,8 +474,8 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
   </aside>
 
   <main>
-    <div id="articleStickyHeader" style="display:none;position:relative;z-index:30;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;"></div>
     <div class="content-area" id="contentArea">
+      <div id="articleStickyHeader" style="display:none;position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;"></div>
       <div class="state-box" id="initState" style="align-items:flex-start;padding:0;height:100%;display:flex;flex-direction:column;width:100%;">
         <div class="db-grid">
           <div class="db-col-center">
