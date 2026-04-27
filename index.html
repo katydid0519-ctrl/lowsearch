@@ -342,7 +342,8 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 
 /* 국가법령정보센터 톤앤매너 */
 #globalSearchBar{top:88px!important;background:#fff!important;border-top:1px solid #eef2f6;border-bottom:1px solid #cfd9e6!important;box-shadow:0 2px 8px rgba(31,47,67,.04);}
-#articleStickyHeader{position:sticky!important;top:0;z-index:89!important;background:#f5f7fb!important;box-shadow:0 2px 8px rgba(31,47,67,.06);}
+#articleStickyHeader{position:fixed!important;z-index:89!important;background:#f5f7fb!important;box-shadow:0 2px 8px rgba(31,47,67,.06);display:none;}
+#globalClock{margin-left:auto;white-space:nowrap;font-size:11px;font-weight:700;color:#445b75;background:#f5f8fc;border:1px solid #cbd6e3;border-radius:4px;padding:6px 10px;font-family:'JetBrains Mono','Noto Sans KR',monospace;}
 .search-wrap{background:#fff;border-bottom:1px solid #d7e0eb;padding:9px 20px;}
 .mode-btn,.db-mode-btn{border-radius:4px;background:#fff;border-color:#cbd6e3;color:#445b75;font-weight:700;}
 .mode-btn.active,.db-mode-active{background:#0b4a8b!important;border-color:#0b4a8b!important;color:#fff!important;}
@@ -434,13 +435,14 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
       <input class="db-search-input" id="searchInput" placeholder="법령명 검색..." onkeydown="if(event.key==='Enter')doSearch()" style="padding:8px 12px;">
       <button class="db-search-btn" onclick="doSearch()" style="border-radius:0;padding:8px 16px;">검색</button>
     </div>
-    <div style="display:flex;gap:5px;flex-wrap:nowrap;flex:1;">
+    <div style="display:flex;gap:5px;flex-wrap:nowrap;flex:0 1 auto;">
       <span class="db-qtag" onclick="heroSearch('산업안전보건법')">#산업안전법</span>
       <span class="db-qtag" onclick="heroSearch('중대재해 처벌 등에 관한 법률')">#중대재해</span>
       <span class="db-qtag" onclick="heroSearch('화학물질관리법')">#화관법</span>
       <span class="db-qtag" onclick="heroSearch('위험물안전관리법')">#위험물</span>
       <span class="db-qtag" onclick="heroSearch('대기환경보전법')">#대기환경</span>
     </div>
+    <div id="globalClock" aria-label="현재 날짜와 시간"></div>
   </div>
 </div>
 
@@ -749,6 +751,29 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 function eh(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function er(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
+function updateGlobalClock(){
+  const el=document.getElementById('globalClock');if(!el)return;
+  const now=new Date();
+  el.textContent=now.toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit',weekday:'short'})+' '+now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+}
+function resetArticleToolbarPin(){
+  const area=document.getElementById('resultArea');
+  if(area)area.style.paddingTop='';
+}
+function updateArticleToolbarPin(){
+  const sh=document.getElementById('articleStickyHeader');
+  const content=document.getElementById('contentArea');
+  const area=document.getElementById('resultArea');
+  if(!sh||!content||!area||sh.style.display==='none')return;
+  const bar=document.getElementById('globalSearchBar');
+  const contentRect=content.getBoundingClientRect();
+  const top=bar?Math.max(0,bar.getBoundingClientRect().bottom):0;
+  sh.style.top=top+'px';
+  sh.style.left=contentRect.left+'px';
+  sh.style.width=contentRect.width+'px';
+  sh.style.right='auto';
+  area.style.paddingTop=(sh.offsetHeight+8)+'px';
+}
 function showLoading(msg){document.getElementById('resultArea').style.display='block';document.getElementById('initState').style.display='none';document.getElementById('resultArea').innerHTML=`<div class="state-box"><div class="spinner"></div><div class="state-title">${eh(msg)}</div></div>`;}
 function showError(msg){document.getElementById('resultArea').style.display='block';document.getElementById('resultArea').innerHTML=`<div class="state-box"><div class="state-title">오류</div><div class="state-desc">${eh(msg)}</div></div>`;}
 
@@ -818,6 +843,10 @@ let selectedArticles=new Set();
 let currentModalArticle=null;
 
 window.onload=()=>{
+  updateGlobalClock();setInterval(updateGlobalClock,30000);
+  window.addEventListener('resize',updateArticleToolbarPin);
+  window.addEventListener('scroll',updateArticleToolbarPin,{passive:true});
+  document.getElementById('contentArea')?.addEventListener('scroll',updateArticleToolbarPin,{passive:true});
   updateFavList();updateLawFavList();updateCounts();
   loadSearchHistory();renderSiteLinks();initHomeWidgets();
 };
@@ -1352,6 +1381,7 @@ function renderLawList(){
   const stickyHdr=document.getElementById('articleStickyHeader');
   const layout=document.querySelector('.layout');if(layout)layout.classList.remove('article-mode');
   if(stickyHdr)stickyHdr.style.display='none';
+  resetArticleToolbarPin();
   document.getElementById('initState').style.display='none';
   area.style.display='block';
   if(!_navStack.length||_navStack[_navStack.length-1]!=='홈'){_navStack.length=0;pushNav('홈');}
@@ -1414,6 +1444,7 @@ function renderArticles(){
   area.style.display='block';
   const showArticleTools=!!currentLaw;
   stickyHdr.style.display=showArticleTools?'block':'none';
+  if(!showArticleTools)resetArticleToolbarPin();
   if(!_navStack.length||_navStack[_navStack.length-1]!=='홈'){_navStack.length=0;pushNav('홈');}
   const kw=currentKeyword;
   const hl=str=>kw?eh(str).replace(new RegExp(er(kw),'gi'),m=>`<mark>${m}</mark>`):eh(str);
@@ -1449,6 +1480,7 @@ function renderArticles(){
   </div>`;
   }
   stickyHdr.innerHTML=stickyHtml;
+  requestAnimationFrame(updateArticleToolbarPin);
 
   // ── 조문 목록 ──
   let html=`<div class="status-bar"><span class="status-text">조문 <span class="status-count">${total}</span>개</span><span class="status-text">${currentPage} / ${totalPages} 페이지</span></div>`;
@@ -1536,6 +1568,7 @@ function toggleArticleSelection(id,checked){if(checked)selectedArticles.add(id);
 function goBack(){
   const sh=document.getElementById('articleStickyHeader');
   if(sh)sh.style.display='none';
+  resetArticleToolbarPin();
   const layout=document.querySelector('.layout');if(layout)layout.classList.remove('article-mode');
   currentView='list';currentLaw=null;articleList=[];appendixList=[];filteredArticles=[];selectedArticles.clear();renderLawList();
 }
@@ -2854,6 +2887,7 @@ function goHome(){
   currentView='list';currentLaw=null;articleList=[];appendixList=[];filteredArticles=[];selectedArticles.clear();
   const layout=document.querySelector('.layout');if(layout)layout.classList.remove('article-mode');
   const sh=document.getElementById('articleStickyHeader');if(sh){sh.style.display='none';sh.innerHTML='';}
+  resetArticleToolbarPin();
   document.getElementById('resultArea').style.display='none';
   document.getElementById('initState').style.display='flex';
   document.getElementById('searchInput').value='';
