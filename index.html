@@ -129,6 +129,10 @@ button:disabled{cursor:not-allowed;}
 .site-cat:hover{background:var(--surface2);border-radius:4px;color:var(--accent);}
 main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .content-area{flex:1;overflow-y:auto;background:var(--bg);}
+.layout.article-mode{height:auto;min-height:calc(100vh - 147px);overflow:visible;align-items:flex-start;}
+.layout.article-mode main{overflow:visible;}
+.layout.article-mode .content-area{overflow:visible;}
+.layout.article-mode aside,.layout.article-mode .right-sidebar{position:sticky;top:147px;max-height:calc(100vh - 147px);}
 .search-wrap{padding:10px 18px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
 .mode-btn{padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;font-family:inherit;transition:all .12s;}
 .mode-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(240,165,0,.08);}
@@ -1350,6 +1354,7 @@ function renderLawFilterBar(visible,total){
 function renderLawList(){
   const area=document.getElementById('resultArea');
   const stickyHdr=document.getElementById('articleStickyHeader');
+  const layout=document.querySelector('.layout');if(layout)layout.classList.remove('article-mode');
   if(stickyHdr)stickyHdr.style.display='none';
   document.getElementById('initState').style.display='none';
   area.style.display='block';
@@ -1409,6 +1414,8 @@ function renderLawList(){
 function renderArticles(){
   const area=document.getElementById('resultArea');
   const stickyHdr=document.getElementById('articleStickyHeader');
+  const layout=document.querySelector('.layout');
+  if(layout)layout.classList.add('article-mode');
   document.getElementById('initState').style.display='none';
   area.style.display='block';
   const showArticleTools=!!currentLaw;
@@ -1535,9 +1542,10 @@ function toggleArticleSelection(id,checked){if(checked)selectedArticles.add(id);
 function goBack(){
   const sh=document.getElementById('articleStickyHeader');
   if(sh)sh.style.display='none';
+  const layout=document.querySelector('.layout');if(layout)layout.classList.remove('article-mode');
   currentView='list';currentLaw=null;articleList=[];appendixList=[];filteredArticles=[];selectedArticles.clear();renderLawList();
 }
-function goPage(p){currentPage=p;renderArticles();document.querySelector('.content-area').scrollTo(0,0);}
+function goPage(p){currentPage=p;renderArticles();window.scrollTo(0,0);}
 
 function ensureModalMemoForm(){
   const el=document.getElementById('modalMemoContainer');
@@ -2850,6 +2858,7 @@ function toggleRightSidebar(){const el=document.getElementById('rightSidebar');e
 
 function goHome(){
   currentView='list';currentLaw=null;articleList=[];appendixList=[];filteredArticles=[];selectedArticles.clear();
+  const layout=document.querySelector('.layout');if(layout)layout.classList.remove('article-mode');
   const sh=document.getElementById('articleStickyHeader');if(sh){sh.style.display='none';sh.innerHTML='';}
   document.getElementById('resultArea').style.display='none';
   document.getElementById('initState').style.display='flex';
