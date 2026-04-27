@@ -2957,4 +2957,24 @@ async function loadArticleHistory(){
   }catch(e){el.innerHTML='<div class="ai-summary-box"><div class="ai-label">📜 변경이력</div><div>조회 실패: '+eh(e.message)+'</div></div>';}
 }
 
-async function compareW
+async function compareWithVersion(idx){
+  if(!currentModalArticle)return;
+  const v=window._historyVersions&&window._historyVersions[idx];
+  if(!v){toast('버전 정보 없음');return;}
+  const el=document.getElementById('modalAiSummary');
+  el.innerHTML='<div class="ai-summary-box"><div class="ai-label">📜 비교 중...</div><div class="ai-loading">과거 버전 조문 로드 중...</div></div>';
+  try{
+    const oc=getOC();
+    const data=await lawApiFetch('service',{OC:oc,target:'law',MST:v.mst,type:'JSON'});
+    const oldArticles=parseArticlesJSON(data,v.nm,v.mst);
+    const curArt=currentModalArticle;
+    const oldArt=oldArticles.find(function(a){return a.num===curArt.num;});
+    let html='<div class="ai-summary-box"><div class="ai-label">📜 '+eh(curArt.num)+' — 현행 vs '+eh(v.efDate)+'</div><div class="history-diff">';
+    if(!oldArt)html+='<div class="diff-added">이 조문은 '+eh(v.efDate)+' 시점에 존재하지 않았습니다 (신설된 조문)</div>';
+    else{const oldText=oldArt.content.trim();const newText=curArt.content.trim();if(oldText===newText)html+='<div style="color:var(--text-muted);font-size:12px;padding:8px;">변경 없음</div>';else{html+='<div style="margin-bottom:8px;font-size:11px;font-weight:600;color:var(--text-dim);">과거 ('+eh(v.efDate)+')</div><div class="diff-removed">'+eh(oldText.substring(0,600))+'</div><div style="margin:10px 0 8px;font-size:11px;font-weight:600;color:var(--text-dim);">현행</div><div class="diff-added">'+eh(newText.substring(0,600))+'</div>';}}
+    html+='</div></div>';el.innerHTML=html;
+  }catch(e){el.innerHTML='<div class="ai-summary-box"><div class="ai-label">📜 비교 실패</div><div>'+eh(e.message)+'</div></div>';}
+}
+</script>
+</body>
+</html>
