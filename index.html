@@ -1887,6 +1887,10 @@ function normalizeSafetyDate(value){
   if(!m)return'';
   return m[1]+'.'+m[2].padStart(2,'0')+'.'+m[3].padStart(2,'0');
 }
+function dateFromBoardNo(value){
+  const m=String(value||'').match(/^(20\d{2})(\d{2})(\d{2})/);
+  return m?m[1]+'.'+m[2]+'.'+m[3]:'';
+}
 function safetyDateValue(value){
   const d=normalizeSafetyDate(value);
   return d?Number(d.replace(/\D/g,'')):0;
@@ -1974,12 +1978,12 @@ async function loadKoshaSafetyWidget(type){
     ];
     let items=[];
     try{
-      const data=await publicApiFetch('https://apis.data.go.kr/B552468/disaster_api02/getDisaster_api02',{serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',callApiId:1060,numOfRows:5,pageNo:1});
+      const data=await publicApiFetch('http://apis.data.go.kr/B552468/disaster_api02/getdisaster_api02',{serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',callApiId:1060,numOfRows:5,pageNo:1,_type:'json',business:'건설업'});
       const raw=data?.body?.items?.item||findArray(data)||[];
       const arr=Array.isArray(raw)?raw:(raw?[raw]:[]);
       arr.slice(0,5).forEach(item=>{
         const title=item.keyword||item.title||'';
-        const date=normalizeSafetyDate(item.regDate||item.date||item.contents||'');
+        const date=normalizeSafetyDate(item.regDate||item.date||item.contents||'')||dateFromBoardNo(item.boardno);
         const desc=item.contents||'';
         if(title)items.push({title,date,desc,boardno:item.boardno||''});
       });
@@ -2002,15 +2006,15 @@ async function loadKoshaSafetyWidget(type){
     el.innerHTML=html;
   }else{
     try{
-      const data=await publicApiFetch('https://apis.data.go.kr/B552468/news_api02/getNews_api02',{serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',callApiId:1040,numOfRows:5,pageNo:1});
+      const data=await publicApiFetch('http://apis.data.go.kr/B552468/news_api02/getNews_api02',{serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',callApiId:1040,numOfRows:5,pageNo:1,_type:'json'});
       const raw=data?.body?.items?.item||findArray(data)||[];
       const arr=Array.isArray(raw)?raw:(raw?[raw]:[]);
       if(!arr.length)throw new Error('데이터 없음');
       el.innerHTML=arr.slice(0,5).map(item=>{
         const title=item.keyword||item.title||'내용 확인';
-        const dateMatch=(item.contents||'').match(/\d{4}-\d{2}-\d{2}/);
-        const date=dateMatch?dateMatch[0]:'';
-        return '<div class="hw-list-item" style="cursor:pointer;" onclick="openKoshaPopup(this)" data-title="'+eh(title)+'" data-contents="'+eh(item.contents||'')+'" data-boardno="'+eh(item.boardno||'')+'" data-type="fatality" data-date="'+eh(date)+'"><span class="hw-list-link"><span class="hw-list-title">'+eh(title)+'</span></span>'+(date?'<span class="hw-list-date">'+eh(date)+'</span>':'')+'</div>';
+        const boardno=item.boardno||item.arno||'';
+        const date=normalizeSafetyDate(item.regDate||item.date||item.contents||'')||dateFromBoardNo(boardno);
+        return '<div class="hw-list-item" style="cursor:pointer;" onclick="openKoshaPopup(this)" data-title="'+eh(title)+'" data-contents="'+eh(item.contents||'')+'" data-boardno="'+eh(boardno)+'" data-type="fatality" data-date="'+eh(date)+'"><span class="hw-list-link"><span class="hw-list-title">'+eh(title)+'</span></span>'+(date?'<span class="hw-list-date">'+eh(date)+'</span>':'')+'</div>';
       }).join('')+'<a href="https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2" target="_blank" class="hw-more-link">사망사고 더보기 →</a>';
     }catch(e){el.innerHTML='<div class="hw-err">데이터를 불러올 수 없습니다.<br><a href="https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2" target="_blank" class="hw-more-link">사망사고 게시판 →</a></div>';}
   }
