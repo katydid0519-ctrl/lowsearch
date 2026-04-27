@@ -8,43 +8,46 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&display=swap');
 :root{
-  --bg:#fdf8f5;--surface:#ffffff;--surface2:#faf2ed;--border:#edd9ce;--border2:#e4c9ba;
-  --accent:#c45e2a;--accent2:#d4733a;--accent-light:#e8834a;
-  --accent-soft:rgba(196,94,42,.1);--accent-glow:rgba(196,94,42,.18);
-  --warm1:#f4a06a;--warm2:#e87d45;--warm3:#c45e2a;
-  --text:#2d1f18;--text-muted:#6b4e3d;--text-dim:#a08070;
-  --radius:12px;--radius-lg:20px;--radius-xl:24px;
+  --bg:#f5f7fb;--surface:#ffffff;--surface2:#f1f5fb;--border:#d8e0ea;--border2:#c6d1df;
+  --accent:#0b4a8b;--accent2:#1769b3;--accent-light:#1f78c8;
+  --accent-soft:rgba(11,74,139,.08);--accent-glow:rgba(31,120,200,.18);
+  --warm1:#2f7dbf;--warm2:#1769b3;--warm3:#0b4a8b;
+  --text:#1f2f43;--text-muted:#4f6177;--text-dim:#7b8ca1;
+  --radius:8px;--radius-lg:10px;--radius-xl:12px;
   --modal-bg:#ffffff;
   --sidebar-w:240px;
-  --shadow:0 1px 3px rgba(100,40,10,.06),0 4px 16px rgba(100,40,10,.05);
-  --shadow-lg:0 4px 24px rgba(100,40,10,.12);
+  --shadow:0 1px 2px rgba(31,47,67,.05);
+  --shadow-lg:0 6px 18px rgba(31,47,67,.10);
 }
 [data-theme="dark"]{
-  --bg:#1a1210;--surface:#241a16;--surface2:#2e201a;--border:#3d2a22;--border2:#4a3228;
-  --accent:#e8834a;--accent2:#d4733a;--accent-light:#f4a06a;
-  --accent-soft:rgba(232,131,74,.12);--accent-glow:rgba(232,131,74,.2);
-  --warm1:#f4a06a;--warm2:#e87d45;--warm3:#c45e2a;
-  --text:#f5ede8;--text-muted:#c4a090;--text-dim:#7a5a4a;
-  --modal-bg:#241a16;
+  --bg:#101821;--surface:#162231;--surface2:#1e2c3d;--border:#2e4055;--border2:#3a5068;
+  --accent:#6eb6ff;--accent2:#4c9be8;--accent-light:#8ac6ff;
+  --accent-soft:rgba(110,182,255,.12);--accent-glow:rgba(110,182,255,.2);
+  --warm1:#8ac6ff;--warm2:#6eb6ff;--warm3:#4c9be8;
+  --text:#eef5fc;--text-muted:#c3d0df;--text-dim:#8799ad;
+  --modal-bg:#162231;
 }
 [data-theme="dark"] .logo-badge{color:#fff;}
-[data-theme="dark"] .btn-search{color:#000;}
+[data-theme="dark"] .btn-search{color:#fff;}
+[data-theme="dark"] .gov-banner{background:#0c131b;border-bottom-color:#243244;color:#c3d0df;}
 [data-theme="dark"] .article-card mark,[data-theme="dark"] .article-title-text mark{background:rgba(240,165,0,.35);color:#f0a500;}
 [data-theme="dark"] .chapter-section{background:#2a2a2a;}
 [data-theme="dark"] .page-btn.active{color:#000;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
-header{background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;z-index:100;box-shadow:0 1px 0 var(--border);}
+.gov-banner{height:30px;background:#eef3f8;border-bottom:1px solid #d9e2ec;color:#33465c;font-size:12px;display:flex;align-items:center;padding:0 24px;gap:8px;white-space:nowrap;}
+.gov-banner-mark{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#d71920 0 48%,#ffffff 48% 52%,#0047a0 52%);border:1px solid rgba(0,0,0,.08);display:inline-block;flex-shrink:0;}
+header{background:rgba(255,255,255,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:30px;z-index:100;box-shadow:0 1px 0 var(--border);}
 [data-theme="dark"] header{background:rgba(26,29,31,.92);}
 .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;}
-.logo-badge{background:linear-gradient(135deg,var(--accent-light),var(--accent));border-radius:8px;padding:4px 9px;font-size:11px;font-weight:800;color:#fff;font-family:'Manrope',sans-serif;letter-spacing:.5px;}
+.logo-badge{background:#0b4a8b;border-radius:4px;padding:4px 9px;font-size:11px;font-weight:800;color:#fff;font-family:'Manrope',sans-serif;letter-spacing:.5px;}
 .logo-sub{color:var(--text-dim);font-weight:400;font-size:11px;letter-spacing:.3px;}
 .logo-title{font-family:'Manrope',sans-serif;font-weight:700;font-size:15px;letter-spacing:-.3px;}
 .header-tabs{display:flex;gap:2px;}
 .tab-btn{padding:6px 14px;border-radius:8px;border:none;background:transparent;color:var(--text-muted);font-size:12px;cursor:pointer;font-family:'Inter',inherit;font-weight:500;transition:all .15s;}
 .tab-btn:hover{color:var(--text);background:var(--surface2);}
 .tab-btn.active{background:var(--accent-soft);color:var(--accent);font-weight:600;}
-.layout{display:flex;flex:1;height:calc(100vh - 110px);overflow:hidden;}
+.layout{display:flex;flex:1;height:calc(100vh - 140px);overflow:hidden;}
 aside{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--bg);border-right:none;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;transition:all .2s;}
 aside.collapsed{width:0;min-width:0;overflow:hidden;border-right:none;}
 aside.collapsed *{display:none;}
@@ -87,6 +90,11 @@ aside.collapsed *{display:none;}
 .btn-xs:hover{border-color:var(--accent);color:var(--accent);}
 .sidebar-toggle,.dark-toggle,.right-toggle,.btn-xs,.btn-fav,.modal-btn,.modal-nav-btn,.page-btn,.tab-btn,.db-mode-btn,.db-search-btn,.btn-search,.back-btn,.safety-tab-btn,.trend-tab-btn,.cal-nav{min-width:36px;min-height:36px;}
 button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--accent-light);outline-offset:2px;}
+button:not(:disabled),a[href],[onclick],label[for],.db-chip,.db-qtag,.cal-day,.site-cat,.hw-list-item,.accident-featured{cursor:pointer;}
+button:not(:disabled),a[href],[onclick],label{transition:border-color .15s,background-color .15s,color .15s,box-shadow .15s,transform .15s,opacity .15s;}
+button:not(:disabled):hover,a[href]:hover,label:hover,.db-chip:hover,.db-qtag:hover,.cal-day:hover,.site-cat:hover,.hw-list-item:hover,.accident-featured:hover{box-shadow:0 0 0 3px rgba(11,74,139,.08);}
+[onclick]:hover{filter:brightness(.985);}
+button:disabled{cursor:not-allowed;}
 .law-filter-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:12px;box-shadow:var(--shadow);}
 .law-filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
 .law-filter-select{background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;padding:8px 10px;font-family:inherit;min-height:36px;}
@@ -263,7 +271,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .db-qtag{padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:11px;color:var(--text-muted);cursor:pointer;transition:all .12s;white-space:nowrap;}
 .db-qtag:hover{border-color:var(--accent);color:var(--accent);background:rgba(196,94,42,.06);}
 .db-grid{display:grid;grid-template-columns:1fr 230px;gap:16px;padding:16px 20px;flex:1;align-items:start;width:100%;}
-.db-col-center{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;}
+.db-col-center{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"safety signal" "msds amendments";gap:14px;align-items:stretch;}
 .db-col-center-left{display:flex;flex-direction:column;gap:14px;}
 .db-col-center-right{display:flex;flex-direction:column;gap:14px;}
 .db-col-right{display:flex;flex-direction:column;gap:14px;}
@@ -280,6 +288,14 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .db-fav-title{color:var(--text-muted);line-height:1.4;flex:1;}
 .db-fav-law{font-size:9px;color:var(--text-dim);margin-top:1px;}
 .db-empty{color:var(--text-dim);font-size:11px;text-align:center;padding:16px 8px;line-height:1.6;}
+.amendment-list{display:flex;flex-direction:column;gap:7px;}
+.amendment-item{display:flex;align-items:flex-start;gap:9px;padding:8px 9px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;transition:all .12s;}
+.amendment-item:hover{border-color:var(--accent);background:var(--accent-soft);}
+.amendment-date{font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;color:#e74040;background:rgba(231,64,64,.08);border-radius:4px;padding:2px 5px;white-space:nowrap;flex-shrink:0;}
+.amendment-title{font-size:12px;font-weight:700;color:var(--text);line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.amendment-meta{font-size:10px;color:var(--text-dim);margin-top:2px;line-height:1.4;}
+.recent-chip{font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:4px;padding:2px 5px;white-space:nowrap;flex-shrink:0;}
+.recent-time{font-size:9px;color:var(--text-dim);margin-left:auto;white-space:nowrap;}
 .trend-tab-btn{flex:1;padding:5px 4px;border-radius:6px;border:none;background:transparent;color:var(--text-dim);font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;}
 .trend-tab-btn.active{background:var(--surface);color:var(--accent);box-shadow:0 1px 4px rgba(0,0,0,.08);}
 .trend-tab-btn:hover:not(.active){color:var(--text);}
@@ -318,17 +334,73 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .cal-event-dot{width:6px;height:6px;border-radius:50%;background:var(--accent-light);flex-shrink:0;}
 .cal-event-del{margin-left:auto;color:var(--text-dim);cursor:pointer;font-size:12px;line-height:1;}
 .cal-event-del:hover{color:#e74040;}
-@media(max-width:1100px){.db-col-center{grid-template-columns:1fr;}.db-grid{grid-template-columns:1fr;}}
+
+/* 국가법령정보센터 톤앤매너 */
+#globalSearchBar{top:88px!important;background:#fff!important;border-top:1px solid #eef2f6;border-bottom:1px solid #cfd9e6!important;box-shadow:0 2px 8px rgba(31,47,67,.04);}
+.search-wrap{background:#fff;border-bottom:1px solid #d7e0eb;padding:9px 20px;}
+.mode-btn,.db-mode-btn{border-radius:4px;background:#fff;border-color:#cbd6e3;color:#445b75;font-weight:700;}
+.mode-btn.active,.db-mode-active{background:#0b4a8b!important;border-color:#0b4a8b!important;color:#fff!important;}
+.law-search-box{background:#fff;border:2px solid #0b4a8b;border-radius:4px;box-shadow:none;}
+.law-search-box:focus-within{border-color:#0b4a8b;box-shadow:0 0 0 3px rgba(11,74,139,.12);}
+.btn-search,.db-search-btn{background:#0b4a8b;border-radius:4px;font-family:'Noto Sans KR',sans-serif;box-shadow:none;}
+.btn-search:hover,.db-search-btn:hover{background:#083766;transform:none;opacity:1;}
+.db-grid{background:#f5f7fb;}
+.db-card,.law-filter-panel,.law-card,.article-card,.market-card,.fav-card{border-radius:8px;box-shadow:0 1px 2px rgba(31,47,67,.05);}
+.db-card{border-top:2px solid #0b4a8b;padding:16px 16px 14px;}
+.db-card:hover{box-shadow:0 4px 12px rgba(31,47,67,.08);}
+.db-card-header{border-bottom:1px solid #d7e0eb;padding-bottom:9px;}
+.db-card-title{font-family:'Noto Sans KR',sans-serif;font-size:14px;color:#1f2f43;}
+.db-card-icon{color:#0b4a8b;}
+.db-card-icon,.site-link-icon{display:none!important;}
+.plain-iconless{font-size:12px;font-weight:700;}
+.btn-xs,.site-toggle-btn,.tab-btn,.sidebar-toggle,.dark-toggle,.right-toggle,.modal-btn,.modal-nav-btn,.page-btn,.cal-nav,.safety-tab-btn{border-radius:4px;background:#fff;border-color:#cbd6e3;color:#445b75;}
+.btn-xs:hover,.site-toggle-btn:hover,.tab-btn:hover,.sidebar-toggle:hover,.dark-toggle:hover,.right-toggle:hover,.modal-btn:hover,.modal-nav-btn:hover,.page-btn:hover,.cal-nav:hover{border-color:#0b4a8b;color:#0b4a8b;background:#f5f8fc;}
+.tab-btn.active{background:#e6f0fa;color:#0b4a8b;}
+.safety-tab-btn.active,.trend-tab-btn.active{background:#0b4a8b!important;color:#fff!important;border-color:#0b4a8b!important;box-shadow:none;}
+.trend-tab-btn{border-radius:4px;}
+.law-card{border-left:4px solid #d7e0eb;padding:14px 18px;box-shadow:none;}
+.law-card:hover{border-left-color:#0b4a8b;box-shadow:0 4px 12px rgba(31,47,67,.08);transform:none;}
+.law-card-type{border-radius:4px;background:#0b4a8b!important;}
+.law-card-name mark,.article-title-text mark,.para-item mark{background:#fff0b8;color:#1f2f43;}
+.law-card-dept,.trust-chip,.article-num,.law-badge,.db-fav-num,.recent-chip,.law-card-count{border-radius:4px;background:#e8f1fb;color:#0b4a8b;border-color:#c9dced;}
+.trust-chip.strong{background:#e8f1fb;color:#0b4a8b;border-color:#c9dced;}
+.chapter-section,.modal-chapter{background:#eef3f8;border-left-color:#0b4a8b;color:#33465c;}
+.article-card{border-radius:8px;box-shadow:none;}
+.article-card.selected{background:#f0f6fc;border-color:#0b4a8b;}
+.article-card.expanded{border-color:#0b4a8b;box-shadow:0 0 0 2px rgba(11,74,139,.10);}
+.para-item,.modal-meta,.modal-related,.compare-col{background:#f6f8fb;border-color:#d7e0eb;}
+.modal-content{border-radius:8px;box-shadow:0 18px 48px rgba(31,47,67,.2);}
+.modal-header{background:#fff;}
+.modal-btn.primary,.page-btn.active{background:#0b4a8b;border-color:#0b4a8b;color:#fff;}
+.hw-weather-card{background:linear-gradient(135deg,#0b3767 0%,#0b4a8b 55%,#1769b3 100%);border-radius:8px;box-shadow:0 4px 14px rgba(11,74,139,.18);padding:16px 22px 14px;}
+.accident-featured{background:#f7fbff;border-color:#c9dced;border-radius:6px;}
+.accident-featured:hover{background:#edf6ff;border-color:#0b4a8b;}
+.amendment-item{border-radius:6px;background:#fff;}
+.amendment-date{background:#fff3f3;color:#cf2e2e;border:1px solid #ffd2d2;}
+#hwSafety{grid-area:safety;}
+#hwSignal{grid-area:signal;}
+#hwMsds{grid-area:msds;}
+#hwAmendments{grid-area:amendments;}
+#hwSafety,#hwSignal{min-height:216px;}
+#hwMsds,#hwAmendments{min-height:166px;}
+#hwAmendmentBody{min-height:82px;display:flex;flex-direction:column;justify-content:center;}
+.article-search-snippet{padding:0 14px 12px 104px;font-size:12px;line-height:1.7;color:var(--text-muted);}
+.article-search-law{font-size:10px;color:var(--text-dim);margin-bottom:3px;}
+@media(max-width:1100px){.db-col-center{grid-template-columns:1fr;grid-template-areas:"safety" "signal" "msds" "amendments";}.db-grid{grid-template-columns:1fr;}}
 @media(max-width:900px){.db-col-right{display:grid;grid-template-columns:1fr 1fr;gap:14px;}}
 @media(max-width:600px){.db-col-right{grid-template-columns:1fr;}.db-quick-tags{display:none;}}
-@media(max-width:768px){aside{position:fixed;left:0;top:54px;bottom:0;z-index:50;box-shadow:2px 0 10px rgba(0,0,0,.1);}aside.collapsed{width:0;min-width:0;}.right-sidebar{position:fixed;right:0;top:54px;bottom:0;z-index:50;}.modal-content{max-width:95%!important;}}
+@media(max-width:768px){.gov-banner{padding:0 12px;font-size:11px;}header{top:30px;padding:0 12px;}#globalSearchBar{top:88px!important;}aside{position:fixed;left:0;top:88px;bottom:0;z-index:50;box-shadow:2px 0 10px rgba(0,0,0,.1);}aside.collapsed{width:0;min-width:0;}.right-sidebar{position:fixed;right:0;top:88px;bottom:0;z-index:50;}.modal-content{max-width:95%!important;}}
 </style>
 </head>
 <body>
+<div class="gov-banner">
+  <span class="gov-banner-mark" aria-hidden="true"></span>
+  <span>이 누리집은 대한민국 공식 전자정부 누리집의 법령정보 이용 흐름을 참고해 구성되었습니다.</span>
+</div>
 <header>
   <div class="logo">
     <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="왼쪽 패널 열기 또는 닫기">☰</button>
-    <span class="logo-badge">LAW</span>
+    <span class="logo-badge">법령</span>
     <span class="logo-title" onclick="goHome()" style="cursor:pointer;">국가법령 검색기</span>
     <button id="globalBackBtn" onclick="globalBack()" aria-label="이전 화면으로 이동"
       style="display:none;align-items:center;gap:4px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-size:12px;cursor:pointer;padding:4px 10px;transition:all .15s;font-family:inherit;"
@@ -336,20 +408,20 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
       onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
       ← 뒤로
     </button>
-    <span class="logo-sub">Industrial Safety v7.0</span>
+    <span class="logo-sub">Made by. PKM</span>
   </div>
   <div class="header-tabs">
-    <button class="tab-btn" onclick="switchTab('favorites')">⭐ 즐겨찾기</button>
+    <button class="tab-btn" onclick="switchTab('favorites')">즐겨찾기</button>
     <button class="tab-btn" onclick="switchTab('history')">히스토리</button>
-    <button class="dark-toggle" onclick="toggleDark()" aria-label="다크 모드 전환">🌙</button>
-    <button class="dark-toggle" onclick="openBackupModal()" aria-label="데이터 백업 및 복원 열기">💾</button>
-    <button class="right-toggle" onclick="toggleRightSidebar()" aria-label="시세 정보 패널 열기 또는 닫기">📊</button>
+    <button class="dark-toggle plain-iconless" onclick="toggleDark()" aria-label="다크 모드 전환">화면</button>
+    <button class="dark-toggle plain-iconless" onclick="openBackupModal()" aria-label="데이터 백업 및 복원 열기">백업</button>
+    <button class="right-toggle plain-iconless" onclick="toggleRightSidebar()" aria-label="시세 정보 패널 열기 또는 닫기">시세</button>
   </div>
 </header>
 
 <div id="globalSearchBar" style="background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;position:sticky;top:58px;z-index:90;backdrop-filter:blur(8px);">
   <div style="display:flex;align-items:center;gap:8px;">
-    <span style="font-size:17px;flex-shrink:0;">⚖️</span>
+    <span style="font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0;">검색</span>
     <button id="modeBtn1" onclick="setMode('law')" class="db-mode-btn db-mode-active" style="flex-shrink:0;">법령명</button>
     <button id="modeBtn2" onclick="setMode('keyword')" class="db-mode-btn" style="flex-shrink:0;">조문</button>
     <div style="width:680px;flex-shrink:0;display:flex;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .15s;" onfocusin="this.style.borderColor='var(--accent-light)'" onfocusout="this.style.borderColor='var(--border)'">
@@ -368,16 +440,16 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 
 <div class="layout">
   <aside id="sidebarEl" style="width:var(--sidebar-w);min-width:var(--sidebar-w);overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:10px;background:var(--bg);">
-    <div class="hw-weather-card" id="hwWeather" style="border-radius:16px;margin:0;flex-shrink:0;min-height:238px;overflow:hidden;">
+    <div class="hw-weather-card" id="hwWeather" style="border-radius:16px;margin:0;flex-shrink:0;min-height:214px;overflow:hidden;">
       <div id="hwWeatherBody"><div style="color:rgba(255,255,255,.5);font-size:11px;">날씨 로딩 중...</div></div>
     </div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;flex-shrink:0;box-shadow:var(--shadow);">
-      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--text-muted);margin-bottom:10px;">📅 캘린더</div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--text-muted);margin-bottom:10px;">캘린더</div>
       <div id="hwCalendarBody"><div class="hw-loading">로딩 중...</div></div>
     </div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:12px 14px;flex:1;overflow-y:auto;box-shadow:var(--shadow);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <span style="font-size:11px;font-weight:700;color:var(--text-muted);">🔗 안전보건환경 사이트</span>
+        <span style="font-size:11px;font-weight:700;color:var(--text-muted);">안전보건환경 사이트</span>
         <button class="site-toggle-btn" type="button" onclick="toggleSiteLinks()" aria-label="안전보건환경 사이트 접기 또는 펼치기">접기/펼치기</button>
       </div>
       <div id="siteLinksArea">
@@ -401,11 +473,10 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
       <div class="state-box" id="initState" style="align-items:flex-start;padding:0;height:100%;display:flex;flex-direction:column;width:100%;">
         <div class="db-grid">
           <div class="db-col-center">
-            <div class="db-col-center-left">
+            <div class="db-col-center-left" style="display:contents;">
               <div class="hw-card db-card db-card-main" id="hwSafety">
                 <div class="db-card-header" style="margin-bottom:12px;">
                   <div style="display:flex;align-items:center;gap:8px;">
-                    <span class="db-card-icon">🚨</span>
                     <span class="db-card-title">안전사고 현황</span>
                   </div>
                   <div style="display:flex;align-items:center;gap:6px;">
@@ -419,7 +490,6 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
               <div class="hw-card db-card" id="hwMsds">
                 <div class="db-card-header">
                   <div style="display:flex;align-items:center;gap:8px;">
-                    <span class="db-card-icon">🧪</span>
                     <span class="db-card-title">MSDS 화학물질 검색</span>
                   </div>
                   <span class="hw-src">KOSHA</span>
@@ -438,29 +508,45 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
                 <div id="msdsResultArea" style="max-height:260px;overflow-y:auto;"></div>
               </div>
             </div>
-            <div class="db-col-center-right">
+            <div class="db-col-center-right" style="display:contents;">
               <div class="hw-card db-card" id="hwSignal">
                 <div class="db-card-header" style="margin-bottom:10px;">
                   <div style="display:flex;align-items:center;gap:8px;">
-                    <span class="db-card-icon">📡</span>
                     <span class="db-card-title">트렌드 &amp; 뉴스</span>
                   </div>
-                  <button class="btn-xs" id="signalRefreshBtn" onclick="refreshTrendWidget()">↺</button>
+                  <button class="btn-xs" id="signalRefreshBtn" onclick="refreshTrendWidget()">새로고침</button>
                 </div>
                 <div style="display:flex;gap:3px;margin-bottom:12px;background:var(--surface2);border-radius:8px;padding:3px;">
-                  <button class="trend-tab-btn active" id="trendTab1" onclick="switchTrendTab('trend',this)">🔥 구글 트렌드</button>
-                  <button class="trend-tab-btn" id="trendTab2" onclick="switchTrendTab('safety',this)">🦺 안전뉴스</button>
-                  <button class="trend-tab-btn" id="trendTab3" onclick="switchTrendTab('labor',this)">⚖️ 노동뉴스</button>
+                  <button class="trend-tab-btn active" id="trendTab1" onclick="switchTrendTab('trend',this)">구글 트렌드</button>
+                  <button class="trend-tab-btn" id="trendTab2" onclick="switchTrendTab('safety',this)">안전뉴스</button>
+                  <button class="trend-tab-btn" id="trendTab3" onclick="switchTrendTab('labor',this)">노동뉴스</button>
                 </div>
                 <div id="hwSignalBody"><div class="hw-loading">로딩 중...</div></div>
+              </div>
+              <div class="hw-card db-card" id="hwAmendments">
+                <div class="db-card-header" style="margin-bottom:10px;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="db-card-title">개정예정 법령알림</span>
+                  </div>
+                  <button class="btn-xs" onclick="loadAmendmentWidget(true)" aria-label="개정예정 법령 새로고침">새로고침</button>
+                </div>
+                <div id="hwAmendmentBody"><div class="hw-loading">로딩 중...</div></div>
               </div>
             </div>
           </div>
           <div class="db-col-right">
+            <div class="hw-card db-card" id="dbRecentWidget">
+              <div class="db-card-header">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="db-card-title">최근 조회</span>
+                </div>
+                <button class="btn-xs" onclick="clearRecentViews()" aria-label="최근 조회 목록 비우기">비우기</button>
+              </div>
+              <div id="dbRecentBody" style="display:flex;flex-direction:column;gap:4px;"></div>
+            </div>
             <div class="hw-card db-card" id="dbFavWidget">
               <div class="db-card-header">
                 <div style="display:flex;align-items:center;gap:8px;">
-                  <span class="db-card-icon">⭐</span>
                   <span class="db-card-title">즐겨찾기 조문</span>
                 </div>
                 <button class="btn-xs" onclick="switchTab('favorites')">전체보기</button>
@@ -470,7 +556,6 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
             <div class="hw-card db-card" id="dbMemoWidget">
               <div class="db-card-header">
                 <div style="display:flex;align-items:center;gap:8px;">
-                  <span class="db-card-icon">📝</span>
                   <span class="db-card-title">최근 메모</span>
                 </div>
                 <button class="btn-xs" onclick="setFilter('memo',document.querySelector('.filter-item:nth-child(3)'))">전체보기</button>
@@ -480,7 +565,6 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
             <div class="hw-card db-card" id="dbLawFavWidget">
               <div class="db-card-header">
                 <div style="display:flex;align-items:center;gap:8px;">
-                  <span class="db-card-icon">📚</span>
                   <span class="db-card-title">법령 즐겨찾기</span>
                 </div>
               </div>
@@ -496,13 +580,13 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
   <aside id="rightSidebar" class="right-sidebar">
     <div class="side-sec" style="padding:10px 12px;">
       <div class="side-label" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0;">
-        📊 시세 정보
+        시세 정보
         <span style="font-size:9px;color:var(--text-dim);" id="marketTime"></span>
       </div>
     </div>
     <div class="market-scroll" id="marketData"><div class="fav-empty">로딩 중...</div></div>
     <div style="padding:8px 12px;border-top:1px solid var(--border);text-align:center;">
-      <button class="btn-xs" onclick="fetchMarketData()" style="width:100%;">🔄 새로고침</button>
+      <button class="btn-xs" onclick="fetchMarketData()" style="width:100%;">새로고침</button>
     </div>
   </aside>
 </div>
@@ -522,7 +606,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
     </div>
     <div id="koshaModalBody" style="padding:20px 24px;font-size:13px;line-height:1.85;color:var(--text-muted);white-space:pre-line;min-height:100px;"></div>
     <div style="padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;">
-      <a id="koshaModalLink" href="#" target="_blank" style="padding:7px 16px;background:var(--accent-light);color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;">🔗 원문 보기</a>
+      <a id="koshaModalLink" href="#" target="_blank" style="padding:7px 16px;background:var(--accent-light);color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;">원문 보기</a>
       <button onclick="closeKoshaModal()" style="padding:7px 16px;border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text-muted);background:transparent;cursor:pointer;">닫기</button>
     </div>
   </div>
@@ -538,12 +622,12 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
         <button onclick="exportModalArticle('pdf')" title="PDF 저장" aria-label="조문 PDF 저장"
           style="display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:7px;border:1.5px solid #e74040;background:#fff0f0;color:#e74040;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;"
           onmouseover="this.style.background='#e74040';this.style.color='#fff'" onmouseout="this.style.background='#fff0f0';this.style.color='#e74040'">
-          📕 PDF
+          PDF
         </button>
         <button onclick="exportModalArticle('csv')" title="CSV 저장" aria-label="조문 CSV 저장"
           style="display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:7px;border:1.5px solid #1d6f42;background:#f0fff6;color:#1d6f42;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;"
           onmouseover="this.style.background='#1d6f42';this.style.color='#fff'" onmouseout="this.style.background='#f0fff6';this.style.color='#1d6f42'">
-          📊 CSV
+          CSV
         </button>
         <button class="btn-xs" onclick="openArticlePopup()" style="font-size:13px;padding:4px 8px;" aria-label="조문 팝업으로 열기">↗</button>
         <button class="modal-close" onclick="closeArticleModal()" aria-label="조문 창 닫기">&times;</button>
@@ -559,15 +643,15 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
       <div id="modalTitle" style="display:none;"></div>
       <div id="modalMeta" style="display:none;"></div>
       <div class="modal-memo" id="modalMemoContainer" style="padding:16px 24px;border-top:1px solid var(--border);margin-top:16px;">
-        <div class="modal-memo-label">📝 메모 &amp; 태그</div>
+        <div class="modal-memo-label">메모 &amp; 태그</div>
         <textarea class="modal-memo-input" id="modalMemoInput" placeholder="메모..."></textarea>
         <input type="text" class="modal-tag-input" id="modalTagInput" placeholder="태그 입력 (쉼표로 구분)">
         <div class="modal-tags" id="modalTagsContainer"></div>
         <div class="modal-btn-group">
-          <button class="modal-btn fav" id="modalFavBtn" onclick="modalToggleFav()">☆ 즐겨찾기</button>
-          <button class="modal-btn" onclick="copyArticleReference()">📋 인용복사</button>
-          <button class="modal-btn" onclick="generateShareLink()">🔗 공유링크</button>
-          <button class="modal-btn" onclick="loadArticleHistory()">📜 변경이력</button>
+          <button class="modal-btn fav" id="modalFavBtn" onclick="modalToggleFav()">즐겨찾기 추가</button>
+          <button class="modal-btn" onclick="copyArticleReference()">인용복사</button>
+          <button class="modal-btn" onclick="generateShareLink()">공유링크</button>
+          <button class="modal-btn" onclick="loadArticleHistory()">변경이력</button>
           <button class="modal-btn" onclick="modalSaveMemo()">저장</button>
         </div>
       </div>
@@ -579,7 +663,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
       <a id="modalLawGoBtn" href="#" target="_blank"
         style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:700;text-decoration:none;cursor:pointer;transition:opacity .15s;white-space:nowrap;"
         onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-        🌐 법제처 원문
+        법제처 원문
       </a>
       <button class="modal-nav-btn" onclick="navigateArticle(1)" id="btnNextArt">다음 조문 ▶</button>
     </div>
@@ -589,7 +673,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 <!-- 비교 모달 -->
 <div class="modal-overlay" id="compareModal" onclick="if(event.target===this)closeCompareModal()">
   <div class="modal-content" style="max-width:1000px;">
-    <div class="modal-header"><div class="modal-title">🔀 조문 비교</div><button class="modal-close" onclick="closeCompareModal()">&times;</button></div>
+    <div class="modal-header"><div class="modal-title">조문 비교</div><button class="modal-close" onclick="closeCompareModal()">&times;</button></div>
     <div class="modal-body" id="compareBody"></div>
   </div>
 </div>
@@ -597,7 +681,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 <!-- MSDS 모달 -->
 <div class="modal-overlay" id="msdsModal" onclick="if(event.target===this)closeMsdsModal()">
   <div class="modal-content" style="max-width:860px;">
-    <div class="modal-header"><div class="modal-title" id="msdsModalTitle">🧪 MSDS 상세정보</div><button class="modal-close" onclick="closeMsdsModal()">&times;</button></div>
+    <div class="modal-header"><div class="modal-title" id="msdsModalTitle">MSDS 상세정보</div><button class="modal-close" onclick="closeMsdsModal()">&times;</button></div>
     <div class="modal-body" id="msdsModalBody" style="padding:0;"></div>
   </div>
 </div>
@@ -605,37 +689,37 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 <!-- 백업 모달 -->
 <div class="modal-overlay" id="backupModal" onclick="if(event.target===this)closeBackupModal()">
   <div class="modal-content" style="max-width:520px;">
-    <div class="modal-header"><div class="modal-title">💾 데이터 백업 / 복원</div><button class="modal-close" onclick="closeBackupModal()">&times;</button></div>
+    <div class="modal-header"><div class="modal-title">데이터 백업 / 복원</div><button class="modal-close" onclick="closeBackupModal()">&times;</button></div>
     <div class="modal-body" style="display:flex;flex-direction:column;gap:16px;">
       <div id="backupInfo" style="background:var(--surface2);border-radius:10px;padding:14px 16px;font-size:12px;line-height:1.8;"></div>
       <div style="border:1px solid var(--border);border-radius:10px;padding:16px;">
-        <div style="font-size:13px;font-weight:700;margin-bottom:8px;">📤 내보내기</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px;">내보내기</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-          <button class="modal-btn primary" onclick="exportBackup('full')">💾 전체 백업</button>
-          <button class="modal-btn" onclick="exportBackup('fav')">⭐ 즐겨찾기만</button>
-          <button class="modal-btn" onclick="exportBackup('memo')">📝 메모/태그만</button>
-          <button class="modal-btn" onclick="exportBackup('cal')">📅 캘린더만</button>
+          <button class="modal-btn primary" onclick="exportBackup('full')">전체 백업</button>
+          <button class="modal-btn" onclick="exportBackup('fav')">즐겨찾기만</button>
+          <button class="modal-btn" onclick="exportBackup('memo')">메모/태그만</button>
+          <button class="modal-btn" onclick="exportBackup('cal')">캘린더만</button>
         </div>
-        <button class="modal-btn" onclick="exportBackupAsText()" style="font-size:11px;">📋 텍스트로 복사</button>
+        <button class="modal-btn" onclick="exportBackupAsText()" style="font-size:11px;">텍스트로 복사</button>
       </div>
       <div style="border:1px solid var(--border);border-radius:10px;padding:16px;">
-        <div style="font-size:13px;font-weight:700;margin-bottom:8px;">📥 가져오기</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px;">가져오기</div>
         <label style="display:inline-block;padding:7px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer;">
-          📂 파일 선택 <input type="file" accept=".json" style="display:none;" onchange="importBackup(event)">
+          파일 선택 <input type="file" accept=".json" style="display:none;" onchange="importBackup(event)">
         </label>
         <div style="margin-top:12px;">
           <textarea id="importPasteArea" style="width:100%;height:80px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:monospace;font-size:11px;padding:8px;resize:vertical;outline:none;" placeholder='JSON 텍스트 붙여넣기'></textarea>
-          <button class="modal-btn primary" onclick="importBackupFromText()" style="margin-top:6px;">📥 붙여넣기로 복원</button>
+          <button class="modal-btn primary" onclick="importBackupFromText()" style="margin-top:6px;">붙여넣기로 복원</button>
         </div>
         <div id="importStatus" style="margin-top:10px;font-size:12px;color:var(--text-muted);"></div>
       </div>
       <div style="border:1px solid rgba(231,64,64,.3);border-radius:10px;padding:16px;">
-        <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:#e74040;">🗑 초기화</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:#e74040;">초기화</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="modal-btn" style="border-color:rgba(231,64,64,.4);color:#e74040;" onclick="clearData('memo')">메모 삭제</button>
           <button class="modal-btn" style="border-color:rgba(231,64,64,.4);color:#e74040;" onclick="clearData('fav')">즐겨찾기 삭제</button>
           <button class="modal-btn" style="border-color:rgba(231,64,64,.4);color:#e74040;" onclick="clearData('cal')">캘린더 삭제</button>
-          <button class="modal-btn" style="border-color:rgba(231,64,64,.4);color:#e74040;" onclick="clearData('all')">⚠️ 전체 초기화</button>
+          <button class="modal-btn" style="border-color:rgba(231,64,64,.4);color:#e74040;" onclick="clearData('all')">전체 초기화</button>
         </div>
       </div>
     </div>
@@ -645,7 +729,7 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 <!-- 사이트 추가 모달 -->
 <div class="modal-overlay" id="addLinkModal" onclick="if(event.target===this)closeAddLinkModal()">
   <div class="modal-content" style="max-width:400px;">
-    <div class="modal-header"><div class="modal-title">🔗 사이트 추가</div><button class="modal-close" onclick="closeAddLinkModal()">&times;</button></div>
+    <div class="modal-header"><div class="modal-title">사이트 추가</div><button class="modal-close" onclick="closeAddLinkModal()">&times;</button></div>
     <div class="modal-body">
       <div style="margin-bottom:12px;"><div style="font-size:11px;font-weight:600;margin-bottom:4px;">사이트명</div><input type="text" class="modal-tag-input" id="customLinkName" placeholder="예: 회사 인트라넷" style="margin:0;"></div>
       <div style="margin-bottom:16px;"><div style="font-size:11px;font-weight:600;margin-bottom:4px;">URL</div><input type="text" class="modal-tag-input" id="customLinkUrl" placeholder="예: https://example.com" style="margin:0;"></div>
@@ -660,7 +744,7 @@ function eh(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
 function er(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
 function showLoading(msg){document.getElementById('resultArea').style.display='block';document.getElementById('initState').style.display='none';document.getElementById('resultArea').innerHTML=`<div class="state-box"><div class="spinner"></div><div class="state-title">${eh(msg)}</div></div>`;}
-function showError(msg){document.getElementById('resultArea').style.display='block';document.getElementById('resultArea').innerHTML=`<div class="state-box"><div class="state-icon">⚠️</div><div class="state-title">오류</div><div class="state-desc">${eh(msg)}</div></div>`;}
+function showError(msg){document.getElementById('resultArea').style.display='block';document.getElementById('resultArea').innerHTML=`<div class="state-box"><div class="state-title">오류</div><div class="state-desc">${eh(msg)}</div></div>`;}
 
 function fetchWithTimeout(url,ms=10000){
   return Promise.race([fetch(url),new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);
@@ -717,11 +801,13 @@ let lawResultFilters={type:'all',status:'all',dept:'all'};
 let lastLawLookupAt='';
 const PAGE_SIZE=20;
 const LS_API='lv64_oc',LS_FAV='lv64_fav',LS_MEMO='lv64_memo',LS_TAGS='lv64_tags',LS_HISTORY='lv64_history',LS_LAW_FAV='lv7_lawfav';
+const LS_RECENT_VIEWS='lv7_recent_views',LS_AMEND_CACHE='lv7_amendment_cache';
 let favorites=new Set(JSON.parse(localStorage.getItem(LS_FAV)||'[]'));
 let lawFavorites=JSON.parse(localStorage.getItem(LS_LAW_FAV)||'[]');
 let memos=JSON.parse(localStorage.getItem(LS_MEMO)||'{}');
 let articleTags=JSON.parse(localStorage.getItem(LS_TAGS)||'{}');
 let searchHistory=JSON.parse(localStorage.getItem(LS_HISTORY)||'[]');
+let recentViews=JSON.parse(localStorage.getItem(LS_RECENT_VIEWS)||'[]');
 let selectedArticles=new Set();
 let currentModalArticle=null;
 
@@ -750,14 +836,14 @@ function renderSiteLinks(){
   DEFAULT_SITES.forEach(cat=>{
     const isOpen=openCats[cat.cat]===true;
     html+=`<div class="site-cat" onclick="toggleSiteCat('${eh(cat.cat)}')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:4px;transition:background .1s;"><span>${cat.cat}</span><span style="font-size:10px;color:var(--text-dim);">${isOpen?'▾':'▸'} ${cat.links.length}</span></div>`;
-    if(isOpen){cat.links.forEach(s=>{html+=`<a class="site-link" href="${eh(s.url)}" target="_blank"><span class="site-link-icon">${s.icon}</span><span class="site-link-name">${eh(s.name)}</span></a>`;});}
+    if(isOpen){cat.links.forEach(s=>{html+=`<a class="site-link" href="${eh(s.url)}" target="_blank"><span class="site-link-name">${eh(s.name)}</span></a>`;});}
   });
   document.getElementById('defaultSiteLinks').innerHTML=html;
   let customHtml='';
   if(customLinks.length){
     const isOpen=openCats['내 링크']===true;
     customHtml+=`<div class="site-cat" onclick="toggleSiteCat('내 링크')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:4px;"><span>내 링크</span><span style="font-size:10px;color:var(--text-dim);">${isOpen?'▾':'▸'} ${customLinks.length}</span></div>`;
-    if(isOpen){customLinks.forEach((s,idx)=>{customHtml+=`<a class="site-link" href="${eh(s.url)}" target="_blank"><span class="site-link-icon">🔗</span><span class="site-link-name">${eh(s.name)}</span><span class="site-link-del" onclick="event.preventDefault();event.stopPropagation();removeCustomLink(${idx});">✕</span></a>`;});}
+    if(isOpen){customLinks.forEach((s,idx)=>{customHtml+=`<a class="site-link" href="${eh(s.url)}" target="_blank"><span class="site-link-name">${eh(s.name)}</span><span class="site-link-del" onclick="event.preventDefault();event.stopPropagation();removeCustomLink(${idx});">삭제</span></a>`;});}
   }
   document.getElementById('customSiteLinks').innerHTML=customHtml;
   document.getElementById('siteLinksArea').style.display=siteLinksVisible?'':'none';
@@ -783,7 +869,7 @@ async function doSearch(){
   if(mode==='law'){const resolved=resolveAlias(kw);if(resolved!==kw){toast('"'+kw+'" → "'+resolved+'" 변환 검색');kw=resolved;document.getElementById('searchInput').value=kw;}}
   addSearchHistory(kw);currentKeyword=kw;currentPage=1;
   if(mode==='law')await searchLaws(kw);
-  else{if(currentView==='articles'){applyFilter();renderArticles();}else await searchLaws(kw);}
+  else await searchArticlesGlobal(kw);
 }
 
 function addSearchHistory(query){searchHistory=searchHistory.filter(q=>q!==query);searchHistory.unshift(query);if(searchHistory.length>20)searchHistory.pop();localStorage.setItem(LS_HISTORY,JSON.stringify(searchHistory));}
@@ -832,6 +918,7 @@ async function loadArticles(mst,name){
   if(_navStack[_navStack.length-1]!=='법령목록')pushNav('법령목록');
   updateBackBtn();
   currentLaw={mst,name};currentKeyword='';
+  addRecentView({kind:'law',mst,name,title:name});
   document.getElementById('searchInput').value='';
   selectedArticles.clear();
   currentFilter='all';currentPage=1;
@@ -842,6 +929,34 @@ async function loadArticles(mst,name){
     appendixList=parseAppendixJSON(data,name,mst);
     currentPage=1;applyFilter();renderArticles();
   }catch(e){showError('조문 로드 실패: '+e.message);}
+}
+
+const ARTICLE_SEARCH_SEEDS=['산업안전보건법','산업안전보건기준에 관한 규칙','중대재해 처벌 등에 관한 법률','화학물질관리법','화학물질의 등록 및 평가 등에 관한 법률','위험물안전관리법','소방시설 설치 및 관리에 관한 법률','고압가스 안전관리법','전기안전관리법','폐기물관리법','대기환경보전법','물환경보전법'];
+async function searchArticlesGlobal(query){
+  showLoading('조문 제목과 본문 검색 중...');
+  const oc=getOC();
+  try{
+    const lawMap={};
+    const addLaw=l=>{const law=normalizeLawResult(l);if(law.name&&law.mst&&!lawMap[law.mst])lawMap[law.mst]=law;};
+    const searchQueries=[query,...ARTICLE_SEARCH_SEEDS];
+    const settled=await Promise.allSettled(searchQueries.map(q=>lawApiFetch('search',{OC:oc,target:'law',type:'JSON',query:q,display:q===query?30:5})));
+    settled.forEach(res=>{if(res.status==='fulfilled')lawArrayFromSearch(res.value).forEach(addLaw);});
+    const laws=Object.values(lawMap).slice(0,24);
+    const kw=query.toLowerCase();
+    const matches=[];
+    await Promise.allSettled(laws.map(async law=>{
+      const data=await lawApiFetch('service',{OC:oc,target:'law',MST:law.mst,type:'JSON'});
+      parseArticlesJSON(data,law.name,law.mst).forEach(art=>{
+        const hay=[art.num,art.title,art.content].join(' ').toLowerCase();
+        if(hay.includes(kw))matches.push(art);
+      });
+    }));
+    articleList=matches.sort((a,b)=>(a.lawName||'').localeCompare(b.lawName||'ko')||String(a.num).localeCompare(String(b.num),'ko',{numeric:true}));
+    appendixList=[];filteredArticles=articleList;currentLaw=null;currentView='articles';currentFilter='all';currentPage=1;selectedArticles.clear();
+    document.getElementById('articleStickyHeader').style.display='block';
+    if(!matches.length){document.getElementById('initState').style.display='none';document.getElementById('resultArea').style.display='block';document.getElementById('resultArea').innerHTML='<div class="state-box"><div class="state-title">조문 검색 결과 없음</div><div class="state-desc">조문 제목과 본문에서 "'+eh(query)+'"를 찾지 못했습니다.</div></div>';return;}
+    renderArticles();
+  }catch(e){showError('조문 검색 실패: '+e.message);}
 }
 
 async function loadAppendixOnly(mst,name){
@@ -1085,7 +1200,7 @@ async function setFilter(type,el){
     const targetIds=new Set();
     if(type==='fav')favorites.forEach(id=>targetIds.add(id));
     else Object.keys(memos).forEach(id=>{if(memos[id]&&memos[id].trim())targetIds.add(id);});
-    if(!targetIds.size){area.innerHTML='<div class="state-box"><div class="state-icon">'+(type==='fav'?'⭐':'📝')+'</div><div class="state-title">'+label+'한 조문이 없습니다</div></div>';return;}
+    if(!targetIds.size){area.innerHTML='<div class="state-box"><div class="state-title">'+label+'한 조문이 없습니다</div></div>';return;}
     const collected=[];
     const needLoad={};
     targetIds.forEach(id=>{
@@ -1110,7 +1225,7 @@ async function setFilter(type,el){
         }catch(e){needLoad[mst].forEach(id=>{const numMatch=id.match(/^v63_[^_]+_(\d+)_/);collected.push({id,num:numMatch?'제'+numMatch[1]+'조':'조문',title:'(로드 실패)',lawName:'MST:'+mst,lawMst:mst,content:'',paras:[]});});}
       }));
     }
-    if(!collected.length){area.innerHTML='<div class="state-box"><div class="state-icon">📋</div><div class="state-title">표시할 조문이 없습니다</div></div>';return;}
+    if(!collected.length){area.innerHTML='<div class="state-box"><div class="state-title">표시할 조문이 없습니다</div></div>';return;}
     articleList=collected;currentView='articles';currentLaw=null;currentKeyword='';filteredArticles=collected;currentPage=1;updateCounts();
     let html='<div class="status-bar"><span class="status-text">'+label+' 조문 <span class="status-count">'+collected.length+'</span>개</span></div>';
     const groups={};
@@ -1120,7 +1235,7 @@ async function setFilter(type,el){
       groups[lawName].forEach(art=>{
         const sid=art.id.replace(/[^a-zA-Z0-9_]/g,'_');
         const memoText=memos[art.id]||'';
-        html+='<div class="article-card" id="card_'+sid+'" style="cursor:pointer;"><div class="article-header" onclick="openArticleModal(\''+sid+'\')"><span class="article-num">'+eh(art.num)+'</span><span class="article-title-text">'+eh(art.title||'(제목 없음)')+'</span>'+(favorites.has(art.id)?'<span style="font-size:13px;color:var(--accent)">★</span>':'')+(memoText?'<span style="font-size:12px;color:var(--text-dim)">📝</span>':'')+'</div>'+(memoText?'<div style="padding:4px 14px 10px;font-size:11px;color:var(--text-dim);border-top:1px solid var(--border);">📝 '+eh(memoText.substring(0,80))+'</div>':'')+'</div>';
+        html+='<div class="article-card" id="card_'+sid+'" style="cursor:pointer;"><div class="article-header" onclick="openArticleModal(\''+sid+'\')"><span class="article-num">'+eh(art.num)+'</span><span class="article-title-text">'+eh(art.title||'(제목 없음)')+'</span>'+(favorites.has(art.id)?'<span style="font-size:12px;color:var(--accent)">즐겨찾기</span>':'')+(memoText?'<span style="font-size:11px;color:var(--text-dim)">메모</span>':'')+'</div>'+(memoText?'<div style="padding:4px 14px 10px;font-size:11px;color:var(--text-dim);border-top:1px solid var(--border);">'+eh(memoText.substring(0,80))+'</div>':'')+'</div>';
       });
     });
     area.innerHTML=html;
@@ -1219,15 +1334,17 @@ function renderLawFilterBar(visible,total){
 
 function renderLawList(){
   const area=document.getElementById('resultArea');
+  const stickyHdr=document.getElementById('articleStickyHeader');
+  if(stickyHdr)stickyHdr.style.display='none';
   document.getElementById('initState').style.display='none';
   area.style.display='block';
   if(!_navStack.length||_navStack[_navStack.length-1]!=='홈'){_navStack.length=0;pushNav('홈');}
-  if(!lawList.length){area.innerHTML=`<div class="state-box"><div class="state-icon">🔍</div><div class="state-title">검색 결과 없음</div></div>`;return;}
+  if(!lawList.length){area.innerHTML=`<div class="state-box"><div class="state-title">검색 결과 없음</div></div>`;return;}
   const hl=str=>currentKeyword?eh(str).replace(new RegExp(er(currentKeyword),'gi'),m=>`<mark>${m}</mark>`):eh(str);
   const typeColor=type=>{if(type.includes('법률'))return '#C0392B';if(type.includes('대통령령')||type.includes('시행령'))return '#D35400';if(type.includes('부령')||type.includes('시행규칙'))return '#CA6F1E';if(type.includes('훈령')||type.includes('예규')||type.includes('고시'))return '#B7950B';return '#7D6608';};
   const visibleLawList=lawList.filter(matchesLawResultFilters);
   let html=renderLawFilterBar(visibleLawList.length,lawList.length);
-  if(!visibleLawList.length){area.innerHTML=html+`<div class="state-box"><div class="state-icon">🔎</div><div class="state-title">필터 조건에 맞는 법령 없음</div></div>`;return;}
+  if(!visibleLawList.length){area.innerHTML=html+`<div class="state-box"><div class="state-title">필터 조건에 맞는 법령 없음</div></div>`;return;}
   visibleLawList.forEach(law=>{
     const isLawFav=lawFavorites.some(f=>f.mst===law.mst);
     const tColor=typeColor(law.type);
@@ -1237,7 +1354,7 @@ function renderLawList(){
     const promStr=fmtDate(law.promDate);
     // 개정예정 뱃지
     const futureBadge=isFuture
-      ?`<span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;color:#fff;background:#e74040;padding:2px 7px;border-radius:4px;letter-spacing:.3px;flex-shrink:0;">🔔 개정예정</span>`:'';
+      ?`<span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;color:#fff;background:#e74040;padding:2px 7px;border-radius:4px;letter-spacing:.3px;flex-shrink:0;">개정예정</span>`:'';
     // 시행일 / 공포일 / 개정구분 정보 행
     const metaParts=[];
     if(law.amendType)metaParts.push(`<span style="font-size:10px;color:var(--text-dim);">${eh(law.amendType)}</span>`);
@@ -1253,7 +1370,7 @@ function renderLawList(){
     </div>`;
 
     html+=`<div class="law-card" onclick="loadArticles('${eh(law.mst||law.id)}','${eh(law.name)}')" style="border-left:4px solid ${isFuture?'#e74040':tColor+'20'};">
-      <button class="btn-fav ${isLawFav?'on':''}" onclick="event.stopPropagation();toggleLawFav('${eh(law.mst)}','${eh(law.name)}','${eh(law.type)}','${eh(law.dept)}')" style="font-size:17px;flex-shrink:0;" aria-label="${eh(law.name)} 법령 즐겨찾기 ${isLawFav?'해제':'추가'}">${isLawFav?'★':'☆'}</button>
+      <button class="btn-fav ${isLawFav?'on':''}" onclick="event.stopPropagation();toggleLawFav('${eh(law.mst)}','${eh(law.name)}','${eh(law.type)}','${eh(law.dept)}')" style="font-size:12px;flex-shrink:0;" aria-label="${eh(law.name)} 법령 즐겨찾기 ${isLawFav?'해제':'추가'}">${isLawFav?'해제':'추가'}</button>
       <span class="law-card-type" style="background:${tColor};">${eh(law.type)}</span>
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
@@ -1263,8 +1380,8 @@ function renderLawList(){
         ${metaHtml}
         ${trustHtml}
         <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;">
-          ${law.articleCount?`<span class="law-card-count">📄 조문 ${law.articleCount}개</span>`:''}
-          ${law.appendixCount?`<span class="law-card-count">📋 별표 ${law.appendixCount}개</span>`:''}
+          ${law.articleCount?`<span class="law-card-count">조문 ${law.articleCount}개</span>`:''}
+          ${law.appendixCount?`<span class="law-card-count">별표 ${law.appendixCount}개</span>`:''}
         </div>
       </div>
       <span class="law-card-dept">${eh(law.dept)}</span>
@@ -1291,13 +1408,19 @@ function renderArticles(){
   let stickyHtml='';
   if(currentLaw){
     stickyHtml+=`<div style="display:flex;align-items:center;padding:10px 22px 6px;gap:8px;">
-      <button class="back-btn" onclick="goBack()" style="margin:0;flex-shrink:0;">◀ 법령 목록</button>
+      <button class="back-btn" onclick="goBack()" style="margin:0;flex-shrink:0;">법령 목록</button>
       <div style="flex:1;font-size:15px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><span class="law-badge">법령</span> ${eh(currentLaw.name)}</div>
       <div style="display:flex;gap:5px;flex-shrink:0;">
-        ${selectedArticles.size>1?`<button class="btn-xs" onclick="openCompareModal()" aria-label="선택 조문 비교">🔀 비교 (${selectedArticles.size})</button>`:''}
-        ${selectedArticles.size>0?`<button class="btn-xs" onclick="exportSelectedArticles('csv')" aria-label="선택 조문 CSV 내보내기">📄 CSV</button>`:''}
-        ${selectedArticles.size>0?`<button class="btn-xs" onclick="exportSelectedArticles('pdf')" aria-label="선택 조문 PDF 내보내기">📕 PDF</button>`:''}
+        ${selectedArticles.size>1?`<button class="btn-xs" onclick="openCompareModal()" aria-label="선택 조문 비교">비교 (${selectedArticles.size})</button>`:''}
+        ${selectedArticles.size>0?`<button class="btn-xs" onclick="exportSelectedArticles('csv')" aria-label="선택 조문 CSV 내보내기">CSV</button>`:''}
+        ${selectedArticles.size>0?`<button class="btn-xs" onclick="exportSelectedArticles('pdf')" aria-label="선택 조문 PDF 내보내기">PDF</button>`:''}
       </div>
+    </div>`;
+  }else if(currentView==='articles'&&currentKeyword){
+    stickyHtml+=`<div style="display:flex;align-items:center;padding:10px 22px 6px;gap:8px;">
+      <button class="back-btn" onclick="goHome()" style="margin:0;flex-shrink:0;">홈</button>
+      <div style="flex:1;font-size:15px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><span class="law-badge">조문검색</span> ${eh(currentKeyword)}</div>
+      <div style="font-size:12px;color:var(--text-dim);">제목 및 본문 검색</div>
     </div>`;
   }
   stickyHtml+=`<div class="art-filter-bar">
@@ -1310,7 +1433,7 @@ function renderArticles(){
 
   // ── 조문 목록 ──
   let html=`<div class="status-bar"><span class="status-text">조문 <span class="status-count">${total}</span>개</span><span class="status-text">${currentPage} / ${totalPages} 페이지</span></div>`;
-  if(!total){html+=`<div class="state-box"><div class="state-icon">📄</div><div class="state-title">조문 없음</div></div>`;area.innerHTML=html;return;}
+  if(!total){html+=`<div class="state-box"><div class="state-title">조문 없음</div></div>`;area.innerHTML=html;return;}
   let lastChapter='';
   pageItems.forEach((art,idx)=>{
     if(!art.title)return;
@@ -1318,7 +1441,8 @@ function renderArticles(){
     const hasMemo=!!(memos[art.id]?.trim());
     const isSelected=selectedArticles.has(art.id);
     const sid=art.id.replace(/[^a-zA-Z0-9_]/g,'_');
-    if(art.chapter&&(idx===0||art.chapter!==lastChapter)){html+=`<div class="chapter-section">${eh(art.chapter)}</div>`;lastChapter=art.chapter;}
+    if(currentLaw&&art.chapter&&(idx===0||art.chapter!==lastChapter)){html+=`<div class="chapter-section">${eh(art.chapter)}</div>`;lastChapter=art.chapter;}
+    const snippet=!currentLaw&&kw?getArticleSnippet(art,kw):'';
     html+=`<div class="article-card ${isSelected?'selected':''}" id="card_${sid}" style="cursor:pointer;">
       <div class="article-header" onclick="openArticleModal('${sid}')" style="padding:10px 14px;">
         <input type="checkbox" class="article-checkbox" ${isSelected?'checked':''} onchange="toggleArticleSelection('${art.id}',this.checked)" onclick="event.stopPropagation()" aria-label="${eh(art.num)} 선택">
@@ -1330,8 +1454,9 @@ function renderArticles(){
           return hl(stripped||t);
         })()}</span>
         ${art.effDate?`<span style="font-size:10px;color:var(--text-dim);white-space:nowrap;margin-left:8px;flex-shrink:0;">시행: ${art.effDate}</span>`:''}
-        <div class="article-actions" style="flex-shrink:0;">${hasMemo?'<span style="font-size:12px;color:var(--text-dim)">📝</span>':''}</div>
+        <div class="article-actions" style="flex-shrink:0;">${hasMemo?'<span style="font-size:11px;color:var(--text-dim)">메모</span>':''}</div>
       </div>
+      ${snippet?`<div class="article-search-snippet"><div class="article-search-law">${eh(art.lawName||'')}</div>${snippet}</div>`:''}
     </div>`;
   });
   if(totalPages>1){
@@ -1351,7 +1476,7 @@ function renderArticles(){
         <input type="checkbox" class="article-checkbox" onchange="toggleArticleSelection('${app.id}',this.checked)" onclick="event.stopPropagation()" aria-label="${eh(app.num)} 선택">
         <span class="article-num" style="color:var(--accent2);background:rgba(224,92,0,.1);min-width:70px;">${eh(app.num)}</span>
         <div style="flex:1;min-width:0;"><div class="article-title-text" style="font-weight:600;">${eh(app.title||'(제목 없음)')}</div></div>
-        <button class="btn-xs" onclick="event.stopPropagation();window.open('${pageUrl}','_blank');">🌐 법제처</button>
+        <button class="btn-xs" onclick="event.stopPropagation();window.open('${pageUrl}','_blank');">법제처</button>
       </div></div>`;
     });
     html+='</div>';
@@ -1364,17 +1489,28 @@ function renderAppendixList(){
   document.getElementById('initState').style.display='none';
   area.style.display='block';
   let html=`<button class="back-btn" onclick="goBack()">◀ 법령 목록</button><div class="law-title-bar"><div style="flex:1;"><span class="law-badge" style="background:rgba(224,92,0,.15);color:var(--accent2);">별표</span>${eh(currentLaw.name)} 별표</div></div>`;
-  if(!appendixList.length){html+=`<div class="state-box"><div class="state-icon">📋</div><div class="state-title">별표 없음</div></div>`;area.innerHTML=html;return;}
+  if(!appendixList.length){html+=`<div class="state-box"><div class="state-title">별표 없음</div></div>`;area.innerHTML=html;return;}
   html+=`<div class="status-bar"><span class="status-text">별표 <span class="status-count">${appendixList.length}</span>개</span></div>`;
   appendixList.forEach((app,idx)=>{
     const pageUrl=`https://www.law.go.kr/lsBylInfoPLinkR.do?lsNm=${encodeURIComponent(app.lawName)}&bylNo=${app.rawNum}&bylBrNo=00&bylCls=BE`;
     html+=`<div class="article-card"><div class="article-header" style="cursor:pointer;" onclick="showAppendixDetail('${eh(app.id)}')">
       <span class="article-num" style="color:var(--accent2);background:rgba(224,92,0,.1);min-width:70px;">${eh(app.num)}</span>
       <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:var(--text);">${eh(app.title||'(제목 없음)')}</div></div>
-      <button class="btn-xs" onclick="event.stopPropagation();window.open('${pageUrl}','_blank');">🌐 법제처</button>
+      <button class="btn-xs" onclick="event.stopPropagation();window.open('${pageUrl}','_blank');">법제처</button>
     </div></div>`;
   });
   area.innerHTML=html;
+}
+
+function getArticleSnippet(art,kw){
+  const raw=String(art.content||art.title||'').replace(/\s+/g,' ').trim();
+  if(!raw)return'';
+  const lower=raw.toLowerCase();
+  const hit=lower.indexOf(String(kw||'').toLowerCase());
+  const start=Math.max(0,hit-60);
+  const end=Math.min(raw.length,(hit>=0?hit:0)+140);
+  const snippet=(start>0?'...':'')+raw.slice(start,end)+(end<raw.length?'...':'');
+  return eh(snippet).replace(new RegExp(er(kw),'gi'),m=>`<mark>${m}</mark>`);
 }
 
 function toggleArticleSelection(id,checked){if(checked)selectedArticles.add(id);else selectedArticles.delete(id);if(currentView==='appendixOnly')renderAppendixList();else renderArticles();}
@@ -1390,6 +1526,7 @@ function openArticleModal(sid){
   if(!art)return;
   currentModalArticle=art;
   try{const cacheObj={id:art.id,num:art.num,title:art.title,lawName:art.lawName,lawMst:art.lawMst,content:art.content.substring(0,300),paras:art.paras.slice(0,30)};localStorage.setItem('v63c_'+art.id,JSON.stringify(cacheObj));}catch(err){}
+  addRecentView({kind:'article',id:art.id,mst:art.lawMst,name:art.lawName,num:art.num,title:art.title});
 
   // 레거시 필드 (copyArticleReference 등에서 사용)
   document.getElementById('modalNum').textContent=art.num;
@@ -1494,7 +1631,7 @@ function openArticleModal(sid){
 
     document.getElementById('modalRelated').innerHTML=
       `<div class="modal-related" style="margin-top:16px;">
-        <div class="modal-related-title">🔗 관련 조문</div>
+        <div class="modal-related-title">관련 조문</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;">${badges}</div>
       </div>`;
   } else {
@@ -1515,7 +1652,7 @@ function openArticleModal(sid){
   // 즐겨찾기 버튼
   const isFav=favorites.has(art.id);
   const btn=document.getElementById('modalFavBtn');
-  btn.classList.toggle('on',isFav);btn.textContent=(isFav?'★':'☆')+' 즐겨찾기';
+  btn.classList.toggle('on',isFav);btn.textContent=isFav?'즐겨찾기 해제':'즐겨찾기 추가';
 
   // 법제처 원문 버튼 URL — 공백 포함 그대로 인코딩
   const lawName=art.lawName||(currentLaw?currentLaw.name:'');
@@ -1538,7 +1675,7 @@ function showAppendixDetail(id){
   html+=`</ol>`;
   document.getElementById('modalContent').innerHTML=html;
   document.getElementById('modalRelated').innerHTML='';
-  document.getElementById('modalMemoContainer').innerHTML=`<div class="modal-memo"><div class="modal-btn-group"><button class="modal-btn primary" onclick="window.open('${app.lawUrl||'#'}','_blank')">🌐 법제처 페이지</button></div></div>`;
+  document.getElementById('modalMemoContainer').innerHTML=`<div class="modal-memo"><div class="modal-btn-group"><button class="modal-btn primary" onclick="window.open('${app.lawUrl||'#'}','_blank')">법제처 페이지</button></div></div>`;
   // 별표는 하단 버튼을 별표 전용 URL로 교체
   const lawGoBtn=document.getElementById('modalLawGoBtn');
   if(lawGoBtn){lawGoBtn.href=app.lawUrl||'https://www.law.go.kr';lawGoBtn.style.display='inline-flex';}
@@ -1571,8 +1708,8 @@ function modalToggleFav(){
   localStorage.setItem(LS_FAV,JSON.stringify([...favorites]));
   const isFav=favorites.has(id);
   const btn=document.getElementById('modalFavBtn');
-  btn.classList.toggle('on',isFav);btn.textContent=(isFav?'★':'☆')+' 즐겨찾기';
-  updateFavList();updateCounts();toast(isFav?'즐겨찾기 ★':'즐겨찾기 해제');
+  btn.classList.toggle('on',isFav);btn.textContent=isFav?'즐겨찾기 해제':'즐겨찾기 추가';
+  updateFavList();updateCounts();toast(isFav?'즐겨찾기 추가':'즐겨찾기 해제');
 }
 
 function modalSaveMemo(){
@@ -1770,7 +1907,7 @@ function updateFavList(){
 function toggleLawFav(mst,name,type,dept){
   const idx=lawFavorites.findIndex(f=>f.mst===mst);
   if(idx>=0){lawFavorites.splice(idx,1);toast(name+' 즐겨찾기 해제');}
-  else{lawFavorites.push({mst,name,type,dept});toast(name+' 즐겨찾기 ★');}
+  else{lawFavorites.push({mst,name,type,dept});toast(name+' 즐겨찾기 추가');}
   localStorage.setItem(LS_LAW_FAV,JSON.stringify(lawFavorites));
   updateLawFavList();if(currentView==='list')renderLawList();
 }
@@ -1778,7 +1915,7 @@ function updateLawFavList(){
   const el=document.getElementById('lawFavList');if(!el)return;
   if(!lawFavorites.length){el.innerHTML='<div class="fav-empty" style="padding:10px;">즐겨찾기한 법령이 없습니다.</div>';return;}
   let html='';
-  lawFavorites.forEach((f,idx)=>{html+=`<div class="fav-card" style="display:flex;align-items:center;gap:6px;"><span class="btn-fav on" onclick="event.stopPropagation();toggleLawFavByIdx(${idx})" style="font-size:14px;flex-shrink:0;">★</span><div style="flex:1;min-width:0;cursor:pointer;" onclick="loadLawFavByIdx(${idx})"><div class="fav-card-law">${eh(f.type)}</div><div class="fav-card-title">${eh(f.name)}</div></div></div>`;});
+  lawFavorites.forEach((f,idx)=>{html+=`<div class="fav-card" style="display:flex;align-items:center;gap:6px;"><button class="btn-fav on" onclick="event.stopPropagation();toggleLawFavByIdx(${idx})" style="font-size:11px;flex-shrink:0;">해제</button><div style="flex:1;min-width:0;cursor:pointer;" onclick="loadLawFavByIdx(${idx})"><div class="fav-card-law">${eh(f.type)}</div><div class="fav-card-title">${eh(f.name)}</div></div></div>`;});
   el.innerHTML=html;
 }
 function loadLawFavByIdx(idx){const f=lawFavorites[idx];if(f)loadArticles(f.mst,f.name);}
@@ -1802,16 +1939,128 @@ function updateCounts(){
   document.getElementById('cnt-memo').textContent=Object.values(memos).filter(m=>m?.trim()).length;
 }
 
+function dateNumber(value){
+  const s=String(value||'').replace(/\D/g,'');
+  return s.length>=8?Number(s.slice(0,8)):0;
+}
+function todayNumber(){
+  const d=new Date();
+  return Number(d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'));
+}
+function relativeTime(ts){
+  const d=new Date(ts);
+  if(Number.isNaN(d.getTime()))return'';
+  const diff=Math.floor((Date.now()-d.getTime())/60000);
+  if(diff<1)return'방금';
+  if(diff<60)return diff+'분 전';
+  if(diff<1440)return Math.floor(diff/60)+'시간 전';
+  return (d.getMonth()+1)+'/'+d.getDate();
+}
+function addRecentView(item){
+  if(!item||(!item.mst&&!item.id))return;
+  const key=item.kind==='article'?'article:'+item.id:'law:'+item.mst;
+  recentViews=recentViews.filter(v=>(v.kind==='article'?'article:'+v.id:'law:'+v.mst)!==key);
+  recentViews.unshift({...item,ts:new Date().toISOString()});
+  recentViews=recentViews.slice(0,8);
+  localStorage.setItem(LS_RECENT_VIEWS,JSON.stringify(recentViews));
+  renderDbRecentWidget();
+}
+function renderDbRecentWidget(){
+  const el=document.getElementById('dbRecentBody');if(!el)return;
+  if(!recentViews.length){el.innerHTML='<div class="db-empty">최근 조회한 법령이나 조문이 없습니다.</div>';return;}
+  el.innerHTML=recentViews.slice(0,5).map((v,idx)=>{
+    const title=v.kind==='article'?(v.num+' '+(v.title||'(제목 없음)')):(v.name||v.title||'법령');
+    const law=v.kind==='article'?v.name:'법령 바로가기';
+    return `<div class="db-fav-item" onclick="jumpToRecent(${idx})"><span class="recent-chip">${v.kind==='article'?'조문':'법령'}</span><div style="flex:1;min-width:0;"><div class="db-fav-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${eh(title)}</div><div class="db-fav-law">${eh(law||'')}</div></div><span class="recent-time">${eh(relativeTime(v.ts))}</span></div>`;
+  }).join('');
+}
+async function jumpToRecent(idx){
+  const item=recentViews[idx];if(!item)return;
+  if(item.kind==='article'&&item.id){await jumpToFav(item.id);return;}
+  if(item.mst&&item.name)loadArticles(item.mst,item.name);
+}
+function clearRecentViews(){
+  recentViews=[];
+  localStorage.removeItem(LS_RECENT_VIEWS);
+  renderDbRecentWidget();
+}
+
 // ── 홈 위젯 ──────────────────────────────────────────────────
 function initHomeWidgets(){
   loadKoshaSafetyWidget('accident');
   loadWeatherWidget();
   loadCalendarWidget();
   initMsdsWidget();
+  renderDbRecentWidget();
   renderDbFavWidget();
   renderDbMemoWidget();
   renderDbLawFavWidget();
+  loadAmendmentWidget(false);
   loadTrendWidget('trend');
+}
+
+function lawArrayFromSearch(data){
+  if(data?.LawSearch?.law)return Array.isArray(data.LawSearch.law)?data.LawSearch.law:[data.LawSearch.law];
+  if(data?.law)return Array.isArray(data.law)?data.law:[data.law];
+  for(const k of Object.keys(data||{})){
+    const v=data[k];
+    if(v&&typeof v==='object'&&v.law)return Array.isArray(v.law)?v.law:[v.law];
+    if(Array.isArray(v)&&v.length&&v[0]['법령명한글'])return v;
+  }
+  return [];
+}
+function normalizeLawResult(l){
+  const name=l['법령명한글']||l['법령명칭']||l['법령명']||'';
+  let mst=l['법령MST']||'';
+  if(!mst){const link=l['법령상세링크']||'';const m=link.match(/MST=(\d+)/);if(m)mst=m[1];}
+  if(!mst)mst=l['법령일련번호']||l['법령ID']||'';
+  return {
+    mst,name,
+    type:l['법령구분명']||l['법령구분']||'법령',
+    dept:l['소관부처명']||l['소관부처명칭']||'',
+    effDate:l['시행일자']||l['법령시행일자']||'',
+    promNo:l['공포번호']||l['법령공포번호']||'',
+    amendType:l['제개정구분명']||l['제개정구분']||''
+  };
+}
+async function loadAmendmentWidget(force){
+  const el=document.getElementById('hwAmendmentBody');if(!el)return;
+  const cached=JSON.parse(localStorage.getItem(LS_AMEND_CACHE)||'null');
+  if(!force&&cached&&Date.now()-cached.ts<6*60*60*1000){renderAmendmentWidget(cached.items||[]);return;}
+  el.innerHTML='<div class="hw-loading">개정예정 법령 조회 중...</div>';
+  const queries=['산업안전보건','중대재해','화학물질','위험물','대기환경','수질','폐기물','소방','고압가스','전기안전'];
+  const today=todayNumber();
+  const byMst={};
+  const oc=getOC();
+  const settled=await Promise.allSettled(queries.map(q=>lawApiFetch('search',{OC:oc,target:'law',type:'JSON',query:q,display:30,sort:'efdes'})));
+  settled.forEach(res=>{
+    if(res.status!=='fulfilled')return;
+    lawArrayFromSearch(res.value).map(normalizeLawResult).forEach(law=>{
+      if(!law.name||!law.mst)return;
+      const eff=dateNumber(law.effDate);
+      if(eff>today&&!byMst[law.mst])byMst[law.mst]=law;
+    });
+  });
+  const items=Object.values(byMst).sort((a,b)=>dateNumber(a.effDate)-dateNumber(b.effDate)).slice(0,6);
+  localStorage.setItem(LS_AMEND_CACHE,JSON.stringify({ts:Date.now(),items}));
+  renderAmendmentWidget(items);
+}
+function renderAmendmentWidget(items){
+  const el=document.getElementById('hwAmendmentBody');if(!el)return;
+  const updated=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+  if(!items.length){
+    el.innerHTML='<div class="db-empty">주요 EHS 법령 중 확인된 개정예정 항목이 없습니다.<br><a href="https://www.law.go.kr" target="_blank" class="hw-more-link">국가법령정보센터 확인 →</a></div>';
+    return;
+  }
+  el.innerHTML='<div class="amendment-list">'+items.map((law,idx)=>{
+    const meta=[law.type,law.dept,law.amendType,law.promNo?'공포번호 '+law.promNo:''].filter(Boolean).join(' · ');
+    return `<div class="amendment-item" onclick="openAmendmentLaw(${idx})"><span class="amendment-date">${eh(fmtDate(law.effDate))}</span><div style="flex:1;min-width:0;"><div class="amendment-title">${eh(law.name)}</div><div class="amendment-meta">${eh(meta||'국가법령정보센터')}</div></div></div>`;
+  }).join('')+'</div><div class="signal-updated">국가법령정보센터 · '+eh(updated)+' 조회</div>';
+}
+function openAmendmentLaw(idx){
+  const cached=JSON.parse(localStorage.getItem(LS_AMEND_CACHE)||'null');
+  const law=cached?.items?.[idx];
+  if(law?.mst)loadArticles(law.mst,law.name);
 }
 
 // ── 트렌드 & 뉴스 ─────────────────────────────────────────────
@@ -2032,7 +2281,11 @@ function openKoshaPopup(el){
   if(cleanContents&&cleanContents.length>3){body.style.whiteSpace='pre-line';body.textContent=cleanContents;}
   else{body.innerHTML=`<div style="color:var(--text-dim);font-size:12px;font-style:italic;">상세 본문은 KOSHA 사이트에서 확인하실 수 있습니다.<br>아래 <strong>원문 보기</strong> 버튼을 눌러주세요.</div>`;}
   const link=document.getElementById('koshaModalLink');
-  link.href=type==='accident'?(boardno?'https://portal.kosha.or.kr/archive/disaster-case/accident-case/acccase-industry/construc-industry/view?pstNo='+boardno:'https://portal.kosha.or.kr/archive/disaster-case/accident-case/acccase-industry/construc-industry'):(boardno?'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2?bbsId=B2025021314108&pstNo='+boardno:'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2');
+  const sourceUrl=type==='accident'
+    ? 'https://portal.kosha.or.kr/archive/disaster-case/accident-case/acccase-industry/construc-industry'
+    : 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2';
+  const bbsId=type==='accident'?'B2025022104003':'B2025021314108';
+  link.href=boardno?`${sourceUrl}?bbsId=${bbsId}&pstNo=${encodeURIComponent(boardno)}`:sourceUrl;
   document.getElementById('koshaModal').style.display='block';
   document.body.style.overflow='hidden';
 }
@@ -2103,43 +2356,42 @@ async function loadWeatherWidget(){
     const humid=Math.round(cur.relative_humidity_2m);
     const windMs=Math.round(cur.wind_speed_10m);
     const wCode=cur.weather_code||0;
-    // WMO 날씨 코드 → 아이콘 + 설명
+    // WMO 날씨 코드 → 설명
     function wmoDesc(c){
-      if(c===0)return['☀️','맑음'];
-      if(c<=2)return['⛅','구름 조금'];
-      if(c===3)return['☁️','흐림'];
-      if(c<=49)return['🌫️','안개'];
-      if(c<=59)return['🌦️','이슬비'];
-      if(c<=69)return['🌧️','비'];
-      if(c<=79)return['❄️','눈'];
-      if(c<=84)return['🌧️','소나기'];
-      if(c<=99)return['⛈️','뇌우'];
-      return['🌥️','흐림'];
+      if(c===0)return'맑음';
+      if(c<=2)return'구름 조금';
+      if(c===3)return'흐림';
+      if(c<=49)return'안개';
+      if(c<=59)return'이슬비';
+      if(c<=69)return'비';
+      if(c<=79)return'눈';
+      if(c<=84)return'소나기';
+      if(c<=99)return'뇌우';
+      return'흐림';
     }
-    const[skyIcon,skyDesc]=wmoDesc(wCode);
+    const skyDesc=wmoDesc(wCode);
     // 안전 지수 계산
     let risk=0;const risks=[];
-    if(tempC>=35){risk+=45;risks.push('🔴 폭염');}else if(tempC>=33){risk+=35;risks.push('🟠 온열 위험');}else if(tempC>=28){risk+=20;risks.push('🟡 더위 주의');}else if(tempC<=0){risk+=35;risks.push('🔵 동결 위험');}else if(tempC<=5){risk+=20;risks.push('🔵 한랭 주의');}
-    if(humid>=85&&tempC>=25){risk+=20;risks.push('💧 고온다습');}
-    if(windMs>=14){risk+=25;risks.push('💨 강풍 위험');}else if(windMs>=7){risk+=10;risks.push('💨 바람 주의');}
-    if(wCode>=61&&wCode<=69){risk+=10;risks.push('🌧️ 우천');}
-    if(wCode>=71&&wCode<=79){risk+=15;risks.push('❄️ 적설');}
-    if(wCode>=80){risk+=15;risks.push('⛈️ 악천후');}
+    if(tempC>=35){risk+=45;risks.push('폭염');}else if(tempC>=33){risk+=35;risks.push('온열 위험');}else if(tempC>=28){risk+=20;risks.push('더위 주의');}else if(tempC<=0){risk+=35;risks.push('동결 위험');}else if(tempC<=5){risk+=20;risks.push('한랭 주의');}
+    if(humid>=85&&tempC>=25){risk+=20;risks.push('고온다습');}
+    if(windMs>=14){risk+=25;risks.push('강풍 위험');}else if(windMs>=7){risk+=10;risks.push('바람 주의');}
+    if(wCode>=61&&wCode<=69){risk+=10;risks.push('우천');}
+    if(wCode>=71&&wCode<=79){risk+=15;risks.push('적설');}
+    if(wCode>=80){risk+=15;risks.push('악천후');}
     risk=Math.min(risk,100);
     const riskClr=risk>=60?'#ef4444':risk>=30?'#f59e0b':'#4ade80';
     const riskLbl=risk>=60?'위험':risk>=30?'주의':'양호';
     el.innerHTML=
       '<div style="position:relative;z-index:1;">'
       +'<div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.45);text-transform:uppercase;margin-bottom:4px;">현장 실시간 기상 · 화성시</div>'
-      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">'
-        +'<div>'
+      +'<div style="display:flex;align-items:flex-start;justify-content:flex-start;margin-bottom:10px;">'
+        +'<div style="min-width:0;">'
           +'<div style="font-family:Manrope,sans-serif;font-size:52px;font-weight:800;line-height:1;color:#fff;">'+tempC+'°</div>'
-          +'<div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:4px;">'+skyDesc+'</div>'
-          +'<div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">체감 '+feelsC+'° · 습도 '+humid+'% · 풍속 '+windMs+'m/s</div>'
+          +'<div style="font-size:12px;color:rgba(255,255,255,.72);margin-top:4px;white-space:nowrap;">'+skyDesc+'</div>'
+          +'<div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px;white-space:nowrap;">체감 '+feelsC+'° · 습도 '+humid+'% · 풍속 '+windMs+'m/s</div>'
         +'</div>'
-        +'<span style="font-size:44px;margin-top:2px;">'+skyIcon+'</span>'
       +'</div>'
-      +'<div style="background:rgba(255,255,255,.1);border-radius:14px;padding:12px 14px;">'
+      +'<div style="background:rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;">'
         +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
           +'<span style="font-size:12px;color:rgba(255,255,255,.7);">종합 안전 지수</span>'
           +'<span style="font-size:10px;padding:3px 10px;background:'+riskClr+';border-radius:20px;font-weight:700;letter-spacing:.5px;color:#fff;">'+riskLbl.toUpperCase()+'</span>'
@@ -2189,7 +2441,7 @@ async function doMsdsSearch(){
 async function openMsdsDetail(chemId,chemNm){
   if(!chemId){toast('화학물질ID 없음');return;}
   const modal=document.getElementById('msdsModal');
-  document.getElementById('msdsModalTitle').textContent='🧪 '+chemNm;
+  document.getElementById('msdsModalTitle').textContent=chemNm;
   document.getElementById('msdsModalBody').innerHTML='<div style="padding:20px;text-align:center;color:var(--text-dim);">MSDS 로딩 중...</div>';
   modal.classList.add('open');
   const results=await Promise.allSettled(MSDS_SECTIONS.map(sec=>publicApiFetch('https://apis.data.go.kr/B552468/msdschem/getChemDetail'+sec.no,{serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',chemId})));
@@ -2209,14 +2461,14 @@ function closeMsdsModal(){document.getElementById('msdsModal')?.classList.remove
 function renderDbFavWidget(){
   const el=document.getElementById('dbFavBody');if(!el)return;
   const items=[...favorites].slice(0,6).map(id=>{const c=localStorage.getItem('v63c_'+id);try{return c?JSON.parse(c):null;}catch(e){return null;}}).filter(Boolean);
-  if(!items.length){el.innerHTML='<div class="db-empty">즐겨찾기한 조문이 없습니다.<br>조문 팝업에서 ☆ 버튼을 눌러 추가하세요.</div>';return;}
+  if(!items.length){el.innerHTML='<div class="db-empty">즐겨찾기한 조문이 없습니다.<br>조문 팝업에서 즐겨찾기 버튼을 눌러 추가하세요.</div>';return;}
   el.innerHTML=items.map(a=>`<div class="db-fav-item" onclick="jumpToFav('${a.id}')"><span class="db-fav-num">${eh(a.num)}</span><div style="flex:1;min-width:0;"><div class="db-fav-title">${eh((a.title||'').substring(0,28))}${(a.title||'').length>28?'…':''}</div><div class="db-fav-law">${eh(a.lawName||'')}</div></div></div>`).join('');
 }
 function renderDbMemoWidget(){
   const el=document.getElementById('dbMemoBody');if(!el)return;
   const entries=Object.entries(memos).filter(([,v])=>v&&v.trim()).slice(0,5);
   if(!entries.length){el.innerHTML='<div class="db-empty">메모한 조문이 없습니다.</div>';return;}
-  el.innerHTML=entries.map(([id,memo])=>{const c=localStorage.getItem('v63c_'+id);let num='조문',lawName='';try{if(c){const o=JSON.parse(c);num=o.num||'조문';lawName=o.lawName||'';}}catch(e){}return`<div class="db-memo-item" onclick="jumpToFav('${id}')"><span class="db-fav-num">${eh(num)}</span><div style="flex:1;min-width:0;"><div class="db-fav-title">${eh(memo.substring(0,32))}${memo.length>32?'…':''}</div><div class="db-fav-law">${eh(lawName)}</div></div><span style="font-size:11px;">📝</span></div>`;}).join('');
+  el.innerHTML=entries.map(([id,memo])=>{const c=localStorage.getItem('v63c_'+id);let num='조문',lawName='';try{if(c){const o=JSON.parse(c);num=o.num||'조문';lawName=o.lawName||'';}}catch(e){}return`<div class="db-memo-item" onclick="jumpToFav('${id}')"><span class="db-fav-num">${eh(num)}</span><div style="flex:1;min-width:0;"><div class="db-fav-title">${eh(memo.substring(0,32))}${memo.length>32?'…':''}</div><div class="db-fav-law">${eh(lawName)}</div></div></div>`;}).join('');
 }
 function renderDbLawFavWidget(){
   const el=document.getElementById('dbLawFavBody');if(!el)return;
@@ -2225,7 +2477,7 @@ function renderDbLawFavWidget(){
 }
 
 // ── 시세 ──────────────────────────────────────────────────────
-const MARKET_SYMBOLS=[{symbol:'^KS11',name:'코스피',icon:'📈'},{symbol:'^KQ11',name:'코스닥',icon:'📊'},{symbol:'USDKRW=X',name:'달러/원',icon:'💵'},{symbol:'GC=F',name:'금 (Gold)',icon:'🥇'},{symbol:'BTC-USD',name:'비트코인',icon:'₿'},{symbol:'^GSPC',name:'S&P 500',icon:'🇺🇸'},{symbol:'^IXIC',name:'나스닥',icon:'💻'}];
+const MARKET_SYMBOLS=[{symbol:'^KS11',name:'코스피'},{symbol:'^KQ11',name:'코스닥'},{symbol:'USDKRW=X',name:'달러/원'},{symbol:'GC=F',name:'금 (Gold)'},{symbol:'BTC-USD',name:'비트코인'},{symbol:'^GSPC',name:'S&P 500'},{symbol:'^IXIC',name:'나스닥'}];
 async function fetchMarketData(){
   const el=document.getElementById('marketData');el.innerHTML='<div class="fav-empty" style="padding:15px;">시세 조회 중...</div>';
   const results=[];
@@ -2233,13 +2485,13 @@ async function fetchMarketData(){
   document.getElementById('marketTime').textContent=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
   let html='';
   results.forEach(r=>{
-    if(r.error){html+=`<div class="market-card"><div class="market-card-header"><span class="market-card-name">${r.icon} ${eh(r.name)}</span></div><div style="font-size:10px;color:var(--text-dim);">조회 실패</div></div>`;return;}
+    if(r.error){html+=`<div class="market-card"><div class="market-card-header"><span class="market-card-name">${eh(r.name)}</span></div><div style="font-size:10px;color:var(--text-dim);">조회 실패</div></div>`;return;}
     const isUp=r.change>0,isDown=r.change<0;
     const cls=isUp?'market-up':isDown?'market-down':'market-flat';
     const arrow=isUp?'▲':isDown?'▼':'–';
     const sign=isUp?'+':'';
     let priceStr=r.symbol.includes('KRW')||r.symbol==='^KS11'||r.symbol==='^KQ11'?r.price.toLocaleString('ko-KR',{maximumFractionDigits:2}):r.symbol.includes('BTC')||r.symbol.includes('ETH')?'$'+r.price.toLocaleString('en-US',{maximumFractionDigits:0}):r.price.toLocaleString('en-US',{maximumFractionDigits:2});
-    html+=`<div class="market-card"><div class="market-card-header"><span class="market-card-name">${r.icon} ${eh(r.name)}</span></div><div class="market-card-price ${cls}">${priceStr}</div><div class="market-card-change ${cls}">${arrow} ${sign}${r.change.toFixed(2)} (${sign}${r.changePct.toFixed(2)}%)</div></div>`;
+    html+=`<div class="market-card"><div class="market-card-header"><span class="market-card-name">${eh(r.name)}</span></div><div class="market-card-price ${cls}">${priceStr}</div><div class="market-card-change ${cls}">${arrow} ${sign}${r.change.toFixed(2)} (${sign}${r.changePct.toFixed(2)}%)</div></div>`;
   });
   el.innerHTML=html||'<div class="fav-empty">데이터 없음</div>';
 }
@@ -2421,7 +2673,7 @@ function openLawRefModal(event, lawName, artNum, lawGoUrl){
     + '</style></head><body>'
     + '<div class="top">'
     + '<div><div class="law-label">'+eh(lawName||curLawName||'법령')+'</div><div class="art-num">'+eh(artNum)+'</div></div>'
-    + '<a class="lawgo" href="'+lawGoUrl+'" target="_blank">🌐 법제처 원문</a>'
+    + '<a class="lawgo" href="'+lawGoUrl+'" target="_blank">법제처 원문</a>'
     + '</div>'
     + '<div class="body" id="content">'
     + (localArt ? buildArtHtml(localArt, colors)
@@ -2493,7 +2745,7 @@ function openLawRefModal(event, lawName, artNum, lawGoUrl){
           // 내용이 단순 절/장 제목만인 경우 → 법제처로 안내
           var isChapterOnly = /^제\d+절|^제\d+장|^부칙/.test(raw.trim());
           if(isChapterOnly){
-            setContent('<div style="text-align:center;padding:28px;color:#aaa;font-size:13px;">이 조문은 법제처에서 직접 확인하세요.<br><a href="'+lawGoUrl+'" target="_blank" style="color:'+colors.accent+';font-weight:700;font-size:14px;display:inline-block;margin-top:12px;">🌐 법제처에서 열기 →</a></div>');
+            setContent('<div style="text-align:center;padding:28px;color:#aaa;font-size:13px;">이 조문은 법제처에서 직접 확인하세요.<br><a href="'+lawGoUrl+'" target="_blank" style="color:'+colors.accent+';font-weight:700;font-size:14px;display:inline-block;margin-top:12px;">법제처에서 열기 →</a></div>');
             return;
           }
           paras.push({text:raw,level:'hang'});
@@ -2592,19 +2844,19 @@ function openBackupModal(){
   const memoCount=Object.values(memoObj).filter(v=>v&&v.trim()).length;
   const calObj=JSON.parse(localStorage.getItem(CAL_LS)||'{}');
   const calCount=Object.values(calObj).reduce((s,a)=>s+(Array.isArray(a)?a.length:0),0);
-  document.getElementById('backupInfo').innerHTML=`<div style="font-weight:700;margin-bottom:8px;font-size:13px;">📊 현재 저장 데이터</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;"><span>⭐ 조문 즐겨찾기</span><span style="font-weight:600;color:var(--accent);">${favCount}개</span><span>📚 법령 즐겨찾기</span><span style="font-weight:600;color:var(--accent);">${lawFavCount}개</span><span>📝 메모</span><span style="font-weight:600;color:var(--accent);">${memoCount}개</span><span>📅 캘린더 일정</span><span style="font-weight:600;color:var(--accent);">${calCount}건</span></div>`;
+  document.getElementById('backupInfo').innerHTML=`<div style="font-weight:700;margin-bottom:8px;font-size:13px;">현재 저장 데이터</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;"><span>조문 즐겨찾기</span><span style="font-weight:600;color:var(--accent);">${favCount}개</span><span>법령 즐겨찾기</span><span style="font-weight:600;color:var(--accent);">${lawFavCount}개</span><span>메모</span><span style="font-weight:600;color:var(--accent);">${memoCount}개</span><span>캘린더 일정</span><span style="font-weight:600;color:var(--accent);">${calCount}건</span></div>`;
   document.getElementById('importStatus').innerHTML='';
   document.getElementById('backupModal').classList.add('open');
 }
 function closeBackupModal(){document.getElementById('backupModal').classList.remove('open');}
 function buildBackupData(type){const now=new Date();const backup={_version:'lv7',_date:now.toISOString(),_type:type,data:{}};const collectKeys=keys=>{keys.forEach(k=>{const v=localStorage.getItem(k);if(v)backup.data[k]=v;});};if(type==='full'||type==='fav'){collectKeys(BACKUP_KEYS.fav);getAllCacheKeys().forEach(k=>{const v=localStorage.getItem(k);if(v)backup.data[k]=v;});}if(type==='full'||type==='memo')collectKeys(BACKUP_KEYS.memo);if(type==='full'||type==='cal')collectKeys(BACKUP_KEYS.cal);if(type==='full'){collectKeys(BACKUP_KEYS.links);collectKeys(BACKUP_KEYS.hist);}return backup;}
-function exportBackupAsText(){const backup=buildBackupData('full');copyText(JSON.stringify(backup),'📋 백업 텍스트 복사됨');}
+function exportBackupAsText(){const backup=buildBackupData('full');copyText(JSON.stringify(backup),'백업 텍스트 복사됨');}
 function exportBackup(type){
   const dateStr=new Date().toISOString().slice(0,10);
   const backup=buildBackupData(type);
   const json=JSON.stringify(backup,null,2);
-  try{const blob=new Blob([json],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`law-backup-${type}-${dateStr}.json`;a.click();URL.revokeObjectURL(a.href);toast('💾 백업 완료');}
-  catch(e){copyText(json,'📋 백업 텍스트 복사됨 (파일 저장 실패)');}
+  try{const blob=new Blob([json],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`law-backup-${type}-${dateStr}.json`;a.click();URL.revokeObjectURL(a.href);toast('백업 완료');}
+  catch(e){copyText(json,'백업 텍스트 복사됨 (파일 저장 실패)');}
 }
 function processImportData(jsonText,statusEl){
   try{
@@ -2622,13 +2874,13 @@ function processImportData(jsonText,statusEl){
       }catch(err){console.warn('키 복원 실패:',key,err);}
     });
     updateFavList();updateLawFavList();updateCounts();renderSiteLinks();
-    statusEl.innerHTML=`<span style="color:#3fb950;font-weight:600;">✅ 복원 완료! (${count}개 항목)</span>`;
-    toast('📥 데이터 복원 완료');openBackupModal();return true;
-  }catch(err){statusEl.innerHTML=`<span style="color:#e74040;">❌ 복원 실패: ${err.message}</span>`;return false;}
+    statusEl.innerHTML=`<span style="color:#3fb950;font-weight:600;">복원 완료 (${count}개 항목)</span>`;
+    toast('데이터 복원 완료');openBackupModal();return true;
+  }catch(err){statusEl.innerHTML=`<span style="color:#e74040;">복원 실패: ${err.message}</span>`;return false;}
 }
-function importBackup(event){const file=event.target.files[0];if(!file)return;const statusEl=document.getElementById('importStatus');statusEl.innerHTML='⏳ 파일 읽는 중...';const reader=new FileReader();reader.onload=e=>{processImportData(e.target.result,statusEl);event.target.value='';};reader.readAsText(file);}
+function importBackup(event){const file=event.target.files[0];if(!file)return;const statusEl=document.getElementById('importStatus');statusEl.innerHTML='파일 읽는 중...';const reader=new FileReader();reader.onload=e=>{processImportData(e.target.result,statusEl);event.target.value='';};reader.readAsText(file);}
 function importBackupFromText(){const text=(document.getElementById('importPasteArea').value||'').trim();const statusEl=document.getElementById('importStatus');if(!text){statusEl.innerHTML='<span style="color:#e74040;">텍스트를 붙여넣어 주세요.</span>';return;}if(processImportData(text,statusEl))document.getElementById('importPasteArea').value='';}
-function clearData(type){const labels={memo:'메모/태그',fav:'즐겨찾기',cal:'캘린더',all:'전체 데이터'};if(!confirm(`정말 ${labels[type]}를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`))return;if(type==='memo'||type==='all'){localStorage.removeItem(LS_MEMO);localStorage.removeItem(LS_TAGS);memos={};articleTags={};}if(type==='fav'||type==='all'){localStorage.removeItem(LS_FAV);localStorage.removeItem(LS_LAW_FAV);favorites=new Set();lawFavorites=[];getAllCacheKeys().forEach(k=>localStorage.removeItem(k));}if(type==='cal'||type==='all'){localStorage.removeItem(CAL_LS);calEvents={};}if(type==='all'){localStorage.removeItem(LS_CUSTOM_LINKS);customLinks=[];localStorage.removeItem(LS_HISTORY);searchHistory=[];}updateFavList();updateLawFavList();updateCounts();renderSiteLinks();toast('🗑 '+labels[type]+' 삭제 완료');openBackupModal();}
+function clearData(type){const labels={memo:'메모/태그',fav:'즐겨찾기',cal:'캘린더',all:'전체 데이터'};if(!confirm(`정말 ${labels[type]}를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`))return;if(type==='memo'||type==='all'){localStorage.removeItem(LS_MEMO);localStorage.removeItem(LS_TAGS);memos={};articleTags={};}if(type==='fav'||type==='all'){localStorage.removeItem(LS_FAV);localStorage.removeItem(LS_LAW_FAV);favorites=new Set();lawFavorites=[];getAllCacheKeys().forEach(k=>localStorage.removeItem(k));}if(type==='cal'||type==='all'){localStorage.removeItem(CAL_LS);calEvents={};}if(type==='all'){localStorage.removeItem(LS_CUSTOM_LINKS);customLinks=[];localStorage.removeItem(LS_HISTORY);searchHistory=[];}updateFavList();updateLawFavList();updateCounts();renderSiteLinks();toast(labels[type]+' 삭제 완료');openBackupModal();}
 
 async function loadArticleHistory(){
   if(!currentModalArticle)return;
@@ -2664,7 +2916,7 @@ async function compareWithVersion(idx){
     const curArt=currentModalArticle;
     const oldArt=oldArticles.find(function(a){return a.num===curArt.num;});
     let html='<div class="ai-summary-box"><div class="ai-label">📜 '+eh(curArt.num)+' — 현행 vs '+eh(v.efDate)+'</div><div class="history-diff">';
-    if(!oldArt)html+='<div class="diff-added">✅ 이 조문은 '+eh(v.efDate)+' 시점에 존재하지 않았습니다 (신설된 조문)</div>';
+    if(!oldArt)html+='<div class="diff-added">이 조문은 '+eh(v.efDate)+' 시점에 존재하지 않았습니다 (신설된 조문)</div>';
     else{const oldText=oldArt.content.trim();const newText=curArt.content.trim();if(oldText===newText)html+='<div style="color:var(--text-muted);font-size:12px;padding:8px;">변경 없음</div>';else{html+='<div style="margin-bottom:8px;font-size:11px;font-weight:600;color:var(--text-dim);">과거 ('+eh(v.efDate)+')</div><div class="diff-removed">'+eh(oldText.substring(0,600))+'</div><div style="margin:10px 0 8px;font-size:11px;font-weight:600;color:var(--text-dim);">현행</div><div class="diff-added">'+eh(newText.substring(0,600))+'</div>';}}
     html+='</div></div>';el.innerHTML=html;
   }catch(e){el.innerHTML='<div class="ai-summary-box"><div class="ai-label">📜 비교 실패</div><div>'+eh(e.message)+'</div></div>';}
