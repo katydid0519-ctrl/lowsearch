@@ -48,7 +48,7 @@ header{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;disp
 .tab-btn{padding:6px 14px;border-radius:8px;border:none;background:transparent;color:var(--text-muted);font-size:12px;cursor:pointer;font-family:'Inter',inherit;font-weight:500;transition:all .15s;}
 .tab-btn:hover{color:var(--text);background:var(--surface2);}
 .tab-btn.active{background:var(--accent-soft);color:var(--accent);font-weight:600;}
-.layout{display:flex;flex:1;height:calc(100vh - 140px);overflow:hidden;}
+.layout{display:flex;flex:1;height:calc(100vh - 147px);overflow:hidden;}
 aside{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--bg);border-right:none;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;transition:all .2s;}
 aside.collapsed{width:0;min-width:0;overflow:hidden;border-right:none;}
 aside.collapsed *{display:none;}
@@ -129,10 +129,6 @@ button:disabled{cursor:not-allowed;}
 .site-cat:hover{background:var(--surface2);border-radius:4px;color:var(--accent);}
 main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .content-area{flex:1;overflow-y:auto;background:var(--bg);}
-.layout.article-mode{height:auto;min-height:calc(100vh - 147px);overflow:visible;align-items:flex-start;}
-.layout.article-mode main{overflow:visible;}
-.layout.article-mode .content-area{overflow:visible;}
-.layout.article-mode aside,.layout.article-mode .right-sidebar{position:sticky;top:147px;max-height:calc(100vh - 147px);}
 .search-wrap{padding:10px 18px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
 .mode-btn{padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;font-family:inherit;transition:all .12s;}
 .mode-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(240,165,0,.08);}
@@ -1414,8 +1410,6 @@ function renderLawList(){
 function renderArticles(){
   const area=document.getElementById('resultArea');
   const stickyHdr=document.getElementById('articleStickyHeader');
-  const layout=document.querySelector('.layout');
-  if(layout)layout.classList.add('article-mode');
   document.getElementById('initState').style.display='none';
   area.style.display='block';
   const showArticleTools=!!currentLaw;
@@ -1545,7 +1539,7 @@ function goBack(){
   const layout=document.querySelector('.layout');if(layout)layout.classList.remove('article-mode');
   currentView='list';currentLaw=null;articleList=[];appendixList=[];filteredArticles=[];selectedArticles.clear();renderLawList();
 }
-function goPage(p){currentPage=p;renderArticles();window.scrollTo(0,0);}
+function goPage(p){currentPage=p;renderArticles();document.querySelector('.content-area').scrollTo(0,0);}
 
 function ensureModalMemoForm(){
   const el=document.getElementById('modalMemoContainer');
