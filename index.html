@@ -1036,6 +1036,22 @@ function lawChatScoreArticle(art,terms,nums){
   terms.forEach(t=>{const lt=t.toLowerCase();if((art.title||'').toLowerCase().includes(lt))score+=8;if(hay.includes(lt))score+=3;});
   return score;
 }
+function lawChatScoreLaw(law,q,terms){
+  const name=String(law.name||'').toLowerCase();
+  const dept=String(law.dept||'').toLowerCase();
+  const rq=String(resolveAlias(q)||q||'').toLowerCase();
+  let score=0;
+  if(name&&rq&&(name.includes(rq)||rq.includes(name)))score+=30;
+  terms.forEach(t=>{
+    const lt=t.toLowerCase();
+    const alias=resolveAlias(t).toLowerCase();
+    if(alias!==lt&&name.includes(alias))score+=20;
+    if(name.includes(lt))score+=10;
+    if(dept.includes(lt))score+=2;
+  });
+  if(/산업안전|중대재해|화학|위험물|소방|환경|전기|가스|폐기물|대기|물환경/.test(law.name||''))score+=2;
+  return score;
+}
 function lawChatSnippet(art,terms){
   const raw=String(art.content||art.title||'').replace(/\s+/g,' ').trim();
   if(!raw)return'';
@@ -1056,37 +1072,58 @@ async function runLawChatbot(){
   try{
     const terms=lawChatTerms(q);
     const nums=lawChatArticleNums(q);
-    const lawQueries=[resolveAlias(q),...terms.slice(0,4),...ARTICLE_SEARCH_SEEDS.slice(0,4)];
+    const primaryQueries=[resolveAlias(q),...terms.slice(0,3)].map(s=>String(s||'').trim()).filter(Boolean);
     const lawMap={};
-    const settled=await Promise.allSettled(lawQueries.map(query=>lawApiFetch('search',{OC:oc,target:'law',type:'JSON',query,display:query===resolveAlias(q)?20:5})));
+    let settled=await Promise.allSettled([...new Set(primaryQueries)].map(query=>lawApiFetch('search',{OC:oc,target:'law',type:'JSON',query,display:query===resolveAlias(q)?12:5})));
     settled.forEach(res=>{if(res.status==='fulfilled')lawArrayFromAny(res.value).map(lawChatNormalizeLaw).forEach(l=>{if(l.name&&l.mst&&!lawMap[l.mst])lawMap[l.mst]=l;});});
-    const laws=Object.values(lawMap).slice(0,8);
+    if(Object.keys(lawMap).length<3){
+      const seedQueries=ARTICLE_SEARCH_SEEDS.slice(0,8);
+      settled=await Promise.allSettled(seedQueries.map(query=>lawApiFetch('search',{OC:oc,target:'law',type:'JSON',query,display:1})));
+      settled.forEach(res=>{if(res.status==='fulfilled')lawArrayFromAny(res.value).map(lawChatNormalizeLaw).forEach(l=>{if(l.name&&l.mst&&!lawMap[l.mst])lawMap[l.mst]=l;});});
+    }
+    const laws=Object.values(lawMap).sort((a,b)=>lawChatScoreLaw(b,q,terms)-lawChatScoreLaw(a,q,terms)).slice(0,10);
     if(!laws.length){
       if(thinking)thinking.innerHTML='관련 법령을 찾지 못했습니다. 법령명이나 핵심 키워드를 조금 바꿔서 다시 입력해 주세요.';
       lawChatScrollBottom();
       return;
     }
     const blocks=[];
-    await Promise.allSettled(laws.slice(0,5).map(async law=>{
+    await Promise.allSettled(laws.map(async law=>{
       const data=await lawApiFetch('service',{OC:oc,target:'law',MST:law.mst,type:'JSON'});
       const arts=parseArticlesJSON(data,law.name,law.mst);
-      const ranked=arts.map(a=>({art:a,score:lawChatScoreArticle(a,terms,nums)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,4);
-      blocks.push({law,articles:ranked.map(x=>x.art),count:arts.length});
+      const ranked=arts.map(a=>({art:a,score:lawChatScoreArticle(a,terms,nums)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,3);
+      const lawScore=lawChatScoreLaw(law,q,terms);
+      const topArticleScore=ranked[0]?.score||0;
+      const hasLawHint=lawScore>=12;
+      const hasSpecificArticleHint=!nums.length||topArticleScore>20||hasLawHint;
+      if((ranked.length&&hasSpecificArticleHint)||hasLawHint)blocks.push({law,articles:ranked.map(x=>x.art),count:arts.length,score:lawScore+ranked.reduce((sum,x)=>sum+x.score,0)});
     }));
-    blocks.sort((a,b)=>b.articles.length-a.articles.length);
-    let html='<div style="font-size:12px;color:var(--text);font-weight:800;margin-bottom:8px;">관련 후보를 찾았습니다</div><div style="font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:10px;">법령명을 누르면 본문 목록으로 이동하고, 조문 열기를 누르면 해당 조항 팝업을 바로 엽니다.</div>';
-    blocks.forEach((block,idx)=>{
-      html+='<div class="chatbot-result"><div style="display:flex;gap:8px;align-items:flex-start;justify-content:space-between;"><div><div class="chatbot-result-title">'+eh(block.law.name)+'</div><div class="chatbot-result-meta">'+eh([block.law.type,block.law.dept,block.law.effDate?'시행 '+fmtDate(block.law.effDate):'',block.count+'개 조문'].filter(Boolean).join(' · '))+'</div></div><button class="btn-xs" onclick="lawChatOpenLaw('+idx+')">본문에서 보기</button></div>';
-      if(block.articles.length){
-        block.articles.forEach(art=>{
-          html+='<div class="chatbot-article"><div class="chatbot-article-title"><span class="article-num">'+eh(art.num)+'</span><span>'+eh(art.title||'(제목 없음)')+'</span></div><div class="chatbot-article-body">'+eh(lawChatSnippet(art,terms)||art.content||'내용 없음')+'</div><div style="display:flex;gap:6px;margin-top:8px;"><button class="btn-xs" onclick="lawChatOpenArticle(\''+eh(art.lawMst)+'\',\''+eh(art.lawName)+'\',\''+eh(art.id)+'\')">조문 열기</button><a class="btn-xs" style="text-decoration:none;display:inline-flex;align-items:center;" href="'+eh(getLawGoUrl(art.lawName,art.num))+'" target="_blank" rel="noopener">원문</a></div></div>';
-        });
-      }else{
-        html+='<div class="chatbot-empty" style="padding:18px 6px;">질문과 직접 일치하는 조항은 적지만, 법령 본문에서 추가 확인할 수 있습니다.</div>';
-      }
-      html+='</div>';
+    blocks.sort((a,b)=>b.score-a.score);
+    const selectedBlocks=blocks.slice(0,3);
+    if(!selectedBlocks.length){
+      if(thinking)thinking.innerHTML='질문과 직접 맞는 법령이나 조문을 찾지 못했습니다. 법령명을 포함하거나 키워드를 더 구체적으로 입력해 주세요.';
+      lawChatScrollBottom();
+      return;
+    }
+    let html='<div style="font-size:12px;color:var(--text);font-weight:800;margin-bottom:8px;">먼저 후보를 골라주세요</div><div style="font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:10px;">관련도가 높은 법령과 조문만 추렸습니다. 원하는 항목을 선택하면 본문 또는 조문 팝업으로 이동합니다.</div>';
+    html+='<div class="chatbot-result"><div class="chatbot-result-title">추천 법령</div>';
+    selectedBlocks.forEach((block,idx)=>{
+      html+='<div class="chatbot-article" style="margin-top:8px;"><div style="display:flex;gap:8px;align-items:flex-start;justify-content:space-between;"><div><div class="chatbot-article-title" style="margin-bottom:5px;">'+eh(block.law.name)+'</div><div class="chatbot-result-meta">'+eh([block.law.type,block.law.dept,block.law.effDate?'시행 '+fmtDate(block.law.effDate):'',block.count+'개 조문'].filter(Boolean).join(' · '))+'</div></div><button class="btn-xs" onclick="lawChatOpenLaw('+idx+')">법령 보기</button></div></div>';
     });
-    window._lawChatBlocks=blocks;
+    html+='</div>';
+    const articlePicks=[];
+    selectedBlocks.forEach((block,blockIdx)=>block.articles.forEach((art,articleIdx)=>articlePicks.push({blockIdx,articleIdx,art})));
+    if(articlePicks.length){
+      html+='<div class="chatbot-result"><div class="chatbot-result-title">추천 조문</div>';
+      articlePicks.slice(0,5).forEach(p=>{
+        const art=p.art;
+        html+='<div class="chatbot-article"><div class="chatbot-article-title"><span class="article-num">'+eh(art.num)+'</span><span>'+eh(art.title||'(제목 없음)')+'</span></div><div class="chatbot-article-body">'+eh(lawChatSnippet(art,terms)||art.content||'내용 없음')+'</div><div style="display:flex;gap:6px;margin-top:8px;"><button class="btn-xs" onclick="lawChatOpenRecommendedArticle('+p.blockIdx+','+p.articleIdx+')">조문 보기</button><a class="btn-xs" style="text-decoration:none;display:inline-flex;align-items:center;" href="'+eh(getLawGoUrl(art.lawName,art.num))+'" target="_blank" rel="noopener">원문</a></div></div>';
+      });
+      html+='</div>';
+    }else{
+      html+='<div class="chatbot-result"><div class="chatbot-result-title">추천 조문</div><div class="chatbot-empty" style="padding:18px 6px;">직접 일치하는 조문은 아직 없습니다. 추천 법령을 먼저 열어 본문 내 검색을 이용해 주세요.</div></div>';
+    }
+    window._lawChatBlocks=selectedBlocks;
     if(thinking)thinking.innerHTML=html;
     lawChatScrollBottom();
   }catch(e){
@@ -1097,6 +1134,11 @@ async function runLawChatbot(){
 function lawChatOpenLaw(idx){
   const block=window._lawChatBlocks?.[idx];if(!block)return;
   closeLawChatbot();loadArticles(block.law.mst,block.law.name);
+}
+function lawChatOpenRecommendedArticle(blockIdx,articleIdx){
+  const art=window._lawChatBlocks?.[blockIdx]?.articles?.[articleIdx];
+  if(!art)return;
+  lawChatOpenArticle(art.lawMst,art.lawName,art.id);
 }
 async function lawChatOpenArticle(mst,name,id){
   closeLawChatbot();
