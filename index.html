@@ -342,8 +342,36 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 
 /* 국가법령정보센터 톤앤매너 */
 #globalSearchBar{top:88px!important;background:#fff!important;border-top:1px solid #eef2f6;border-bottom:1px solid #cfd9e6!important;box-shadow:0 2px 8px rgba(31,47,67,.04);}
-#articleStickyHeader{position:fixed!important;z-index:89!important;background:#f5f7fb!important;box-shadow:0 2px 8px rgba(31,47,67,.06);display:none;}
+#articleStickyHeader{position:fixed!important;top:147px;z-index:96!important;background:#f5f7fb!important;box-shadow:0 2px 8px rgba(31,47,67,.06);display:none;}
 #globalClock{margin-left:auto;white-space:nowrap;font-size:11px;font-weight:700;color:#445b75;background:#f5f8fc;border:1px solid #cbd6e3;border-radius:4px;padding:6px 10px;font-family:'JetBrains Mono','Noto Sans KR',monospace;}
+.chatbot-modal{max-width:920px;width:calc(100% - 48px);}
+.robot-chat-btn{width:38px;height:38px;border:1px solid #0b4a8b;border-radius:8px;background:#fff;display:inline-flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;cursor:pointer;transition:background .15s,box-shadow .15s,transform .15s;}
+.robot-chat-btn:hover,.robot-chat-btn:focus-visible{background:#f5f8fc;box-shadow:0 0 0 3px rgba(11,74,139,.1);}
+.robot-chat-btn:active{transform:translateY(1px);}
+.robot-face{width:22px;height:18px;border:2px solid #0b4a8b;border-radius:6px;background:#eef5fc;position:relative;display:inline-block;}
+.robot-face:before{content:'';position:absolute;left:4px;top:6px;width:3px;height:3px;border-radius:50%;background:#0b4a8b;box-shadow:9px 0 0 #0b4a8b;}
+.robot-face:after{content:'';position:absolute;left:7px;right:7px;bottom:4px;height:2px;border-radius:2px;background:#0b4a8b;}
+.robot-antenna{position:absolute;top:-6px;left:50%;width:2px;height:6px;background:#0b4a8b;transform:translateX(-50%);}
+.robot-antenna:after{content:'';position:absolute;top:-3px;left:-2px;width:6px;height:6px;border-radius:50%;background:#d71920;}
+.chatbot-shell{display:flex;flex-direction:column;min-height:600px;max-height:78vh;background:#f6f8fb;}
+.chatbot-main{padding:18px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px;}
+.chatbot-compose{border-top:1px solid var(--border);padding:14px 16px;background:#fff;display:flex;gap:10px;align-items:flex-end;}
+.chatbot-input{flex:1;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-family:inherit;font-size:13px;padding:11px 12px;line-height:1.5;resize:none;min-height:44px;max-height:120px;}
+.chat-msg{display:flex;gap:9px;align-items:flex-start;max-width:86%;}
+.chat-msg.user{align-self:flex-end;flex-direction:row-reverse;}
+.chat-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#0b4a8b;color:#fff;font-size:11px;font-weight:800;}
+.chat-msg.user .chat-avatar{background:#445b75;}
+.chat-bubble{border:1px solid var(--border);border-radius:12px;background:#fff;padding:10px 12px;font-size:13px;line-height:1.65;color:var(--text-muted);box-shadow:0 2px 8px rgba(31,47,67,.04);}
+.chat-msg.user .chat-bubble{background:#0b4a8b;color:#fff;border-color:#0b4a8b;}
+.chat-suggestions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.chatbot-result{border:1px solid var(--border);border-radius:8px;background:var(--surface);padding:12px;margin-bottom:10px;}
+.chatbot-result-title{font-size:13px;font-weight:800;color:var(--text);margin-bottom:5px;}
+.chatbot-result-meta{font-size:11px;color:var(--text-dim);line-height:1.5;}
+.chatbot-article{border:1px solid var(--border);border-radius:8px;background:var(--surface);padding:12px;margin-top:10px;}
+.chatbot-article-title{font-size:13px;font-weight:800;color:var(--text);margin-bottom:8px;display:flex;gap:8px;align-items:center;}
+.chatbot-article-body{font-size:12px;line-height:1.75;color:var(--text-muted);max-height:220px;overflow:auto;background:var(--surface2);border-radius:6px;padding:10px;}
+.chatbot-empty{color:var(--text-dim);font-size:12px;line-height:1.7;text-align:center;padding:28px 10px;}
+@media(max-width:900px){.chatbot-modal{width:calc(100% - 20px);}.chat-msg{max-width:96%;}.chatbot-compose{flex-direction:column;align-items:stretch;}}
 .search-wrap{background:#fff;border-bottom:1px solid #d7e0eb;padding:9px 20px;}
 .mode-btn,.db-mode-btn{border-radius:4px;background:#fff;border-color:#cbd6e3;color:#445b75;font-weight:700;}
 .mode-btn.active,.db-mode-active{background:#0b4a8b!important;border-color:#0b4a8b!important;color:#fff!important;}
@@ -435,6 +463,9 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
       <input class="db-search-input" id="searchInput" placeholder="법령명 검색..." onkeydown="if(event.key==='Enter')doSearch()" style="padding:8px 12px;">
       <button class="db-search-btn" onclick="doSearch()" style="border-radius:0;padding:8px 16px;">검색</button>
     </div>
+    <button class="robot-chat-btn" onclick="openLawChatbot()" aria-label="법령 챗봇 열기" title="법령 챗봇">
+      <span class="robot-face" aria-hidden="true"><span class="robot-antenna"></span></span>
+    </button>
     <div style="display:flex;gap:5px;flex-wrap:nowrap;flex:0 1 auto;">
       <span class="db-qtag" onclick="heroSearch('산업안전보건법')">#산업안전법</span>
       <span class="db-qtag" onclick="heroSearch('중대재해 처벌 등에 관한 법률')">#중대재해</span>
@@ -694,6 +725,36 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
   </div>
 </div>
 
+<!-- 법령 챗봇 모달 -->
+<div class="modal-overlay" id="lawChatbotModal" onclick="if(event.target===this)closeLawChatbot()">
+  <div class="modal-content chatbot-modal">
+    <div class="modal-header">
+      <div class="modal-title">법령 챗봇</div>
+      <button class="modal-close" onclick="closeLawChatbot()" aria-label="법령 챗봇 닫기">&times;</button>
+    </div>
+    <div class="chatbot-shell">
+      <div class="chatbot-main" id="lawChatResults">
+        <div class="chat-msg bot">
+          <div class="chat-avatar">AI</div>
+          <div class="chat-bubble">
+            찾고 싶은 법령명, 상황, 조항 키워드를 입력하세요. 국가법령정보센터 조회 결과를 바탕으로 관련 법령과 조문 후보를 찾아드립니다.
+            <div class="chat-suggestions">
+              <button class="btn-xs" onclick="lawChatAsk('관리감독자 조항')">관리감독자</button>
+              <button class="btn-xs" onclick="lawChatAsk('안전보건관리책임자')">안전보건관리책임자</button>
+              <button class="btn-xs" onclick="lawChatAsk('위험성평가')">위험성평가</button>
+              <button class="btn-xs" onclick="lawChatAsk('중대재해 처벌')">중대재해</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="chatbot-compose">
+        <textarea id="lawChatInput" class="chatbot-input" placeholder="예: 산업안전보건법 시행령 관리감독자 조항 찾아줘" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();runLawChatbot();}"></textarea>
+        <button class="modal-btn primary" onclick="runLawChatbot()">전송</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 백업 모달 -->
 <div class="modal-overlay" id="backupModal" onclick="if(event.target===this)closeBackupModal()">
   <div class="modal-content" style="max-width:520px;">
@@ -919,6 +980,129 @@ async function doSearch(){
 function addSearchHistory(query){searchHistory=searchHistory.filter(q=>q!==query);searchHistory.unshift(query);if(searchHistory.length>20)searchHistory.pop();localStorage.setItem(LS_HISTORY,JSON.stringify(searchHistory));}
 function loadSearchHistory(){const input=document.getElementById('searchInput');input.addEventListener('focus',()=>{const datalist=document.getElementById('searchDatalist')||createDatalist();datalist.innerHTML=searchHistory.map(h=>`<option value="${eh(h)}">`).join('');});}
 function createDatalist(){const list=document.createElement('datalist');list.id='searchDatalist';document.body.appendChild(list);document.getElementById('searchInput').setAttribute('list','searchDatalist');return list;}
+
+function openLawChatbot(){
+  document.getElementById('lawChatbotModal')?.classList.add('open');
+  const input=document.getElementById('lawChatInput');
+  if(input){
+    if(!input.value.trim())input.value=document.getElementById('searchInput')?.value||'';
+    setTimeout(()=>input.focus(),80);
+  }
+  lawChatScrollBottom();
+}
+function closeLawChatbot(){document.getElementById('lawChatbotModal')?.classList.remove('open');}
+function lawChatAsk(text){const input=document.getElementById('lawChatInput');if(input){input.value=text;runLawChatbot();}}
+function lawChatScrollBottom(){
+  const out=document.getElementById('lawChatResults');
+  if(out)requestAnimationFrame(()=>{out.scrollTop=out.scrollHeight;});
+}
+function lawChatMessage(role,html){
+  const out=document.getElementById('lawChatResults');
+  if(!out)return null;
+  const row=document.createElement('div');
+  row.className='chat-msg '+(role==='user'?'user':'bot');
+  row.innerHTML='<div class="chat-avatar">'+(role==='user'?'나':'AI')+'</div><div class="chat-bubble">'+html+'</div>';
+  out.appendChild(row);
+  lawChatScrollBottom();
+  return row.querySelector('.chat-bubble');
+}
+function lawChatUserMessage(text){lawChatMessage('user',eh(text).replace(/\n/g,'<br>'));}
+function lawChatBotMessage(html){return lawChatMessage('bot',html);}
+function lawChatTerms(q){
+  return String(q||'').replace(/[^\w가-힣\s]/g,' ').split(/\s+/).map(s=>s.trim()).filter(s=>s.length>=2&&!['찾아줘','알려줘','조항','법령','관련','대해','대한','에서','으로','하고','또는'].includes(s));
+}
+function lawChatArticleNums(q){
+  const nums=[];String(q||'').replace(/제\s*(\d+)\s*조(?:\s*의\s*(\d+))?/g,(m,a,b)=>{nums.push('제'+a+'조'+(b?'의'+b:''));return m;});
+  return nums;
+}
+function lawArrayFromAny(data){
+  let items=[];
+  if(data?.LawSearch?.law)items=data.LawSearch.law;
+  else if(data?.law)items=data.law;
+  else{for(const k of Object.keys(data||{})){const v=data[k];if(v&&typeof v==='object'&&v.law){items=v.law;break;}if(Array.isArray(v)&&v.length&&(v[0]['법령명한글']||v[0]['법령명칭'])){items=v;break;}}}
+  return Array.isArray(items)?items:(items?[items]:[]);
+}
+function lawChatNormalizeLaw(l){
+  const name=l['법령명한글']||l['법령명칭']||l['법령명']||'';
+  let mst=l['법령MST']||'';
+  if(!mst){const link=l['법령상세링크']||'';const m=link.match(/MST=(\d+)/);if(m)mst=m[1];}
+  if(!mst)mst=l['법령일련번호']||l['법령ID']||'';
+  return {mst,name,type:l['법령구분명']||l['법령구분']||'법령',dept:l['소관부처명']||l['소관부처명칭']||'',effDate:l['시행일자']||l['법령시행일자']||''};
+}
+function lawChatScoreArticle(art,terms,nums){
+  const hay=[art.num,art.title,art.content,art.lawName].join(' ').toLowerCase();
+  let score=0;
+  nums.forEach(n=>{if(art.num===n||hay.includes(n.toLowerCase()))score+=20;});
+  terms.forEach(t=>{const lt=t.toLowerCase();if((art.title||'').toLowerCase().includes(lt))score+=8;if(hay.includes(lt))score+=3;});
+  return score;
+}
+function lawChatSnippet(art,terms){
+  const raw=String(art.content||art.title||'').replace(/\s+/g,' ').trim();
+  if(!raw)return'';
+  const lower=raw.toLowerCase();
+  let hit=-1;for(const t of terms){hit=lower.indexOf(t.toLowerCase());if(hit>=0)break;}
+  const start=Math.max(0,(hit>=0?hit:0)-70);
+  const end=Math.min(raw.length,(hit>=0?hit:0)+220);
+  return (start>0?'...':'')+raw.slice(start,end)+(end<raw.length?'...':'');
+}
+async function runLawChatbot(){
+  const q=(document.getElementById('lawChatInput')?.value||'').trim();
+  if(!q){toast('질문을 입력하세요');return;}
+  lawChatUserMessage(q);
+  const input=document.getElementById('lawChatInput');
+  if(input)input.value='';
+  const thinking=lawChatBotMessage('국가법령정보센터에서 관련 법령과 조항을 찾는 중입니다...');
+  const oc=getOC();
+  try{
+    const terms=lawChatTerms(q);
+    const nums=lawChatArticleNums(q);
+    const lawQueries=[resolveAlias(q),...terms.slice(0,4),...ARTICLE_SEARCH_SEEDS.slice(0,4)];
+    const lawMap={};
+    const settled=await Promise.allSettled(lawQueries.map(query=>lawApiFetch('search',{OC:oc,target:'law',type:'JSON',query,display:query===resolveAlias(q)?20:5})));
+    settled.forEach(res=>{if(res.status==='fulfilled')lawArrayFromAny(res.value).map(lawChatNormalizeLaw).forEach(l=>{if(l.name&&l.mst&&!lawMap[l.mst])lawMap[l.mst]=l;});});
+    const laws=Object.values(lawMap).slice(0,8);
+    if(!laws.length){
+      if(thinking)thinking.innerHTML='관련 법령을 찾지 못했습니다. 법령명이나 핵심 키워드를 조금 바꿔서 다시 입력해 주세요.';
+      lawChatScrollBottom();
+      return;
+    }
+    const blocks=[];
+    await Promise.allSettled(laws.slice(0,5).map(async law=>{
+      const data=await lawApiFetch('service',{OC:oc,target:'law',MST:law.mst,type:'JSON'});
+      const arts=parseArticlesJSON(data,law.name,law.mst);
+      const ranked=arts.map(a=>({art:a,score:lawChatScoreArticle(a,terms,nums)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,4);
+      blocks.push({law,articles:ranked.map(x=>x.art),count:arts.length});
+    }));
+    blocks.sort((a,b)=>b.articles.length-a.articles.length);
+    let html='<div style="font-size:12px;color:var(--text);font-weight:800;margin-bottom:8px;">관련 후보를 찾았습니다</div><div style="font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:10px;">법령명을 누르면 본문 목록으로 이동하고, 조문 열기를 누르면 해당 조항 팝업을 바로 엽니다.</div>';
+    blocks.forEach((block,idx)=>{
+      html+='<div class="chatbot-result"><div style="display:flex;gap:8px;align-items:flex-start;justify-content:space-between;"><div><div class="chatbot-result-title">'+eh(block.law.name)+'</div><div class="chatbot-result-meta">'+eh([block.law.type,block.law.dept,block.law.effDate?'시행 '+fmtDate(block.law.effDate):'',block.count+'개 조문'].filter(Boolean).join(' · '))+'</div></div><button class="btn-xs" onclick="lawChatOpenLaw('+idx+')">본문에서 보기</button></div>';
+      if(block.articles.length){
+        block.articles.forEach(art=>{
+          html+='<div class="chatbot-article"><div class="chatbot-article-title"><span class="article-num">'+eh(art.num)+'</span><span>'+eh(art.title||'(제목 없음)')+'</span></div><div class="chatbot-article-body">'+eh(lawChatSnippet(art,terms)||art.content||'내용 없음')+'</div><div style="display:flex;gap:6px;margin-top:8px;"><button class="btn-xs" onclick="lawChatOpenArticle(\''+eh(art.lawMst)+'\',\''+eh(art.lawName)+'\',\''+eh(art.id)+'\')">조문 열기</button><a class="btn-xs" style="text-decoration:none;display:inline-flex;align-items:center;" href="'+eh(getLawGoUrl(art.lawName,art.num))+'" target="_blank" rel="noopener">원문</a></div></div>';
+        });
+      }else{
+        html+='<div class="chatbot-empty" style="padding:18px 6px;">질문과 직접 일치하는 조항은 적지만, 법령 본문에서 추가 확인할 수 있습니다.</div>';
+      }
+      html+='</div>';
+    });
+    window._lawChatBlocks=blocks;
+    if(thinking)thinking.innerHTML=html;
+    lawChatScrollBottom();
+  }catch(e){
+    if(thinking)thinking.innerHTML='검색 중 오류가 발생했습니다.<br>'+eh(e.message);
+    lawChatScrollBottom();
+  }
+}
+function lawChatOpenLaw(idx){
+  const block=window._lawChatBlocks?.[idx];if(!block)return;
+  closeLawChatbot();loadArticles(block.law.mst,block.law.name);
+}
+async function lawChatOpenArticle(mst,name,id){
+  closeLawChatbot();
+  await loadArticles(mst,name);
+  setTimeout(()=>{const idx=filteredArticles.findIndex(a=>a.id===id);if(idx>=0){currentPage=Math.floor(idx/PAGE_SIZE)+1;renderArticles();setTimeout(()=>openArticleModal(id.replace(/[^a-zA-Z0-9_]/g,'_')),120);}},250);
+}
 
 const LAW_ALIASES={'산안법':'산업안전보건법','산업안전법':'산업안전보건법','중대법':'중대재해처벌법','중대재해법':'중대재해처벌법','중처법':'중대재해처벌법','근기법':'근로기준법','근로법':'근로기준법','화관법':'화학물질관리법','화평법':'화학물질의 등록 및 평가 등에 관한 법률','소방법':'소방기본법','위험물법':'위험물안전관리법','환경법':'환경정책기본법','대기법':'대기환경보전법','수질법':'수질 및 수생태계 보전에 관한 법률','폐기물법':'폐기물관리법','토양법':'토양환경보전법','소음법':'소음·진동관리법','전안법':'전기안전관리법','가스법':'고압가스 안전관리법','재난법':'재난 및 안전관리 기본법','노조법':'노동조합 및 노동관계조정법','산재법':'산업재해보상보험법','고보법':'고용보험법'};
 function resolveAlias(q){const t=q.trim();if(LAW_ALIASES[t])return LAW_ALIASES[t];return t;}
