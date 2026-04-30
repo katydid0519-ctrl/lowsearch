@@ -2498,6 +2498,30 @@ function getKoshaItemDate(item){
   const boardno=item?.boardno||item?.pstNo||item?.arno||'';
   return normalizeSafetyDate(item?.regDate||item?.pubDate||item?.date||'')||dateFromBoardNo(boardno)||normalizeSafetyDate(item?.contents||item?.desc||'');
 }
+function extractSafetyIncidentDate(value){
+  const s=String(value||'');
+  const m=s.match(/(20\d{2})\s*[.\/년-]\s*(\d{1,2})\s*[.\/월-]\s*(\d{1,2})/);
+  if(!m||m[3]==='0'||m[3]==='00')return'';
+  return m[1]+'.'+m[2].padStart(2,'0')+'.'+m[3].padStart(2,'0');
+}
+function safetyDaysBetween(a,b){
+  const da=normalizeSafetyDate(a),db=normalizeSafetyDate(b);
+  if(!da||!db)return 0;
+  const ta=new Date(da.replace(/\./g,'-')).getTime();
+  const tb=new Date(db.replace(/\./g,'-')).getTime();
+  if(!Number.isFinite(ta)||!Number.isFinite(tb))return 0;
+  return Math.round((tb-ta)/86400000);
+}
+function isRecentKoshaAccident(item){
+  if(item?.source==='KOSHA 포털')return true;
+  const pubDate=getKoshaItemDate(item);
+  const incidentDate=extractSafetyIncidentDate(item?.desc||item?.contents||'');
+  if(!incidentDate)return true;
+  const today=new Date().toISOString().slice(0,10).replace(/-/g,'.');
+  const ageFromToday=safetyDaysBetween(incidentDate,today);
+  const lagFromPub=safetyDaysBetween(incidentDate,pubDate);
+  return ageFromToday<=120&&lagFromPub<=120;
+}
 const KOSHA_ACCIDENT_RECENT_FIXES=[
   {
     title:'축사 지붕 작업 중 추락',
@@ -2609,9 +2633,10 @@ async function loadKoshaSafetyWidget(type){
         const boardno=item.boardno||item.pstNo||item.arno||'';
         const date=getKoshaItemDate({...item,boardno});
         const desc=item.contents||'';
-        if(title)items.push({title,date,desc,boardno});
+        if(title)items.push({title,date,desc,boardno,source:'공공 API'});
       });
     }catch(e){console.warn('[재해사례]',e.message);}
+    items=items.filter(isRecentKoshaAccident);
     items=mergeKoshaRecentItems(items,KOSHA_ACCIDENT_RECENT_FIXES);
     if(!items.length)items=fallbackItems;
     let html='';
@@ -2644,6 +2669,32 @@ async function loadKoshaSafetyWidget(type){
   }
 }
 
+function cleanKoshaPopupText(value){
+  let text=String(value||'');
+  for(let i=0;i<3;i++){
+    const textarea=document.createElement('textarea');
+    textarea.innerHTML=text.replace(/<br\s*\/?>/gi,'\n');
+    text=textarea.value;
+  }
+  const div=document.createElement('div');
+  div.innerHTML=text.replace(/<br\s*\/?>/gi,'\n');
+  text=(div.textContent||div.innerText||text)
+    .replace(/\u00a0/g,' ')
+    .replace(/[ \t]+/g,' ')
+    .replace(/(\d)\s+(?=\d)/g,'$1')
+    .replace(/(\d)\s+([.:])/g,'$1$2')
+    .replace(/([.:])\s+(?=\d)/g,'$1')
+    .replace(/\(\s+/g,'(')
+    .replace(/\s+\)/g,')')
+    .replace(/\s+,/g,',')
+    .replace(/,\s*/g,', ')
+    .replace(/(\d{4})\.(\d{1,2})\.(\d{1,2})\./g,'$1. $2. $3.')
+    .replace(/(\d{1,2}):(\d{2})\s*경/g,'$1:$2경')
+    .replace(/\s+/g,' ')
+    .trim();
+  return text;
+}
+
 function openKoshaPopup(el){
   const title=el.dataset.title||'',biz=el.dataset.biz||'',contents=el.dataset.contents||'',boardno=el.dataset.boardno||'',type=el.dataset.type||'accident',date=el.dataset.date||'';
   document.getElementById('koshaModalTitle').textContent=title;
@@ -2652,7 +2703,7 @@ function openKoshaPopup(el){
   badge.style.cssText=type==='accident'?'color:#a73b21;background:rgba(167,59,33,.08);font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 8px;border-radius:4px;display:inline-block;margin-bottom:6px;':'color:#b45309;background:rgba(245,158,11,.08);font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 8px;border-radius:4px;display:inline-block;margin-bottom:6px;';
   document.getElementById('koshaModalMeta').textContent=date?'일시: '+date:'';
   const body=document.getElementById('koshaModalBody');
-  let cleanContents=contents.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+  let cleanContents=cleanKoshaPopupText(contents);
   if(cleanContents&&cleanContents.length>3){body.style.whiteSpace='pre-line';body.textContent=cleanContents;}
   else{body.innerHTML=`<div style="color:var(--text-dim);font-size:12px;font-style:italic;">상세 본문은 KOSHA 사이트에서 확인하실 수 있습니다.<br>아래 <strong>원문 보기</strong> 버튼을 눌러주세요.</div>`;}
   const link=document.getElementById('koshaModalLink');
