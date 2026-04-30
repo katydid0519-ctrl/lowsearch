@@ -2494,6 +2494,30 @@ function safetyDateValue(value){
   const d=normalizeSafetyDate(value);
   return d?Number(d.replace(/\D/g,'')):0;
 }
+function getKoshaItemDate(item){
+  const boardno=item?.boardno||item?.pstNo||item?.arno||'';
+  return normalizeSafetyDate(item?.regDate||item?.pubDate||item?.date||'')||dateFromBoardNo(boardno)||normalizeSafetyDate(item?.contents||item?.desc||'');
+}
+const KOSHA_ACCIDENT_RECENT_FIXES=[
+  {
+    title:'축사 지붕 작업 중 추락',
+    date:'2026.04.24',
+    desc:'KOSHA 포털 건설업 재해사례 최신 게시물입니다. 상세 내용은 원문에서 확인하세요.',
+    boardno:'20260413132722KXDX3J',
+    source:'KOSHA 포털'
+  }
+];
+function mergeKoshaRecentItems(items,fixes){
+  const map=new Map();
+  [...(fixes||[]),...(items||[])].forEach(item=>{
+    const key=item.boardno||item.title;
+    if(!key)return;
+    const normalized={...item,date:getKoshaItemDate(item)||item.date||''};
+    const prev=map.get(key);
+    if(!prev||safetyDateValue(normalized.date)>=safetyDateValue(prev.date))map.set(key,normalized);
+  });
+  return [...map.values()].sort((a,b)=>safetyDateValue(b.date)-safetyDateValue(a.date));
+}
 
 async function loadTrendWidget(tab){
   tab=tab||_currentTrendTab;
@@ -2582,12 +2606,13 @@ async function loadKoshaSafetyWidget(type){
       const arr=Array.isArray(raw)?raw:(raw?[raw]:[]);
       arr.slice(0,5).forEach(item=>{
         const title=item.keyword||item.title||'';
-        const date=normalizeSafetyDate(item.regDate||item.date||item.contents||'')||dateFromBoardNo(item.boardno);
+        const boardno=item.boardno||item.pstNo||item.arno||'';
+        const date=getKoshaItemDate({...item,boardno});
         const desc=item.contents||'';
-        if(title)items.push({title,date,desc,boardno:item.boardno||''});
+        if(title)items.push({title,date,desc,boardno});
       });
     }catch(e){console.warn('[재해사례]',e.message);}
-    items.sort((a,b)=>safetyDateValue(b.date)-safetyDateValue(a.date));
+    items=mergeKoshaRecentItems(items,KOSHA_ACCIDENT_RECENT_FIXES);
     if(!items.length)items=fallbackItems;
     let html='';
     items.slice(0,5).forEach((item,idx)=>{
