@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>국가법령 검색기</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23eef3f8'/%3E%3Ccircle cx='32' cy='32' r='23' fill='white' stroke='%23cbd6e3' stroke-width='3'/%3E%3Cpath d='M14 35c8-16 28-20 38-8C43 23 35 27 31 35c-4 8-13 10-17 0z' fill='%23d71920'/%3E%3Cpath d='M50 29c-8 16-28 20-38 8 9 4 17 0 21-8 4-8 13-10 17 0z' fill='%230047a0'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23eef3f8'/%3E%3C/svg%3E">
+<link rel="shortcut icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23eef3f8'/%3E%3Ccircle cx='32' cy='32' r='23' fill='white' stroke='%23cbd6e3' stroke-width='3'/%3E%3Cpath d='M14 35c8-16 28-20 38-8C43 23 35 27 31 35c-4 8-13 10-17 0z' fill='%23d71920'/%3E%3Cpath d='M50 29c-8 16-28 20-38 8 9 4 17 0 21-8 4-8 13-10 17 0z' fill='%230047a0'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23eef3f8'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23eef3f8'/%3E%3Ccircle cx='32' cy='32' r='23' fill='white' stroke='%23cbd6e3' stroke-width='3'/%3E%3Cpath d='M14 35c8-16 28-20 38-8C43 23 35 27 31 35c-4 8-13 10-17 0z' fill='%23d71920'/%3E%3Cpath d='M50 29c-8 16-28 20-38 8 9 4 17 0 21-8 4-8 13-10 17 0z' fill='%230047a0'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23eef3f8'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#0b4a8b">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&display=swap');
@@ -2522,15 +2526,10 @@ function isRecentKoshaAccident(item){
   const lagFromPub=safetyDaysBetween(incidentDate,pubDate);
   return ageFromToday<=120&&lagFromPub<=120;
 }
-const KOSHA_ACCIDENT_RECENT_FIXES=[
-  {
-    title:'축사 지붕 작업 중 추락',
-    date:'2026.04.24',
-    desc:'KOSHA 포털 건설업 재해사례 최신 게시물입니다. 상세 내용은 원문에서 확인하세요.',
-    boardno:'20260413132722KXDX3J',
-    source:'KOSHA 포털'
-  }
-];
+const KOSHA_ACCIDENT_BUSINESS='제조업';
+const KOSHA_ACCIDENT_URL='https://portal.kosha.or.kr/archive/disaster-case/accident-case/acccase-industry/manufac-industry';
+const KOSHA_ACCIDENT_BBS_ID='B2025022104002';
+const KOSHA_ACCIDENT_RECENT_FIXES=[];
 function mergeKoshaRecentItems(items,fixes){
   const map=new Map();
   [...(fixes||[]),...(items||[])].forEach(item=>{
@@ -2625,33 +2624,34 @@ async function loadKoshaSafetyWidget(type){
     ];
     let items=[];
     try{
-      const data=await publicApiFetch('http://apis.data.go.kr/B552468/disaster_api02/getdisaster_api02',{serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',callApiId:1060,numOfRows:5,pageNo:1,_type:'json',business:'건설업'});
+      const data=await publicApiFetch('http://apis.data.go.kr/B552468/disaster_api02/getdisaster_api02',{serviceKey:'a1c9254b6c81516caabb71a3e9260472c64b1b6d4ef201f04bbba661ce1b6361',callApiId:1060,numOfRows:100,pageNo:1,_type:'json',business:KOSHA_ACCIDENT_BUSINESS});
       const raw=data?.body?.items?.item||findArray(data)||[];
       const arr=Array.isArray(raw)?raw:(raw?[raw]:[]);
-      arr.slice(0,5).forEach(item=>{
+      arr.forEach(item=>{
+        const biz=String(item.business||'').trim();
+        if(biz&&biz!==KOSHA_ACCIDENT_BUSINESS)return;
         const title=item.keyword||item.title||'';
         const boardno=item.boardno||item.pstNo||item.arno||'';
         const date=getKoshaItemDate({...item,boardno});
         const desc=item.contents||'';
-        if(title)items.push({title,date,desc,boardno,source:'공공 API'});
+        if(title)items.push({title,date,desc,boardno,biz:biz||KOSHA_ACCIDENT_BUSINESS,source:'공공 API'});
       });
     }catch(e){console.warn('[재해사례]',e.message);}
-    items=items.filter(isRecentKoshaAccident);
     items=mergeKoshaRecentItems(items,KOSHA_ACCIDENT_RECENT_FIXES);
     if(!items.length)items=fallbackItems;
     let html='';
     items.slice(0,5).forEach((item,idx)=>{
       if(idx===0&&item.desc){
-        html+=`<div class="accident-featured" onclick="openKoshaPopup(this)" data-title="${eh(item.title)}" data-contents="${eh(item.desc)}" data-boardno="${eh(item.boardno||'')}" data-type="accident" data-date="${eh(item.date)}">
-          <div class="accident-featured-date">${item.date?eh(item.date):'조회 실패'} <span style="font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:1px 6px;border-radius:3px;margin-left:4px;">${item.fallback?'확인 필요':'최신'}</span></div>
+        html+=`<div class="accident-featured" onclick="openKoshaPopup(this)" data-title="${eh(item.title)}" data-contents="${eh(item.desc)}" data-boardno="${eh(item.boardno||'')}" data-type="accident" data-date="${eh(item.date)}" data-biz="${eh(item.biz||KOSHA_ACCIDENT_BUSINESS)}">
+          <div class="accident-featured-date">${item.date?eh(item.date):'조회 실패'} <span style="font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:1px 6px;border-radius:3px;margin-left:4px;">${item.fallback?'확인 필요':'최신등록'}</span></div>
           <div class="accident-featured-title">${eh(item.title)}</div>
           <div class="accident-featured-desc">${eh(item.desc.substring(0,80))}${item.desc.length>80?'…':''}</div>
         </div>`;
       }else{
-        html+=`<div class="hw-list-item" style="cursor:pointer;" onclick="openKoshaPopup(this)" data-title="${eh(item.title)}" data-contents="${eh(item.desc||'')}" data-boardno="${eh(item.boardno||'')}" data-type="accident" data-date="${eh(item.date)}"><span class="hw-list-link"><span class="hw-list-title">${eh(item.title)}</span></span>${item.date?`<span class="hw-list-date">${eh(item.date)}</span>`:''}</div>`;
+        html+=`<div class="hw-list-item" style="cursor:pointer;" onclick="openKoshaPopup(this)" data-title="${eh(item.title)}" data-contents="${eh(item.desc||'')}" data-boardno="${eh(item.boardno||'')}" data-type="accident" data-date="${eh(item.date)}" data-biz="${eh(item.biz||KOSHA_ACCIDENT_BUSINESS)}"><span class="hw-list-link"><span class="hw-list-title">${eh(item.title)}</span></span>${item.date?`<span class="hw-list-date">${eh(item.date)}</span>`:''}</div>`;
       }
     });
-    html+=`<a href="https://portal.kosha.or.kr/archive/disaster-case/accident-case/acccase-industry/construc-industry" target="_blank" class="hw-more-link">재해사례 더보기 →</a>`;
+    html+=`<a href="${KOSHA_ACCIDENT_URL}" target="_blank" class="hw-more-link">${KOSHA_ACCIDENT_BUSINESS} 재해사례 더보기 →</a>`;
     el.innerHTML=html;
   }else{
     try{
@@ -2708,9 +2708,9 @@ function openKoshaPopup(el){
   else{body.innerHTML=`<div style="color:var(--text-dim);font-size:12px;font-style:italic;">상세 본문은 KOSHA 사이트에서 확인하실 수 있습니다.<br>아래 <strong>원문 보기</strong> 버튼을 눌러주세요.</div>`;}
   const link=document.getElementById('koshaModalLink');
   const sourceUrl=type==='accident'
-    ? 'https://portal.kosha.or.kr/archive/disaster-case/accident-case/acccase-industry/construc-industry'
+    ? KOSHA_ACCIDENT_URL
     : 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2';
-  const bbsId=type==='accident'?'B2025022104003':'B2025021314108';
+  const bbsId=type==='accident'?KOSHA_ACCIDENT_BBS_ID:'B2025021314108';
   link.href=boardno?`${sourceUrl}?bbsId=${bbsId}&pstNo=${encodeURIComponent(boardno)}`:sourceUrl;
   document.getElementById('koshaModal').style.display='block';
   document.body.style.overflow='hidden';
