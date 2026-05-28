@@ -1309,15 +1309,21 @@ function parseArticlesJSON(data,lawName,lawMst){
     };
     let list=[];
     let joWrapper=law?.조문||law?.조문목록||{};
-    if(Array.isArray(joWrapper)){list=joWrapper;}
-    else if(joWrapper?.편장절){
-      const chapters=joWrapper.편장절;
-      const chapArr=Array.isArray(chapters)?chapters:(chapters?[chapters]:[]);
-      chapArr.forEach(ch=>{const chapterName=ch?.편장절관명||ch?.편장명||'';const joArr=ch?.조문단위||[];const joList=Array.isArray(joArr)?joArr:(joArr?[joArr]:[]);joList.forEach(jo=>{jo._chapter=chapterName;list.push(jo);});});
+    // 법제처 응답은 시행령/규칙에 따라 편 > 장 > 절 > 관 등으로 깊이가 다르게 중첩될 수 있어
+    // 단순 분기로는 일부 조문만 수집된다(예: 지방세법 시행령). 재귀 워커로 모든 조문단위를 수집한다.
+    const JO_CHILD_KEYS=new Set(['항','호','목','조문참고자료','조문이력','조문변경이력','조문주']);
+    const isJoUnit=n=>n&&typeof n==='object'&&!Array.isArray(n)&&(n.조문번호!==undefined||n.조문내용!==undefined||n.조문제목!==undefined);
+    const pickChapterName=n=>n?.편장절관명||n?.편장명||n?.편명||n?.장명||n?.절명||n?.관명||'';
+    function walkJo(node,chapter,out){
+      if(!node)return;
+      if(Array.isArray(node)){node.forEach(c=>walkJo(c,chapter,out));return;}
+      if(typeof node!=='object')return;
+      if(isJoUnit(node)){if(chapter&&!node._chapter)node._chapter=chapter;out.push(node);return;}
+      const myChapter=pickChapterName(node)||chapter;
+      for(const k of Object.keys(node)){if(JO_CHILD_KEYS.has(k))continue;walkJo(node[k],myChapter,out);}
     }
-    else if(joWrapper?.조문단위){const joArr=joWrapper.조문단위;list=Array.isArray(joArr)?joArr:(joArr?[joArr]:[]);}
-    else if(joWrapper?.편장절관){const chapArr=Array.isArray(joWrapper.편장절관)?joWrapper.편장절관:[joWrapper.편장절관];chapArr.forEach(ch=>{const chapterName=ch?.편장절관명||ch?.편장명||'';const joArr=ch?.조문단위||ch?.조문||[];const joList=Array.isArray(joArr)?joArr:(joArr?[joArr]:[]);joList.forEach(jo=>{jo._chapter=chapterName;list.push(jo);});});}
-    else{if(joWrapper?.조문){list=Array.isArray(joWrapper.조문)?joWrapper.조문:[joWrapper.조문];}}
+    if(Array.isArray(joWrapper)){joWrapper.forEach(n=>walkJo(n,'',list));}
+    else{walkJo(joWrapper,'',list);}
 
     let currentChapter='';
     list.forEach((jo,i)=>{

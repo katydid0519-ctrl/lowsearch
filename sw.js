@@ -1,5 +1,5 @@
 // 국가법령 검색기 PWA Service Worker
-const VERSION = 'v1.0.0';
+const VERSION = 'v1.1.1';
 const APP_CACHE = `law-app-${VERSION}`;
 const RUNTIME_CACHE = `law-runtime-${VERSION}`;
 
