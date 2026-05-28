@@ -1,0 +1,29 @@
+{
+  "name": "국가법령 검색기",
+  "short_name": "법령검색",
+  "description": "국가법령정보 검색 및 안전보건 트렌드 PWA",
+  "lang": "ko",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "any",
+  "background_color": "#f5f7fb",
+  "theme_color": "#0b4a8b",
+  "categories": ["productivity", "reference", "government"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
