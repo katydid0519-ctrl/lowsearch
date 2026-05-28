@@ -1336,13 +1336,30 @@ function parseArticlesJSON(data,lawName,lawMst){
       console.log('[parseArticlesJSON]',{lawName,collected:list.length,joWrapperKeys:wrapperKeys,sampleArticleKeys:sampleKeys,rawJoWrapper:joWrapper});
     }catch(e){}
 
+    // 법제처 응답에서 텍스트 필드가 가끔 {__cdata:"..."}/{#text:"..."}/{_: "..."}/{내용:"..."}
+    // 같은 객체나 배열로 내려올 수 있어 .trim() 직전에 항상 문자열로 강제한다.
+    function safeText(v){
+      if(v==null)return '';
+      if(typeof v==='string')return v;
+      if(Array.isArray(v))return v.map(safeText).filter(Boolean).join('\n');
+      if(typeof v==='object'){
+        if(typeof v.__cdata==='string')return v.__cdata;
+        if(typeof v['#text']==='string')return v['#text'];
+        if(typeof v._==='string')return v._;
+        if(typeof v.내용==='string')return v.내용;
+        if(typeof v.value==='string')return v.value;
+        return '';
+      }
+      return String(v);
+    }
+
     let currentChapter='';
     list.forEach((jo,i)=>{
-      const rawContent=(jo?.조문내용||'').trim();
+      const rawContent=safeText(jo?.조문내용).trim();
       const firstLine=rawContent.split('\n')[0].trim();
       // 조문번호: 법제처는 "제8조의2"를 조문번호=8, 조문가지번호=2로 내려주는 경우가 있다.
-      let num = String(jo?.조문번호||'').trim();
-      const branchNum=String(jo?.조문가지번호||jo?.조문가지번호문자||'').trim();
+      let num = safeText(jo?.조문번호).trim();
+      const branchNum=safeText(jo?.조문가지번호||jo?.조문가지번호문자).trim();
       if(!num){
         const m0 = firstLine.match(/^제(\d+조(?:의\d+)?)/);
         if(m0) num = m0[1]; // "8조의2" 형태
@@ -1357,7 +1374,7 @@ function parseArticlesJSON(data,lawName,lawMst){
       else{
         chapter=currentChapter;
         // 법제처 API의 조문제목 필드 우선 사용
-        const rawTitle = (jo?.조문제목||'').trim();
+        const rawTitle = safeText(jo?.조문제목).trim();
         if(rawTitle){
           // 조문제목이 있으면 그대로 사용
           title = rawTitle;
@@ -1394,16 +1411,16 @@ function parseArticlesJSON(data,lawName,lawMst){
 
         // 2) 항 파싱
         hangArr.forEach(h=>{
-          const hn=h?.항번호||'',hc=h?.항내용||'';
+          const hn=safeText(h?.항번호).trim(),hc=safeText(h?.항내용).trim();
           if(hc) paras.push({num:hn?`제${hn}항`:'항',text:hc,level:'hang'});
           const hoRaw=h?.호||[];
           const hoArr=Array.isArray(hoRaw)?hoRaw:(hoRaw?[hoRaw]:[]);
           hoArr.forEach(ho=>{
-            const hon=ho?.호번호||'',hoc=ho?.호내용||ho?.내용||'';
+            const hon=safeText(ho?.호번호).trim(),hoc=safeText(ho?.호내용||ho?.내용).trim();
             if(hoc) paras.push({num:hon?`${hon}호`:'호',text:hoc,level:'ho'});
             const mokRaw=ho?.목||[];
             const mokArr=Array.isArray(mokRaw)?mokRaw:(mokRaw?[mokRaw]:[]);
-            mokArr.forEach(m=>{const mc=m?.목내용||m?.내용||'';if(mc)paras.push({num:'목',text:mc,level:'mok'});});
+            mokArr.forEach(m=>{const mc=safeText(m?.목내용||m?.내용).trim();if(mc)paras.push({num:'목',text:mc,level:'mok'});});
           });
         });
       } else if(paraContent){
@@ -1423,7 +1440,7 @@ function parseArticlesJSON(data,lawName,lawMst){
           else paras.push({num:idx===0?'본문':String(idx+1),text:part.trim(),level:'hang'});
         });
       }
-      const effDate=jo?.조문시행일자||lawMeta.effDate||'';
+      const effDate=safeText(jo?.조문시행일자||lawMeta.effDate).trim();
       // 조문번호 정규화: "8의2" → "제8조의2", "8" → "제8조"
       function buildArtNum(raw){
         const s = String(raw).trim();
