@@ -899,6 +899,23 @@ function findArray(obj,depth=0){
   return null;
 }
 
+// 법제처 XML→JSON 변환물에서 텍스트 필드가 {__cdata}, {#text}, {_}, {내용} 등의 객체/배열로
+// 떨어질 수 있어, .trim() 호출 전 항상 문자열로 강제. 모든 파서에서 공유.
+function safeText(v){
+  if(v==null)return '';
+  if(typeof v==='string')return v;
+  if(Array.isArray(v))return v.map(safeText).filter(Boolean).join('\n');
+  if(typeof v==='object'){
+    if(typeof v.__cdata==='string')return v.__cdata;
+    if(typeof v['#text']==='string')return v['#text'];
+    if(typeof v._==='string')return v._;
+    if(typeof v.내용==='string')return v.내용;
+    if(typeof v.value==='string')return v.value;
+    return '';
+  }
+  return String(v);
+}
+
 // ── STATE ─────────────────────────────────────────────────────────────────
 let mode='law',currentView='list',currentLaw=null;
 let lawList=[],articleList=[],appendixList=[],filteredArticles=[];
@@ -1335,23 +1352,6 @@ function parseArticlesJSON(data,lawName,lawMst){
       const sampleKeys=list[0]&&typeof list[0]==='object'?Object.keys(list[0]):[];
       console.log('[parseArticlesJSON]',{lawName,collected:list.length,joWrapperKeys:wrapperKeys,sampleArticleKeys:sampleKeys,rawJoWrapper:joWrapper});
     }catch(e){}
-
-    // 법제처 응답에서 텍스트 필드가 가끔 {__cdata:"..."}/{#text:"..."}/{_: "..."}/{내용:"..."}
-    // 같은 객체나 배열로 내려올 수 있어 .trim() 직전에 항상 문자열로 강제한다.
-    function safeText(v){
-      if(v==null)return '';
-      if(typeof v==='string')return v;
-      if(Array.isArray(v))return v.map(safeText).filter(Boolean).join('\n');
-      if(typeof v==='object'){
-        if(typeof v.__cdata==='string')return v.__cdata;
-        if(typeof v['#text']==='string')return v['#text'];
-        if(typeof v._==='string')return v._;
-        if(typeof v.내용==='string')return v.내용;
-        if(typeof v.value==='string')return v.value;
-        return '';
-      }
-      return String(v);
-    }
 
     let currentChapter='';
     list.forEach((jo,i)=>{
@@ -3194,16 +3194,16 @@ function openLawRefModal(event, lawName, artNum, lawGoUrl){
         function bNum(raw, branch){var s=String(raw||'').trim();var b=String(branch||'').trim();if(b&&b!=='0'&&!/의\d+/.test(s))s=s.replace(/조$/,'')+'의'+b;if(/^제\d+조/.test(s))return s;var mm3=s.match(/^(\d+)(의\d+)?$/);if(mm3)return'제'+mm3[1]+'조'+(mm3[2]||'');return'제'+s+'조';}
         var jo = list.find(function(j){return bNum(j?.조문번호||'',j?.조문가지번호||j?.조문가지번호문자||'')===an;});
         if(!jo) throw new Error('조문 없음: '+an);
-        var raw = (jo.조문내용||'').trim();
+        var raw = safeText(jo.조문내용).trim();
         var paras = [];
         var ha = Array.isArray(jo.항)?jo.항:(jo.항?[jo.항]:[]);
         if(ha.length){
           var bodyT = raw.replace(/^제\d+조(?:의\d+)?(?:\([^)]*\))?\s*/,'').split('\n')[0].trim();
           if(bodyT) paras.push({text:bodyT,level:'hang'});
           ha.forEach(function(h){
-            var hc=h.항내용||h.내용||''; if(hc)paras.push({text:hc,level:'hang'});
+            var hc=safeText(h.항내용||h.내용).trim(); if(hc)paras.push({text:hc,level:'hang'});
             var hoA=Array.isArray(h.호)?h.호:(h.호?[h.호]:[]);
-            hoA.forEach(function(ho){var hoc=ho.호내용||ho.내용||'';if(hoc)paras.push({text:hoc,level:'ho'});});
+            hoA.forEach(function(ho){var hoc=safeText(ho.호내용||ho.내용).trim();if(hoc)paras.push({text:hoc,level:'ho'});});
           });
         } else if(raw){
           var stripped2 = raw.replace(/^제\d+조(?:의\d+)?(?:\([^)]*\))?\s*/,'').trim();
