@@ -20,6 +20,7 @@ const allowedHosts = [
   'www.moel.go.kr',
   'api.rss2json.com',
 ];
+const lawApiOrigin = process.env.LAW_API_ORIGIN || 'https://lawsearchsite.netlify.app';
 
 exports.handler = async function(event) {
   const targetUrl = event.queryStringParameters && event.queryStringParameters.url;
@@ -57,6 +58,10 @@ exports.handler = async function(event) {
         'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8',
         'Accept-Encoding': 'identity',
         'Cache-Control': 'no-cache',
+        ...(parsedUrl.hostname === 'law.go.kr' || parsedUrl.hostname.endsWith('.law.go.kr') ? {
+          'Origin': lawApiOrigin,
+          'Referer': `${lawApiOrigin}/`,
+        } : {}),
       },
       timeout: 15000,
     };

@@ -66,13 +66,23 @@ GitHub Pages는 정적 호스팅이라 `proxy.js`(Netlify Function)가 동작하
 서비스 워커는 `file://` 에서 동작하지 않습니다. 로컬에서 PWA로 테스트하려면 정적 서버를 띄우세요:
 
 ```powershell
-# Python 3
-python -m http.server 8080
-# 또는 Node
-npx serve -p 8080
+# 권장: 정적 파일 + Netlify proxy 호환 로컬 서버
+npm run dev
+
+# npm이 설치되어 있지 않은 Windows 환경
+.\run-local.bat
+# 또는 PowerShell
+.\run-local.ps1
+
+# 포트를 바꾸고 싶을 때
+$env:PORT=8090; npm run dev
 ```
 
-`http://localhost:8080` 에서 열고 DevTools → Application 탭에서 Service Worker / Manifest 확인.
+`http://127.0.0.1:8080` 에서 열고 DevTools → Application 탭에서 Service Worker / Manifest 확인.
+
+`dev-server.js`는 `/.netlify/functions/proxy?url=...` 경로를 로컬에서도 처리합니다. 일반 `python -m http.server`나 `npx serve`로도 화면은 열 수 있지만, 법제처·KOSHA·시세·트렌드처럼 CORS가 있는 API는 로컬에서 실패할 수 있습니다.
+
+파싱 디버그 로그가 필요하면 주소 뒤에 `?debug=1`을 붙여 여세요.
 
 ## 🔁 캐시 갱신
 
