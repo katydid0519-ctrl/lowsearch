@@ -1,7 +1,7 @@
 {
-  "name": "국가법령 검색기",
-  "short_name": "법령검색",
-  "description": "국가법령정보 검색 및 안전보건 트렌드 PWA",
+  "name": "\uad6d\uac00\ubc95\ub839 \uac80\uc0c9\uae30",
+  "short_name": "\ubc95\ub839\uac80\uc0c9\uae30",
+  "description": "\uad6d\uac00\ubc95\ub839\uc815\ubcf4 \uac80\uc0c9 \ubc0f \uc548\uc804\ubcf4\uac74 \ud5ec\ud37c PWA",
   "lang": "ko",
   "dir": "ltr",
   "start_url": "./",
@@ -14,37 +14,19 @@
   "categories": ["productivity", "reference", "government"],
   "icons": [
     {
-      "src": "logo.png",
+      "src": "logo.png?v=4",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "logo.png",
+      "src": "logo.png?v=4",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "logo.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "logo.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "logo.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "logo.png",
+      "src": "logo.png?v=4",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
